@@ -182,6 +182,10 @@ public class CImageController
 	        );
 		
 		String localPath = files[0].getPath();
+		if (File.separatorChar != '/')
+		{
+			localPath = localPath.replace(File.separatorChar, '/');
+		}
 		String ipaddress = "0.0.0.0";
 		try
 		{
