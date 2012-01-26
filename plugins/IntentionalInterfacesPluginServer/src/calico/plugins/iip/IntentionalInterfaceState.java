@@ -1,0 +1,39 @@
+package calico.plugins.iip;
+
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+
+import java.util.List;
+
+import calico.networking.netstuff.CalicoPacket;
+
+public class IntentionalInterfaceState
+{
+	private final List<CalicoPacket> packets = new ObjectArrayList<CalicoPacket>();
+	
+	private final List<CalicoPacket> cellPackets = new ObjectArrayList<CalicoPacket>();
+	private final List<CalicoPacket> linkPackets = new ObjectArrayList<CalicoPacket>();
+	
+	public void reset()
+	{
+		packets.clear();
+		cellPackets.clear();
+		linkPackets.clear();
+	}
+	
+	public void addCellPacket(CalicoPacket packet)
+	{
+		cellPackets.add(packet);
+	}
+	
+	public void addLinkPacket(CalicoPacket packet)
+	{
+		linkPackets.add(packet);
+	}
+	
+	public CalicoPacket[] getAllPackets()
+	{
+		packets.addAll(cellPackets);
+		packets.addAll(linkPackets);
+		return packets.toArray(new CalicoPacket[0]);
+	}
+}
