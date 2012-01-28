@@ -42,8 +42,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	@Override
 	public void handleCalicoEvent(int event, CalicoPacket p, Client c)
 	{
-
-		switch (IntentionalInterfacesNetworkCommands.forId(event))
+		switch (IntentionalInterfacesNetworkCommands.Command.forId(event))
 		{
 			case CIC_CREATE:
 				CIC_CREATE(p, c);
@@ -72,7 +71,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	private static void CIC_CREATE(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.CIC_CREATE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CIC_CREATE.verify(p);
 
 		long uuid = p.getLong();
 		long canvas_uuid = p.getLong();
@@ -91,7 +90,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	private static void CIC_MOVE(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.CIC_MOVE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CIC_MOVE.verify(p);
 
 		long uuid = p.getLong();
 		CIntentionCell cell = CIntentionCellController.getInstance().getCellById(uuid);
@@ -109,7 +108,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	private static void CIC_DELETE(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.CIC_DELETE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CIC_DELETE.verify(p);
 
 		long uuid = p.getLong();
 		CIntentionCellController.getInstance().removeCellById(uuid);
@@ -134,7 +133,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	private static void CLINK_CREATE(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.CLINK_CREATE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CLINK_CREATE.verify(p);
 
 		long uuid = p.getLong();
 		CCanvasLink.LinkType type = CCanvasLink.LinkType.values()[p.getInt()];
@@ -152,7 +151,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	private static void CLINK_RETYPE(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.CLINK_RETYPE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CLINK_RETYPE.verify(p);
 
 		long uuid = p.getLong();
 		CCanvasLink link = CCanvasLinkController.getInstance().getLinkById(uuid);
@@ -169,7 +168,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	private static void CLINK_MOVE(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.CLINK_MOVE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CLINK_MOVE.verify(p);
 
 		long uuid = p.getLong();
 		CCanvasLink link = CCanvasLinkController.getInstance().getLinkById(uuid);
@@ -212,7 +211,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	private static void CLINK_DELETE(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.CLINK_DELETE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CLINK_DELETE.verify(p);
 
 		long uuid = p.getLong();
 		CCanvasLinkController.getInstance().removeLinkById(uuid);

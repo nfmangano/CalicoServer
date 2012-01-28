@@ -36,7 +36,7 @@ public class CIntentionCell
 	public CalicoPacket getState()
 	{
 		return CalicoPacket.getPacket(
-				IntentionalInterfacesNetworkCommands.CIC_CREATE.id,
+				IntentionalInterfacesNetworkCommands.CIC_CREATE,
 				uuid,
 				canvas_uuid,
 				location.x,

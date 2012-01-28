@@ -50,7 +50,7 @@ public class CCanvasLink
 	public CalicoPacket getState()
 	{
 		return CalicoPacket.getPacket(
-				IntentionalInterfacesNetworkCommands.CLINK_CREATE.id,
+				IntentionalInterfacesNetworkCommands.CLINK_CREATE,
 				uuid,
 				linkType.ordinal(),
 				anchorA.getId(),
