@@ -542,7 +542,7 @@ public class CGroup {
 			return false;
 		for(int i=0;i<polygon.npoints;i++)
 		{
-			if (!containerGroup.contains(new Point(polygon.xpoints[i], polygon.ypoints[i])))
+			if (!points.contains(new Point(polygon.xpoints[i], polygon.ypoints[i])))
 			{
 				return false;
 			}
