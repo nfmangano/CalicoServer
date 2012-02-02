@@ -468,8 +468,8 @@ public class ProcessQueue
 		}
 		
 		CGroupController.copy_to_canvas(uuid, new_uuid, new_canvasuid, shift_x, shift_y, final_x, final_y, true);
-		if (!CGroupController.groups.get(uuid).isPermanent())
-			CGroupController.drop(new_uuid);
+		//if (!CGroupController.groups.get(uuid).isPermanent())
+		//	CGroupController.drop(new_uuid);
 //		CGroupController.copy(uuid, new_uuid, new_canvasuid, shift_x, shift_y, true);
 
 		CCanvasController.snapshot(new_canvasuid);
