@@ -622,11 +622,12 @@ public class ProcessQueue
 		scaleY = p.getDouble();
 		text = p.getString();
 
-		CGroupController.no_notify_finish(uuid, captureChildren);
 //		CGroupController.groups.get(uuid).finish();
 		CGroupController.groups.get(uuid).primative_rotate(rotation);
 		CGroupController.groups.get(uuid).primative_scale(scaleX, scaleY);
 		CGroupController.groups.get(uuid).setText(text);
+		
+		CGroupController.no_notify_finish(uuid, captureChildren);
 
 		if(client!=null)
 		{
