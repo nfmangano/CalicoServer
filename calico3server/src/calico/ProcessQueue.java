@@ -468,8 +468,8 @@ public class ProcessQueue
 		}
 		
 		CGroupController.copy_to_canvas(uuid, new_uuid, new_canvasuid, shift_x, shift_y, final_x, final_y, true);
-		if (!CGroupController.groups.get(uuid).isPermanent())
-			CGroupController.drop(new_uuid);
+		//if (!CGroupController.groups.get(uuid).isPermanent())
+		//	CGroupController.drop(new_uuid);
 //		CGroupController.copy(uuid, new_uuid, new_canvasuid, shift_x, shift_y, true);
 
 		CCanvasController.snapshot(new_canvasuid);
@@ -622,11 +622,12 @@ public class ProcessQueue
 		scaleY = p.getDouble();
 		text = p.getString();
 
-		CGroupController.no_notify_finish(uuid, captureChildren);
 //		CGroupController.groups.get(uuid).finish();
 		CGroupController.groups.get(uuid).primative_rotate(rotation);
 		CGroupController.groups.get(uuid).primative_scale(scaleX, scaleY);
 		CGroupController.groups.get(uuid).setText(text);
+		
+		CGroupController.no_notify_finish(uuid, captureChildren);
 
 		if(client!=null)
 		{
