@@ -1124,6 +1124,10 @@ public class CGroup {
 		this.groupArea = PolygonUtils.PolygonArea(this.points);
 //		smoothedPath = 
 		pathReferenceShadow = Geometry.getBezieredPoly(points);
+		
+		scaleX = 1.0d;
+		scaleY = 1.0d;
+		rotation = 0.0d;
 	}
 	
 	public void printBounds()
