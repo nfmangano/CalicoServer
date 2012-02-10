@@ -435,9 +435,17 @@ public class ClientThread extends Thread
 			resp2.putString(getUsername()+" has timed out");
 			// Send it to everyone else
 			ClientManager.send_except(this.clientid, resp2);
-			
-			
-			
+		}
+		catch (SocketException e)
+		{
+			if (e.getMessage().startsWith("Connection reset by peer"))
+			{
+				System.out.println("Client \"" + toString() + "\" closed the socket. Service thread exiting.");
+			}
+			else
+			{
+				e.printStackTrace();
+			}
 		}
 		catch(IOException e)
 		{
