@@ -22,7 +22,7 @@ public class CCanvasLinkAnchor
 		this.canvas_uuid = canvas_uuid;
 		this.group_uuid = 0L;
 		type = Type.CANVAS;
-		point = null;
+		point = new Point();
 	}
 
 	public CCanvasLinkAnchor(long uuid, long canvas_uuid, Type type, int x, int y)
@@ -30,11 +30,8 @@ public class CCanvasLinkAnchor
 		this(uuid, canvas_uuid);
 
 		this.type = type;
-
-		if (canvas_uuid == 0L)
-		{
-			this.point = new Point(x, y);
-		}
+		point.x = x;
+		point.y = y;
 	}
 
 	public CCanvasLinkAnchor(long uuid, long canvas_uuid, long group_uuid, Type type, int x, int y)
