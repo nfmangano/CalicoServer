@@ -2,6 +2,8 @@ package calico.plugins.iip;
 
 import calico.clients.Client;
 import calico.clients.ClientManager;
+import calico.components.CCanvas;
+import calico.controllers.CCanvasController;
 import calico.events.CalicoEventHandler;
 import calico.events.CalicoEventListener;
 import calico.networking.netstuff.CalicoPacket;
@@ -10,6 +12,7 @@ import calico.plugins.CalicoPluginManager;
 import calico.plugins.CalicoStateElement;
 import calico.plugins.iip.controllers.CCanvasLinkController;
 import calico.plugins.iip.controllers.CIntentionCellController;
+import calico.uuid.UUIDAllocator;
 
 public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements CalicoEventListener, CalicoStateElement
 {
@@ -34,6 +37,14 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 			// CCanvasController.canvases.get(canvaskey.longValue()),
 			// CalicoEventHandler.PASSIVE_LISTENER);
 			// }
+		}
+		 
+		for (CCanvas canvas : CCanvasController.canvases.values())
+		{ 
+			int x = canvas.getGridX() * 100;
+			int y = canvas.getGridY() * 100;
+			CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvas.getUUID(), x, y);
+			CIntentionCellController.getInstance().addCell(cell);
 		}
 
 		CalicoPluginManager.registerCalicoStateExtension(this);
