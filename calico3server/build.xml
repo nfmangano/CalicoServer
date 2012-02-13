@@ -40,7 +40,9 @@
 		<jar destfile="${build}/fugue_icons.jar" basedir="icons" includes="calico/iconsets/fugue/**/*.*" />-->
 		<jar destfile="${libs}/calico_templates.jar" basedir="admintpl"/><!-- includes="calico/admintemplates/**/*.*" />-->
 	</target>
-	
+
+	<!-- Developers must have a pushbutton mechanism to flush out the old build and produce a whole new one from the current code -->
+	<target name="rebuild-dist" depends="clean-dist, dist"/>
 
 	<target name="clean-dist">
 		<delete dir="${dist}" />
