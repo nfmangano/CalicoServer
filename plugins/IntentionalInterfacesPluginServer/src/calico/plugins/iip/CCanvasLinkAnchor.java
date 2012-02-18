@@ -6,7 +6,7 @@ public class CCanvasLinkAnchor
 {
 	enum Type
 	{
-		CANVAS,
+		FLOATING,
 		INTENTION_CELL;
 	}
 
@@ -21,7 +21,7 @@ public class CCanvasLinkAnchor
 		this.uuid = uuid;
 		this.canvas_uuid = canvas_uuid;
 		this.group_uuid = 0L;
-		type = Type.CANVAS;
+		type = Type.FLOATING;
 		point = new Point();
 	}
 
@@ -66,22 +66,10 @@ public class CCanvasLinkAnchor
 		return point;
 	}
 
-	public void move(long canvas_uuid, long group_uuid)
+	public void move(long canvas_uuid, long group_uuid, int x, int y)
 	{
 		this.canvas_uuid = canvas_uuid;
 		this.group_uuid = group_uuid;
-		point = null;
-	}
-
-	public void move(int x, int y)
-	{
-		canvas_uuid = 0L;
-		group_uuid = 0L;
-
-		if (point == null)
-		{
-			point = new Point();
-		}
 		point.x = x;
 		point.y = y;
 	}

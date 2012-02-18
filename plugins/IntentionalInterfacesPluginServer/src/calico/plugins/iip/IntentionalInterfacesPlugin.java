@@ -70,8 +70,8 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 			case CLINK_RETYPE:
 				CLINK_RETYPE(p, c);
 				break;
-			case CLINK_MOVE:
-				CLINK_MOVE(p, c);
+			case CLINK_MOVE_ANCHOR:
+				CLINK_MOVE_ANCHOR(p, c);
 				break;
 			case CLINK_DELETE:
 				CLINK_DELETE(p, c);
@@ -176,43 +176,19 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		}
 	}
 
-	private static void CLINK_MOVE(CalicoPacket p, Client c)
+	private static void CLINK_MOVE_ANCHOR(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.Command.CLINK_MOVE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CLINK_MOVE_ANCHOR.verify(p);
 
-		long uuid = p.getLong();
-		CCanvasLink link = CCanvasLinkController.getInstance().getLinkById(uuid);
-
-		boolean isEndpointA = p.getBoolean();
+		long anchor_uuid = p.getLong();
 		long canvas_uuid = p.getLong();
 		long group_uuid = p.getLong();
 		int x = p.getInt();
 		int y = p.getInt();
 
-		if (isEndpointA)
-		{
-			if (canvas_uuid == 0L)
-			{
-				link.getAnchorA().move(x, y);
-			}
-			else
-			{
-				link.getAnchorA().move(canvas_uuid, group_uuid);
-			}
-		}
-		else
-		{
-			if (canvas_uuid == 0L)
-			{
-				link.getAnchorB().move(x, y);
-			}
-			else
-			{
-				link.getAnchorB().move(canvas_uuid, group_uuid);
-			}
-		}
-
+		CCanvasLinkController.getInstance().moveLinkAnchor(anchor_uuid, canvas_uuid, group_uuid, x, y);
+				
 		if (c != null)
 		{
 			ClientManager.send_except(c, p);
