@@ -320,6 +320,10 @@ public class ProcessQueue
 			ClientManager.send(c, CalicoPacket.getPacket(NetworkCommand.CANVAS_CLEAR_FOR_SC, uuid));
 			ClientManager.send(c, CCanvasController.canvases.get(uuid).getUpdatePackets());
 			ClientManager.send(c, CalicoPacket.getPacket(NetworkCommand.CANVAS_SC_FINISH, uuid));
+			if (ClientManager.out_of_sync_clients.contains(c.getClientID()))
+			{
+				ClientManager.out_of_sync_clients.remove(c.getClientID());
+			}
 		}
 	}
 	
@@ -818,10 +822,19 @@ public class ProcessQueue
 			&& !ClientConsistencyListener.ignoreConsistencyCheck
 			&& CCanvasController.canvases.get(canvas).get_signature() != sig)
 		{
+			ClientManager.out_of_sync_clients.add(client.getClientID());
 			ClientManager.send(client, CalicoPacket.command(NetworkCommand.CONSISTENCY_FAILED));
 			if (COptions.debug.consistency_debug_enabled)
 			{
 				ClientManager.send(client, CCanvasController.getCanvasConsistencyDebugPacket(canvas));
+			}
+		}
+		else
+		{
+			if (ClientManager.out_of_sync_clients.contains(client.getClientID()))
+			{
+				ClientManager.send(client, CalicoPacket.command(NetworkCommand.CONSISTENCY_RESYNCED));
+				ClientManager.out_of_sync_clients.remove(client.getClientID());
 			}
 		}
 	}
@@ -1068,7 +1081,6 @@ public class ProcessQueue
 			y[i] = p.getInt();
 		}
 		CStrokeController.no_notify_batch_append(uuid, x, y);
-		CStrokeController.no_notify_finish(uuid);
 		
 		double rotation;
 		double scaleX;
@@ -1081,6 +1093,8 @@ public class ProcessQueue
 		
 		CStrokeController.strokes.get(uuid).primative_rotate(rotation);
 		CStrokeController.strokes.get(uuid).primative_scale(scaleX, scaleY);
+		
+		CStrokeController.no_notify_finish(uuid);
 
 		ClientManager.send_except(client, p);
 		if (client != null)
