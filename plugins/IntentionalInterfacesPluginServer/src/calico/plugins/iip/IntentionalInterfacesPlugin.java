@@ -134,11 +134,13 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	{
 		long uuid = p.getLong();
 		long canvas_uuid = p.getLong();
-		long group_uuid = p.getLong();
 		CCanvasLinkAnchor.Type type = CCanvasLinkAnchor.Type.values()[p.getInt()];
 		int x = p.getInt();
 		int y = p.getInt();
-		return new CCanvasLinkAnchor(uuid, canvas_uuid, group_uuid, type, x, y);
+		long group_uuid = p.getLong();
+		int xGroup = p.getInt();
+		int yGroup = p.getInt();
+		return new CCanvasLinkAnchor(uuid, canvas_uuid, type, x, y, group_uuid, xGroup, yGroup);
 	}
 
 	private static void CLINK_CREATE(CalicoPacket p, Client c)
@@ -183,11 +185,10 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 
 		long anchor_uuid = p.getLong();
 		long canvas_uuid = p.getLong();
-		long group_uuid = p.getLong();
 		int x = p.getInt();
 		int y = p.getInt();
 
-		CCanvasLinkController.getInstance().moveLinkAnchor(anchor_uuid, canvas_uuid, group_uuid, x, y);
+		CCanvasLinkController.getInstance().moveLinkAnchor(anchor_uuid, canvas_uuid, x, y);
 				
 		if (c != null)
 		{
