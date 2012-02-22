@@ -16,7 +16,6 @@ public class CCanvasLinkAnchor
 	private Point point;
 	
 	private long group_uuid;
-	private Point groupPosition;
 
 	public CCanvasLinkAnchor(long uuid, long canvas_uuid)
 	{
@@ -26,7 +25,6 @@ public class CCanvasLinkAnchor
 		point = new Point();
 		
 		this.group_uuid = 0L;
-		groupPosition = new Point();
 	}
 
 	public CCanvasLinkAnchor(long uuid, long canvas_uuid, Type type, int x, int y)
@@ -38,13 +36,11 @@ public class CCanvasLinkAnchor
 		point.y = y;
 	}
 
-	public CCanvasLinkAnchor(long uuid, long canvas_uuid, Type type, int x, int y, long group_uuid, int xGroup, int yGroup)
+	public CCanvasLinkAnchor(long uuid, long canvas_uuid, Type type, int x, int y, long group_uuid)
 	{
 		this(uuid, canvas_uuid, type, x, y);
 
 		this.group_uuid = group_uuid;
-		groupPosition.x = xGroup;
-		groupPosition.y = yGroup;
 	}
 
 	public long getId()
@@ -62,11 +58,6 @@ public class CCanvasLinkAnchor
 		return group_uuid;
 	}
 	
-	public Point getGroupPosition()
-	{
-		return groupPosition;
-	}
-
 	public Type getType()
 	{
 		return type;

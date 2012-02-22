@@ -59,16 +59,12 @@ public class CCanvasLink
 				anchorA.getPoint().x,
 				anchorA.getPoint().y,
 				anchorA.getGroupId(),
-				anchorA.getGroupPosition().x,
-				anchorA.getGroupPosition().y,
 				anchorB.getId(),
 				anchorB.getCanvasId(),
 				anchorB.getType().ordinal(),
 				anchorB.getPoint().x,
 				anchorB.getPoint().y,
-				anchorB.getGroupId(),
-				anchorB.getGroupPosition().x,
-				anchorB.getGroupPosition().y
+				anchorB.getGroupId()
 		);
 	}
 }

@@ -138,9 +138,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		int x = p.getInt();
 		int y = p.getInt();
 		long group_uuid = p.getLong();
-		int xGroup = p.getInt();
-		int yGroup = p.getInt();
-		return new CCanvasLinkAnchor(uuid, canvas_uuid, type, x, y, group_uuid, xGroup, yGroup);
+		return new CCanvasLinkAnchor(uuid, canvas_uuid, type, x, y, group_uuid);
 	}
 
 	private static void CLINK_CREATE(CalicoPacket p, Client c)
