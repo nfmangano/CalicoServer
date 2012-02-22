@@ -50,9 +50,9 @@ public class CCanvasLinkController
 		linkAnchors.remove(link.getAnchorB().getId());
 	}
 	
-	public void moveLinkAnchor(long anchor_uuid, long canvas_uuid, int x, int y)
+	public void moveLinkAnchor(long anchor_uuid, long canvas_uuid, CCanvasLinkAnchor.Type type, int x, int y)
 	{
 		CCanvasLinkAnchor anchor = linkAnchors.get(anchor_uuid);
-		anchor.move(canvas_uuid, x, y);
+		anchor.move(canvas_uuid, type, x, y);
 	}
 }
