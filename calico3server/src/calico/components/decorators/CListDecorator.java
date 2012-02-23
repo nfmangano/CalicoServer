@@ -305,10 +305,15 @@ public class CListDecorator extends CGroupDecorator {
 		{
 			for (int j=0;j<listItems.length;j++)
 			{
-				if ((int)CGroupController.groups.get(listItems[j]).getMidPoint().getY() == yValues[i])
+				if (CGroupController.exists(listItems[j]))
 				{
-					sortedElementList[i] = listItems[j];
-					break;
+					if ((int)CGroupController.groups.get(listItems[j]).getMidPoint().getY() == yValues[i])
+					{
+						sortedElementList[i] = listItems[j];
+						//This line needed in case multiple groups have the same y value
+						listItems[j] = -1;
+						break;
+					}
 				}
 			}
 		}
