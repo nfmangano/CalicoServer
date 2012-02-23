@@ -42,6 +42,10 @@ public class ClientManager
 	 */
 	static IntArraySet clientids = new IntArraySet();
 	
+	/**
+	 * This keeps a list of out of sync clients
+	 */
+	public static IntArraySet out_of_sync_clients = new IntArraySet();
 	
 	private static int nextClientID = 0;
 	
@@ -131,6 +135,9 @@ public class ClientManager
 	{
 		ClientManager.getClientThread(clientid).interrupt();
 		drop(clientid, "Client with same name has connected from another location");
+		
+		if (out_of_sync_clients.contains(clientid))
+			out_of_sync_clients.remove(clientid);
 		
 		clientids.remove(clientid);
 	}
