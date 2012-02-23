@@ -112,6 +112,7 @@ public class ProcessQueue
 				case NetworkCommand.GROUP_SCALE:GROUP_SCALE(pdata,client);break;
 				case NetworkCommand.GROUP_CREATE_TEXT_GROUP:GROUP_CREATE_TEXT_GROUP(pdata,client);break;
 				case NetworkCommand.GROUP_MAKE_RECTANGLE:GROUP_MAKE_RECTANGLE(pdata,client);break;
+				case NetworkCommand.GROUP_COPY_WITH_MAPPINGS:GROUP_COPY_WITH_MAPPINGS(pdata,client);break;
 				
 
 				case NetworkCommand.ARROW_CREATE:ARROW_CREATE(pdata,client);break;
@@ -477,6 +478,23 @@ public class ProcessQueue
 //		CGroupController.copy(uuid, new_uuid, new_canvasuid, shift_x, shift_y, true);
 
 		CCanvasController.snapshot(new_canvasuid);
+	}
+	
+	public static void GROUP_COPY_WITH_MAPPINGS(CalicoPacket p, Client client)
+	{
+		long guuid = p.getLong();
+		
+		Long2ReferenceArrayMap<Long> UUIDMappings = new Long2ReferenceArrayMap<Long>();
+		int mappingSize = p.getInt();
+		for (int i = 0; i < mappingSize; i++)
+		{
+			long key = p.getLong();
+			long value = p.getLong();
+			UUIDMappings.put(key, new Long(value));
+		}
+		
+		CGroupController.no_notify_copy(guuid, 0l, UUIDMappings);
+		ClientManager.send_except(client,p);
 	}
 	
 	public static void GROUP_SET_TEXT(CalicoPacket p, Client client)

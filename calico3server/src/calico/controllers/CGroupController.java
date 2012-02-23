@@ -416,6 +416,151 @@ public class CGroupController
 		
 	}//no_notify_copy
 	
+	public static void no_notify_copy(final long uuid, final long new_puuid, Long2ReferenceArrayMap<Long> UUIDMappings)
+	{
+		if(!exists(uuid)){return;}// old one doesnt exist
+		
+		CGroup temp = groups.get(uuid);
+		long new_uuid = UUIDMappings.get(uuid).longValue();
+		long canvasuuid = temp.getCanvasUUID();
+		CalicoPacket[] packets;
+		
+		if (temp instanceof CGroupDecorator)
+		{
+			long old_decoratorChildUUID = ((CGroupDecorator)temp).getDecoratedUUID();
+			if (UUIDMappings.containsKey(old_decoratorChildUUID))
+			{
+				long new_decoratorChildUUID = UUIDMappings.get(old_decoratorChildUUID).longValue();
+				no_notify_copy(old_decoratorChildUUID, new_uuid, UUIDMappings);
+				
+				ArrayList<Long> subGroups = getSubGroups(old_decoratorChildUUID);
+				Long2ReferenceArrayMap<Long> subGroupMappings = new Long2ReferenceArrayMap<Long>();
+				for (Long sub_uuid: subGroups)
+				{
+					if (UUIDMappings.containsKey(sub_uuid))
+					{
+						subGroupMappings.put(sub_uuid, UUIDMappings.get(sub_uuid));
+					}
+				}
+				packets = ((CGroupDecorator)temp).getDecoratorUpdatePackets(new_uuid, canvasuuid, new_puuid, new_decoratorChildUUID, subGroupMappings);
+				batchReceive(packets);
+				
+				CGroupController.groups.get(new_uuid).setChildGroups(new long[] { new_decoratorChildUUID } );
+
+			}
+		}
+		else
+		{
+			packets = groups.get(uuid).getUpdatePackets(new_uuid, canvasuuid, new_puuid, 0, 0, false);
+		
+			batchReceive(packets);
+			
+			CGroup tempNew = groups.get(new_uuid);
+			
+			// DEAL WITH THE CHILDREN
+			
+			// Child stroke elements
+			long[] bge_uuids = temp.getChildStrokes();
+			long[] new_bge_uuids = new long[bge_uuids.length];
+			
+			if(bge_uuids.length>0)
+			{
+				for(int i=0;i<bge_uuids.length;i++)
+				{
+					if ((UUIDMappings.containsKey(bge_uuids[i])))
+					{
+						new_bge_uuids[i] = UUIDMappings.get(bge_uuids[i]).longValue();
+						CStrokeController.no_notify_copy(bge_uuids[i], new_bge_uuids[i], new_uuid, canvasuuid, 0, 0);
+					}
+				}
+				tempNew.clearChildStrokes();
+				tempNew.setChildStrokes(new_bge_uuids);
+	//			for(int i = 0; i < new_bge_uuids.length; i++)
+	//			{
+	//				tempNew.addChildStroke(new_bge_uuids[i]);
+	//			}
+			}
+			
+			//Child group elements
+			long[] grp_uuids = temp.getChildGroups();
+			long[] new_grp_uuids = new long[grp_uuids.length];
+			
+			if(grp_uuids.length>0)
+			{
+				for(int i=0;i<grp_uuids.length;i++)
+				{
+					if ((UUIDMappings.containsKey(grp_uuids[i])))
+					{
+						new_grp_uuids[i] = UUIDMappings.get(grp_uuids[i]).longValue();
+						no_notify_copy(grp_uuids[i], new_uuid, UUIDMappings);
+					}
+				}
+				tempNew.setChildGroups(new_grp_uuids);
+			}
+			
+			//Child arrow elements
+			long[] arrow_uuids = temp.getChildArrows();
+			long[] new_arw_uuids = new long[arrow_uuids.length];
+			
+			if(arrow_uuids.length>0)
+			{
+				for(int i=0;i<arrow_uuids.length;i++)
+				{				
+					CArrow tempA = CArrowController.arrows.get(arrow_uuids[i]);
+					if(tempA.getAnchorA().getUUID()==uuid||tempA.getAnchorB().getUUID()==uuid){	
+						if ((UUIDMappings.containsKey(arrow_uuids[i])))
+						{
+							new_arw_uuids[i] = UUIDMappings.get(arrow_uuids[i]).longValue();
+											
+							AnchorPoint anchorA = tempA.getAnchorA().clone();
+							AnchorPoint anchorB = tempA.getAnchorB().clone();				
+
+							if (anchorA.getUUID() == uuid)
+							{
+								anchorA.setUUID(new_uuid);
+							}
+							if (anchorB.getUUID() == uuid)
+							{
+								anchorB.setUUID(new_uuid);
+							}
+							CArrowController.no_notify_start(new_arw_uuids[i], canvasuuid, tempA.getArrowType(), tempA.getArrowColor(), anchorA, anchorB);
+						}
+					}
+				}
+			}
+		}		
+	}//no_notify_copy
+	
+	private static ArrayList<Long> getSubGroups(long uuid)
+	{
+		if(!exists(uuid)){return null;}// doesn't exist
+		
+		ArrayList<Long> childGroups = new ArrayList<Long>();
+		
+		CGroup temp = groups.get(uuid);
+		
+		if (temp instanceof CGroupDecorator)
+		{
+			childGroups.addAll(getSubGroups(((CGroupDecorator)temp).getDecoratedUUID()));
+		}
+		else
+		{						
+			//Child group elements
+			long[] grp_uuids = temp.getChildGroups();
+			
+			if(grp_uuids.length>0)
+			{
+				for(int i=0;i<grp_uuids.length;i++)
+				{
+					childGroups.add(grp_uuids[i]);
+					childGroups.addAll(getSubGroups(grp_uuids[i]));
+				}
+			}
+		}
+
+		return childGroups;	
+	}
+	
 	
 	public static void recheck_parent(final long uuid)
 	{
