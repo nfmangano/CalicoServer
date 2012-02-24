@@ -1,4 +1,4 @@
-	package calico.plugins.palette;
+package calico.plugins.palette;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
@@ -111,12 +111,12 @@ public class PalettePlugin extends AbstractCalicoPlugin
 		
 	}
 	
-	public static void addPaletteItemToPalette(long paletteUUID, CalicoPacket paletteItem)
+	private static void addPaletteItemToPalette(long paletteUUID, CalicoPacket paletteItem)
 	{
 		no_notify_addPaletteItemToPalette(paletteUUID, paletteItem);
 	}
 	
-	public static void addPalette(long uuid)
+	private static void addPalette(long uuid)
 	{
 		palettes.put(uuid, new Palette(uuid));
 	}
@@ -145,7 +145,7 @@ public class PalettePlugin extends AbstractCalicoPlugin
 	 * @param xLoc
 	 * @param yLoc
 	 */
-	public static CalicoPacket getPastePacket(long paletteUUID, long paletteItemUUID, long canvasUUID, int xLoc, int yLoc, long[] newUUIDs)
+	private static CalicoPacket getPastePacket(long paletteUUID, long paletteItemUUID, long canvasUUID, int xLoc, int yLoc, long[] newUUIDs)
 	{
 		
 		CalicoPacket[] subPackets = getSubPacketsFromPaletteItem(paletteUUID, paletteItemUUID);
@@ -334,7 +334,7 @@ public class PalettePlugin extends AbstractCalicoPlugin
 		CCanvasController.snapshot(CGroupController.groups.get(baseUUID).getCanvasUUID());
 	}
 	
-	public static void PALETTE_PACKET(CalicoPacket p, Client client)
+	private static void PALETTE_PACKET(CalicoPacket p, Client client)
 	{
 		p.rewind();
 		p.getInt();

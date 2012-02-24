@@ -81,6 +81,16 @@ public class CCanvas
 
 	}
 	
+	public int getGridX()
+	{
+		return gridx;
+	}
+	
+	public int getGridY()
+	{
+		return gridy;
+	}
+	
 	public CCanvasBackupState getBackupState()
 	{
 		return new CCanvasBackupState(this.uuid, getUpdatePackets());
