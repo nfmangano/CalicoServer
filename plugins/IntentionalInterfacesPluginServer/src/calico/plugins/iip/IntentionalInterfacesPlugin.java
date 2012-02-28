@@ -43,7 +43,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		{ 
 			int x = canvas.getGridX() * 100;
 			int y = canvas.getGridY() * 100;
-			CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvas.getUUID(), x, y);
+			CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvas.getUUID(), false, x, y);
 			CIntentionCellController.getInstance().addCell(cell);
 		}
 
@@ -86,10 +86,11 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 
 		long uuid = p.getLong();
 		long canvas_uuid = p.getLong();
+		boolean inUse = p.getBoolean();
 		int x = p.getInt();
 		int y = p.getInt();
 
-		CIntentionCell cell = new CIntentionCell(uuid, canvas_uuid, x, y);
+		CIntentionCell cell = new CIntentionCell(uuid, canvas_uuid, inUse, x, y);
 		CIntentionCellController.getInstance().addCell(cell);
 
 		if (c != null)
@@ -106,6 +107,8 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		long uuid = p.getLong();
 		CIntentionCell cell = CIntentionCellController.getInstance().getCellById(uuid);
 
+		cell.setInUse(p.getBoolean());
+		
 		int x = p.getInt();
 		int y = p.getInt();
 		cell.setLocation(x, y);

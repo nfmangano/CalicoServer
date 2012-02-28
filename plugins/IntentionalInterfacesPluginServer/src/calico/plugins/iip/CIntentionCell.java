@@ -8,12 +8,14 @@ public class CIntentionCell
 {
 	long uuid;
 	long canvas_uuid;
+	boolean inUse;
 	Point location;
 	
-	public CIntentionCell(long uuid, long canvas_uuid, int x, int y)
+	public CIntentionCell(long uuid, long canvas_uuid, boolean inUse, int x, int y)
 	{
 		this.uuid = uuid;
 		this.canvas_uuid = canvas_uuid;
+		this.inUse = inUse;
 		this.location = new Point(x, y);
 	}
 	
@@ -25,6 +27,16 @@ public class CIntentionCell
 	public long getCanvasId()
 	{
 		return canvas_uuid;
+	}
+	
+	public boolean isInUse()
+	{
+		return inUse;
+	}
+
+	public void setInUse(boolean inUse)
+	{
+		this.inUse = inUse;
 	}
 	
 	public void setLocation(int x, int y)
@@ -39,6 +51,7 @@ public class CIntentionCell
 				IntentionalInterfacesNetworkCommands.CIC_CREATE,
 				uuid,
 				canvas_uuid,
+				inUse,
 				location.x,
 				location.y
 		);
