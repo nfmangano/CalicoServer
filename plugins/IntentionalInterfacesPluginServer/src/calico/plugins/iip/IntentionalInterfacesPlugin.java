@@ -73,6 +73,9 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 			case CLINK_MOVE_ANCHOR:
 				CLINK_MOVE_ANCHOR(p, c);
 				break;
+			case CLINK_LABEL:
+				CLINK_LABEL(p, c);
+				break;
 			case CLINK_DELETE:
 				CLINK_DELETE(p, c);
 				break;
@@ -192,6 +195,21 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 
 		CCanvasLinkController.getInstance().moveLinkAnchor(anchor_uuid, canvas_uuid, type, x, y);
 				
+		if (c != null)
+		{
+			ClientManager.send_except(c, p);
+		}
+	}
+	
+	private static void CLINK_LABEL(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CLINK_LABEL.verify(p);
+
+		long uuid = p.getLong();
+		CCanvasLink link = CCanvasLinkController.getInstance().getLinkById(uuid);
+		link.setLabel(p.getString());
+
 		if (c != null)
 		{
 			ClientManager.send_except(c, p);

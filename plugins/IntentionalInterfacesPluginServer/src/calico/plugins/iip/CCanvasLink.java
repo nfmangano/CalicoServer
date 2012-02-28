@@ -18,6 +18,8 @@ public class CCanvasLink
 
 	private CCanvasLinkAnchor anchorA;
 	private CCanvasLinkAnchor anchorB;
+	
+	private String label;
 
 	public CCanvasLink(long uuid, LinkType linkType, CCanvasLinkAnchor anchorA, CCanvasLinkAnchor anchorB)
 	{
@@ -25,6 +27,7 @@ public class CCanvasLink
 		this.linkType = linkType;
 		this.anchorA = anchorA;
 		this.anchorB = anchorB;
+		this.label = "";
 	}
 	
 	public long getId()
@@ -46,6 +49,16 @@ public class CCanvasLink
 	{
 		this.linkType = linkType;
 	}
+	
+	public String getLabel()
+	{
+		return label;
+	}
+	
+	public void setLabel(String label)
+	{
+		this.label = label;
+	}
 
 	public CalicoPacket getState()
 	{
@@ -64,7 +77,8 @@ public class CCanvasLink
 				anchorB.getType().ordinal(),
 				anchorB.getPoint().x,
 				anchorB.getPoint().y,
-				anchorB.getGroupId()
+				anchorB.getGroupId(),
+				label
 		);
 	}
 }
