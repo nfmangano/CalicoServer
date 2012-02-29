@@ -62,6 +62,8 @@ public class COptions
 	public static class canvas
 	{
 		public static int max_snapshots = 50;
+		public static long sleeptime = 10L; // Must be less than 5000
+		public static int max_sleep_count = (int) (5000 / sleeptime);
 	}
 	
 	public static class uuid

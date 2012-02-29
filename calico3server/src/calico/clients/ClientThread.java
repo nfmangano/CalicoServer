@@ -409,7 +409,20 @@ public class ClientThread extends Thread
 //					{
 						try
 						{
-							ProcessQueue.receive(com, this.client, packet);
+							//Only canvas specific commands are sent to a canvas thread. 
+							if (com >= 200 && com <= 3000 && currentCanvasUUID != 0l)
+							{
+								synchronized(CalicoServer.canvasThreads)
+								{
+									if (!CalicoServer.canvasThreads.containsKey(currentCanvasUUID))
+									{
+										CalicoServer.canvasThreads.put(currentCanvasUUID, new CanvasThread(currentCanvasUUID));
+									}
+									CalicoServer.canvasThreads.get(currentCanvasUUID).addPacketToQueue(com, this.client, packet);
+								}
+							}
+							else
+								ProcessQueue.receive(com, this.client, packet);
 						}
 						catch (Exception e)
 						{
