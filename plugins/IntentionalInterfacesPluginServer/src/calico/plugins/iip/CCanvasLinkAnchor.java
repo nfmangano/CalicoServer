@@ -4,25 +4,27 @@ import java.awt.Point;
 
 public class CCanvasLinkAnchor
 {
-	enum Type
+	public enum Type
 	{
-		CANVAS,
+		FLOATING,
 		INTENTION_CELL;
 	}
 
 	private long uuid;
 	private long canvas_uuid;
-	private long group_uuid;
 	private Type type;
 	private Point point;
+
+	private long group_uuid;
 
 	public CCanvasLinkAnchor(long uuid, long canvas_uuid)
 	{
 		this.uuid = uuid;
 		this.canvas_uuid = canvas_uuid;
-		this.group_uuid = 0L;
-		type = Type.CANVAS;
+		type = Type.FLOATING;
 		point = new Point();
+
+		this.group_uuid = 0L;
 	}
 
 	public CCanvasLinkAnchor(long uuid, long canvas_uuid, Type type, int x, int y)
@@ -34,7 +36,7 @@ public class CCanvasLinkAnchor
 		point.y = y;
 	}
 
-	public CCanvasLinkAnchor(long uuid, long canvas_uuid, long group_uuid, Type type, int x, int y)
+	public CCanvasLinkAnchor(long uuid, long canvas_uuid, Type type, int x, int y, long group_uuid)
 	{
 		this(uuid, canvas_uuid, type, x, y);
 
@@ -66,22 +68,10 @@ public class CCanvasLinkAnchor
 		return point;
 	}
 
-	public void move(long canvas_uuid, long group_uuid)
+	public void move(long canvas_uuid, Type type, int x, int y)
 	{
 		this.canvas_uuid = canvas_uuid;
-		this.group_uuid = group_uuid;
-		point = null;
-	}
-
-	public void move(int x, int y)
-	{
-		canvas_uuid = 0L;
-		group_uuid = 0L;
-
-		if (point == null)
-		{
-			point = new Point();
-		}
+		this.type = type;
 		point.x = x;
 		point.y = y;
 	}
