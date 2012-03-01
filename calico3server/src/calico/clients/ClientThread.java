@@ -418,7 +418,12 @@ public class ClientThread extends Thread
 									{
 										CalicoServer.canvasThreads.put(currentCanvasUUID, new CanvasThread(currentCanvasUUID));
 									}
-									CalicoServer.canvasThreads.get(currentCanvasUUID).addPacketToQueue(com, this.client, packet);
+									CanvasThread canvasThread = CalicoServer.canvasThreads.get(currentCanvasUUID);
+									//CalicoServer.canvasThreads.get(currentCanvasUUID).addPacketToQueue(com, this.client, packet);
+									synchronized(canvasThread)
+									{
+										canvasThread.addPacketToQueue(com, this.client, packet);
+									}
 								}
 							}
 							else
@@ -432,8 +437,15 @@ public class ClientThread extends Thread
 					this.lastHearbeat = System.currentTimeMillis();
 				}
 				
-				// CPU Limiter (This prevents the CPU from going bonkers)
-				Thread.sleep(COptions.client.threadopts.sleeptime);
+				try
+				{
+					// CPU Limiter (This prevents the CPU from going bonkers)
+					Thread.sleep(COptions.client.threadopts.sleeptime);
+				}
+				catch(InterruptedException e)
+				{
+					logger.warn("ClientThread " + clientid + " interrupted");
+				}
 				
 				
 				

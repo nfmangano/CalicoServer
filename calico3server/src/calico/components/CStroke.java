@@ -366,6 +366,7 @@ public class CStroke
 					continue;
 				
 				if(smallestArea > CGroupController.groups.get(groupList[i]).getArea() 
+					&& CGroupController.groups.get(groupList[i]).isPermanent()
 //					&& isContainedInPath(CGroupController.groups.get(groupList[i]).getPathReference())
 					&& CGroupController.groups.get(groupList[i]).canParentChild(this.uuid, (int)Geometry.getMidPoint2D(points).getX(), (int)Geometry.getMidPoint2D(points).getY())
 					)
