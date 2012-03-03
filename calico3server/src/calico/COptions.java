@@ -68,9 +68,9 @@ public class COptions
 	
 	public static class uuid
 	{
-		public static int block_size = 170;
-		public static int allocation_increment = 300;
-		public static int min_size = 300;
+		public static int block_size = 300;
+		public static int allocation_increment = 500;
+		public static int min_size = 500;
 	}
 	
 	public static class server

@@ -493,7 +493,7 @@ public class ProcessQueue
 			UUIDMappings.put(key, new Long(value));
 		}
 		
-		CGroupController.no_notify_copy(guuid, 0l, UUIDMappings);
+		CGroupController.no_notify_copy(guuid, 0l, UUIDMappings, true);
 		ClientManager.send_except(client,p);
 	}
 	

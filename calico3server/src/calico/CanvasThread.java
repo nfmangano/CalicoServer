@@ -38,8 +38,22 @@ public class CanvasThread extends Thread {
 			if (!packetQueue.isEmpty())
 			{
 				sleepCount = 0;
-				CanvasPacket packet = packetQueue.poll();
-				ProcessQueue.receive(packet.command, packet.client, packet.packet);
+				CanvasPacket packet = null;
+				try
+				{
+					packet = packetQueue.poll();
+				}
+				//Catch possible concurrency issue.
+				catch(Exception e)
+				{
+					e.printStackTrace();
+					packet = null;
+				}
+				if (packet != null)
+				{
+					
+					ProcessQueue.receive(packet.command, packet.client, packet.packet);
+				}
 			}
 			else
 			{

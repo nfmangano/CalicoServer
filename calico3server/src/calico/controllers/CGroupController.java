@@ -288,6 +288,7 @@ public class CGroupController
 			if (packets[i] == null)
 			{
 				logger.warn("WARNING!!! BatchReceive received a null packet, something likely went wrong!");
+				System.out.println("WARNING!!! BatchReceive received a null packet, something likely went wrong!");
 				continue;
 			}
 			
@@ -416,7 +417,7 @@ public class CGroupController
 		
 	}//no_notify_copy
 	
-	public static void no_notify_copy(final long uuid, final long new_puuid, Long2ReferenceArrayMap<Long> UUIDMappings)
+	public static void no_notify_copy(final long uuid, final long new_puuid, Long2ReferenceArrayMap<Long> UUIDMappings, boolean isRoot)
 	{
 		if(!exists(uuid)){return;}// old one doesnt exist
 		
@@ -431,7 +432,7 @@ public class CGroupController
 			if (UUIDMappings.containsKey(old_decoratorChildUUID))
 			{
 				long new_decoratorChildUUID = UUIDMappings.get(old_decoratorChildUUID).longValue();
-				no_notify_copy(old_decoratorChildUUID, new_uuid, UUIDMappings);
+				no_notify_copy(old_decoratorChildUUID, new_uuid, UUIDMappings, false);
 				
 				ArrayList<Long> subGroups = getSubGroups(old_decoratorChildUUID);
 				Long2ReferenceArrayMap<Long> subGroupMappings = new Long2ReferenceArrayMap<Long>();
@@ -492,14 +493,14 @@ public class CGroupController
 					if ((UUIDMappings.containsKey(grp_uuids[i])))
 					{
 						new_grp_uuids[i] = UUIDMappings.get(grp_uuids[i]).longValue();
-						no_notify_copy(grp_uuids[i], new_uuid, UUIDMappings);
+						no_notify_copy(grp_uuids[i], new_uuid, UUIDMappings, false);
 					}
 				}
 				tempNew.setChildGroups(new_grp_uuids);
 			}
 			
 			//Child arrow elements
-			long[] arrow_uuids = temp.getChildArrows();
+			/*long[] arrow_uuids = temp.getChildArrows();
 			long[] new_arw_uuids = new long[arrow_uuids.length];
 			
 			if(arrow_uuids.length>0)
@@ -527,8 +528,32 @@ public class CGroupController
 						}
 					}
 				}
-			}
+			}*/
 		}		
+		
+		if (isRoot)
+		{
+			long[] arrow_uuids  = CCanvasController.canvases.get(canvasuuid).getChildArrows();
+			for (int i = 0; i < arrow_uuids.length; i++)
+			{
+				CArrow tempArrow = CArrowController.arrows.get(arrow_uuids[i]);
+				if ((UUIDMappings.containsKey(tempArrow.getAnchorA().getUUID()) || tempArrow.getAnchorA().getUUID() == uuid) && 
+					(UUIDMappings.containsKey(tempArrow.getAnchorB().getUUID()) || tempArrow.getAnchorB().getUUID() == uuid))
+				{
+					long new_arrow_uuid = UUIDMappings.get(arrow_uuids[i]).longValue();
+					
+					AnchorPoint anchorA = tempArrow.getAnchorA().clone();
+					AnchorPoint anchorB = tempArrow.getAnchorB().clone();
+					
+					if (UUIDMappings.containsKey(anchorA.getUUID()) && UUIDMappings.containsKey(anchorB.getUUID()))
+					{
+						anchorA.setUUID(UUIDMappings.get(anchorA.getUUID()).longValue());
+						anchorB.setUUID(UUIDMappings.get(anchorB.getUUID()).longValue());
+						CArrowController.no_notify_start(new_arrow_uuid, canvasuuid, tempArrow.getArrowType(), tempArrow.getArrowColor(), anchorA, anchorB);
+					}
+				}
+			}
+		}
 	}//no_notify_copy
 	
 	private static ArrayList<Long> getSubGroups(long uuid)
@@ -1113,7 +1138,8 @@ public class CGroupController
 		{
 			for(int i=0;i<uuids.length;i++)
 			{
-				if( (CGroupController.groups.get(uuids[i]).getArea()< group_area) && CGroupController.groups.get(uuids[i]).getPathReference().contains(p))
+				if( (CGroupController.groups.get(uuids[i]).getArea()< group_area) && CGroupController.groups.get(uuids[i]).getPathReference().contains(p)
+						&& CGroupController.groups.get(uuids[i]).isPermanent())
 				{
 					group_area = CGroupController.groups.get(uuids[i]).getArea();
 					group_uuid = uuids[i];
