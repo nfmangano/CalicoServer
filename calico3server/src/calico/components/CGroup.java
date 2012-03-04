@@ -651,11 +651,11 @@ public class CGroup {
 		if (grouparr.length > 0) {
 			for (int i = 0; i < grouparr.length; i++) {
 				if (grouparr[i] != this.uuid
-						&& smallestGroupArea > CGroupController.groups.get(
-								grouparr[i]).getArea()
-						&& CGroupController.canParentChild(grouparr[i], this.uuid, x, y)) {
-					smallestGroupArea = CGroupController.groups
-							.get(grouparr[i]).getArea();
+						&& CGroupController.groups.get(grouparr[i]).isPermanent()
+						&& smallestGroupArea > CGroupController.groups.get(grouparr[i]).getArea()
+						&& CGroupController.canParentChild(grouparr[i], this.uuid, x, y)) 
+				{
+					smallestGroupArea = CGroupController.groups.get(grouparr[i]).getArea();
 					smallestGUID = grouparr[i];
 					logger.trace("GROUP " + this.uuid + " CAN PARENT TO "
 							+ grouparr[i]);

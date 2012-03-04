@@ -112,6 +112,7 @@ public class ProcessQueue
 				case NetworkCommand.GROUP_SCALE:GROUP_SCALE(pdata,client);break;
 				case NetworkCommand.GROUP_CREATE_TEXT_GROUP:GROUP_CREATE_TEXT_GROUP(pdata,client);break;
 				case NetworkCommand.GROUP_MAKE_RECTANGLE:GROUP_MAKE_RECTANGLE(pdata,client);break;
+				case NetworkCommand.GROUP_COPY_WITH_MAPPINGS:GROUP_COPY_WITH_MAPPINGS(pdata,client);break;
 				
 
 				case NetworkCommand.ARROW_CREATE:ARROW_CREATE(pdata,client);break;
@@ -320,6 +321,10 @@ public class ProcessQueue
 			ClientManager.send(c, CalicoPacket.getPacket(NetworkCommand.CANVAS_CLEAR_FOR_SC, uuid));
 			ClientManager.send(c, CCanvasController.canvases.get(uuid).getUpdatePackets());
 			ClientManager.send(c, CalicoPacket.getPacket(NetworkCommand.CANVAS_SC_FINISH, uuid));
+			if (ClientManager.out_of_sync_clients.contains(c.getClientID()))
+			{
+				ClientManager.out_of_sync_clients.remove(c.getClientID());
+			}
 		}
 	}
 	
@@ -475,6 +480,23 @@ public class ProcessQueue
 		CCanvasController.snapshot(new_canvasuid);
 	}
 	
+	public static void GROUP_COPY_WITH_MAPPINGS(CalicoPacket p, Client client)
+	{
+		long guuid = p.getLong();
+		
+		Long2ReferenceArrayMap<Long> UUIDMappings = new Long2ReferenceArrayMap<Long>();
+		int mappingSize = p.getInt();
+		for (int i = 0; i < mappingSize; i++)
+		{
+			long key = p.getLong();
+			long value = p.getLong();
+			UUIDMappings.put(key, new Long(value));
+		}
+		
+		CGroupController.no_notify_copy(guuid, 0l, UUIDMappings, true);
+		ClientManager.send_except(client,p);
+	}
+	
 	public static void GROUP_SET_TEXT(CalicoPacket p, Client client)
 	{
 		long uuid = p.getLong();
@@ -627,7 +649,7 @@ public class ProcessQueue
 		CGroupController.groups.get(uuid).primative_scale(scaleX, scaleY);
 		CGroupController.groups.get(uuid).setText(text);
 		
-		CGroupController.no_notify_finish(uuid, captureChildren);
+		CGroupController.no_notify_finish(uuid, captureChildren, false);
 
 		if(client!=null)
 		{
@@ -818,10 +840,19 @@ public class ProcessQueue
 			&& !ClientConsistencyListener.ignoreConsistencyCheck
 			&& CCanvasController.canvases.get(canvas).get_signature() != sig)
 		{
+			ClientManager.out_of_sync_clients.add(client.getClientID());
 			ClientManager.send(client, CalicoPacket.command(NetworkCommand.CONSISTENCY_FAILED));
 			if (COptions.debug.consistency_debug_enabled)
 			{
 				ClientManager.send(client, CCanvasController.getCanvasConsistencyDebugPacket(canvas));
+			}
+		}
+		else
+		{
+			if (ClientManager.out_of_sync_clients.contains(client.getClientID()))
+			{
+				ClientManager.send(client, CalicoPacket.command(NetworkCommand.CONSISTENCY_RESYNCED));
+				ClientManager.out_of_sync_clients.remove(client.getClientID());
 			}
 		}
 	}
@@ -1068,7 +1099,6 @@ public class ProcessQueue
 			y[i] = p.getInt();
 		}
 		CStrokeController.no_notify_batch_append(uuid, x, y);
-		CStrokeController.no_notify_finish(uuid);
 		
 		double rotation;
 		double scaleX;
@@ -1081,6 +1111,8 @@ public class ProcessQueue
 		
 		CStrokeController.strokes.get(uuid).primative_rotate(rotation);
 		CStrokeController.strokes.get(uuid).primative_scale(scaleX, scaleY);
+		
+		CStrokeController.no_notify_finish(uuid);
 
 		ClientManager.send_except(client, p);
 		if (client != null)
