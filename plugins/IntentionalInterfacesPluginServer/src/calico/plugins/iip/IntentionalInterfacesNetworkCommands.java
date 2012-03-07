@@ -15,7 +15,8 @@ public class IntentionalInterfacesNetworkCommands
 	public enum Command
 	{
 		/**
-		 * Create a new CIntentionCell
+		 * Create a new CIntentionCell. This command is not supported by the server, since all CIC's are created here on
+		 * IIP plugin init.
 		 */
 		CIC_CREATE,
 		/**
