@@ -8,13 +8,15 @@ public class IntentionalInterfacesNetworkCommands
 	public static final int CIC_MOVE = Command.CIC_MOVE.id;
 	public static final int CLINK_CREATE = Command.CLINK_CREATE.id;
 	public static final int CLINK_RETYPE = Command.CLINK_RETYPE.id;
-	public static final int CLINK_MOVE = Command.CLINK_MOVE.id;
+	public static final int CLINK_MOVE_ANCHOR = Command.CLINK_MOVE_ANCHOR.id;
+	public static final int CLINK_LABEL = Command.CLINK_LABEL.id;
 	public static final int CLINK_DELETE = Command.CLINK_DELETE.id;
 
 	public enum Command
 	{
 		/**
-		 * Create a new CIntentionCell
+		 * Create a new CIntentionCell. This command is not supported by the server, since all CIC's are created here on
+		 * IIP plugin init.
 		 */
 		CIC_CREATE,
 		/**
@@ -36,7 +38,11 @@ public class IntentionalInterfacesNetworkCommands
 		/**
 		 * Move one enpoint of a CCanvasLink
 		 */
-		CLINK_MOVE,
+		CLINK_MOVE_ANCHOR,
+		/**
+		 * Set the label of a CCanvasLink
+		 */
+		CLINK_LABEL,
 		/**
 		 * Delete a CCanvasLink
 		 */

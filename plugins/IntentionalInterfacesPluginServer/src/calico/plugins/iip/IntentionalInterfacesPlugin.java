@@ -38,12 +38,10 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 			// CalicoEventHandler.PASSIVE_LISTENER);
 			// }
 		}
-		 
+
 		for (CCanvas canvas : CCanvasController.canvases.values())
-		{ 
-			int x = canvas.getGridX() * 100;
-			int y = canvas.getGridY() * 100;
-			CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvas.getUUID(), x, y);
+		{
+			CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvas.getUUID(), false);
 			CIntentionCellController.getInstance().addCell(cell);
 		}
 
@@ -56,8 +54,8 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		switch (IntentionalInterfacesNetworkCommands.Command.forId(event))
 		{
 			case CIC_CREATE:
-				CIC_CREATE(p, c);
-				break;
+				throw new UnsupportedOperationException(
+						"A client has attempted to dynamically construct a CIntentionCell. The current policy only allows the server to create CIC's on IIP plugin init.");
 			case CIC_MOVE:
 				CIC_MOVE(p, c);
 				break;
@@ -70,31 +68,15 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 			case CLINK_RETYPE:
 				CLINK_RETYPE(p, c);
 				break;
-			case CLINK_MOVE:
-				CLINK_MOVE(p, c);
+			case CLINK_MOVE_ANCHOR:
+				CLINK_MOVE_ANCHOR(p, c);
+				break;
+			case CLINK_LABEL:
+				CLINK_LABEL(p, c);
 				break;
 			case CLINK_DELETE:
 				CLINK_DELETE(p, c);
 				break;
-		}
-	}
-
-	private static void CIC_CREATE(CalicoPacket p, Client c)
-	{
-		p.rewind();
-		IntentionalInterfacesNetworkCommands.Command.CIC_CREATE.verify(p);
-
-		long uuid = p.getLong();
-		long canvas_uuid = p.getLong();
-		int x = p.getInt();
-		int y = p.getInt();
-
-		CIntentionCell cell = new CIntentionCell(uuid, canvas_uuid, x, y);
-		CIntentionCellController.getInstance().addCell(cell);
-
-		if (c != null)
-		{
-			ClientManager.send_except(c, p);
 		}
 	}
 
@@ -105,6 +87,8 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 
 		long uuid = p.getLong();
 		CIntentionCell cell = CIntentionCellController.getInstance().getCellById(uuid);
+
+		cell.setInUse(p.getBoolean());
 
 		int x = p.getInt();
 		int y = p.getInt();
@@ -134,11 +118,11 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	{
 		long uuid = p.getLong();
 		long canvas_uuid = p.getLong();
-		long group_uuid = p.getLong();
 		CCanvasLinkAnchor.Type type = CCanvasLinkAnchor.Type.values()[p.getInt()];
 		int x = p.getInt();
 		int y = p.getInt();
-		return new CCanvasLinkAnchor(uuid, canvas_uuid, group_uuid, type, x, y);
+		long group_uuid = p.getLong();
+		return new CCanvasLinkAnchor(uuid, canvas_uuid, type, x, y, group_uuid);
 	}
 
 	private static void CLINK_CREATE(CalicoPacket p, Client c)
@@ -176,42 +160,33 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		}
 	}
 
-	private static void CLINK_MOVE(CalicoPacket p, Client c)
+	private static void CLINK_MOVE_ANCHOR(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.Command.CLINK_MOVE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CLINK_MOVE_ANCHOR.verify(p);
 
-		long uuid = p.getLong();
-		CCanvasLink link = CCanvasLinkController.getInstance().getLinkById(uuid);
-
-		boolean isEndpointA = p.getBoolean();
+		long anchor_uuid = p.getLong();
 		long canvas_uuid = p.getLong();
-		long group_uuid = p.getLong();
+		CCanvasLinkAnchor.Type type = CCanvasLinkAnchor.Type.values()[p.getInt()];
 		int x = p.getInt();
 		int y = p.getInt();
 
-		if (isEndpointA)
+		CCanvasLinkController.getInstance().moveLinkAnchor(anchor_uuid, canvas_uuid, type, x, y);
+
+		if (c != null)
 		{
-			if (canvas_uuid == 0L)
-			{
-				link.getAnchorA().move(x, y);
-			}
-			else
-			{
-				link.getAnchorA().move(canvas_uuid, group_uuid);
-			}
+			ClientManager.send_except(c, p);
 		}
-		else
-		{
-			if (canvas_uuid == 0L)
-			{
-				link.getAnchorB().move(x, y);
-			}
-			else
-			{
-				link.getAnchorB().move(canvas_uuid, group_uuid);
-			}
-		}
+	}
+
+	private static void CLINK_LABEL(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CLINK_LABEL.verify(p);
+
+		long uuid = p.getLong();
+		CCanvasLink link = CCanvasLinkController.getInstance().getLinkById(uuid);
+		link.setLabel(p.getString());
 
 		if (c != null)
 		{
