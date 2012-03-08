@@ -38,12 +38,10 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 			// CalicoEventHandler.PASSIVE_LISTENER);
 			// }
 		}
-		 
+
 		for (CCanvas canvas : CCanvasController.canvases.values())
-		{ 
-			int x = canvas.getGridX() * 100;
-			int y = canvas.getGridY() * 100;
-			CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvas.getUUID(), false, x, y);
+		{
+			CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvas.getUUID(), false);
 			CIntentionCellController.getInstance().addCell(cell);
 		}
 
@@ -56,8 +54,8 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		switch (IntentionalInterfacesNetworkCommands.Command.forId(event))
 		{
 			case CIC_CREATE:
-				CIC_CREATE(p, c);
-				break;
+				throw new UnsupportedOperationException(
+						"A client has attempted to dynamically construct a CIntentionCell. The current policy only allows the server to create CIC's on IIP plugin init.");
 			case CIC_MOVE:
 				CIC_MOVE(p, c);
 				break;
@@ -82,26 +80,6 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		}
 	}
 
-	private static void CIC_CREATE(CalicoPacket p, Client c)
-	{
-		p.rewind();
-		IntentionalInterfacesNetworkCommands.Command.CIC_CREATE.verify(p);
-
-		long uuid = p.getLong();
-		long canvas_uuid = p.getLong();
-		boolean inUse = p.getBoolean();
-		int x = p.getInt();
-		int y = p.getInt();
-
-		CIntentionCell cell = new CIntentionCell(uuid, canvas_uuid, inUse, x, y);
-		CIntentionCellController.getInstance().addCell(cell);
-
-		if (c != null)
-		{
-			ClientManager.send_except(c, p);
-		}
-	}
-
 	private static void CIC_MOVE(CalicoPacket p, Client c)
 	{
 		p.rewind();
@@ -111,7 +89,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		CIntentionCell cell = CIntentionCellController.getInstance().getCellById(uuid);
 
 		cell.setInUse(p.getBoolean());
-		
+
 		int x = p.getInt();
 		int y = p.getInt();
 		cell.setLocation(x, y);
@@ -194,13 +172,13 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		int y = p.getInt();
 
 		CCanvasLinkController.getInstance().moveLinkAnchor(anchor_uuid, canvas_uuid, type, x, y);
-				
+
 		if (c != null)
 		{
 			ClientManager.send_except(c, p);
 		}
 	}
-	
+
 	private static void CLINK_LABEL(CalicoPacket p, Client c)
 	{
 		p.rewind();
