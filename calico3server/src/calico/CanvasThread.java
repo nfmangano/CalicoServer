@@ -28,7 +28,10 @@ public class CanvasThread extends Thread {
 	
 	public void addPacketToQueue(int command,Client client,CalicoPacket packet)
 	{
-		packetQueue.add(new CanvasPacket(command, client, packet));
+		synchronized(packetQueue)
+		{
+			packetQueue.add(new CanvasPacket(command, client, packet));
+		}
 	}
 	
 	public void run()
@@ -48,6 +51,9 @@ public class CanvasThread extends Thread {
 				{
 					e.printStackTrace();
 					packet = null;
+					//If there is an error, we kill the thread, otherwise there may be an infinite loop of errors.
+					//Of course this means none of the packets in the queue will be processed, but it is better than infinite loop.
+					return;
 				}
 				if (packet != null)
 				{
