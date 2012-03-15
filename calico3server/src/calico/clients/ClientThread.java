@@ -418,12 +418,7 @@ public class ClientThread extends Thread
 									{
 										CalicoServer.canvasThreads.put(currentCanvasUUID, new CanvasThread(currentCanvasUUID));
 									}
-									CanvasThread canvasThread = CalicoServer.canvasThreads.get(currentCanvasUUID);
-									//CalicoServer.canvasThreads.get(currentCanvasUUID).addPacketToQueue(com, this.client, packet);
-									synchronized(canvasThread)
-									{
-										canvasThread.addPacketToQueue(com, this.client, packet);
-									}
+									CalicoServer.canvasThreads.get(currentCanvasUUID).addPacketToQueue(com, this.client, packet);
 								}
 							}
 							else
