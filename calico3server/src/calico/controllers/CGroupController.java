@@ -1186,7 +1186,8 @@ public class CGroupController
 	}
 	
 	public static void no_notify_move_start(long guuid) {
-		set_parent(guuid, 0);
+		no_notify_set_parent(guuid, 0);
+		//set_parent(guuid, 0);
 	}
 	
 	public static boolean group_is_ancestor_of(long ancestor, long group)

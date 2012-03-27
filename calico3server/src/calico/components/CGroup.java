@@ -637,7 +637,7 @@ public class CGroup {
 //		if (sendPackets) {
 //			CGroupController.set_parent(this.uuid, smallestGUID);
 //		} else {
-//			CGroupController.no_notify_set_parent(this.uuid, smallestGUID);
+			CGroupController.no_notify_set_parent(this.uuid, smallestGUID);
 //		}
 
 	}

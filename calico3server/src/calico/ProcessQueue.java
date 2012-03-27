@@ -381,6 +381,8 @@ public class ProcessQueue
 		long guuid = p.getLong();
 		
 		CGroupController.no_notify_move_start(guuid);
+		
+		ClientManager.send_except(client, p);
 	}
 	public static void GROUP_MOVE_END(CalicoPacket p, Client client)
 	{
@@ -402,7 +404,8 @@ public class ProcessQueue
 		else
 			return;
 		
-		CGroupController.drop(uuid);
+		CGroupController.no_notify_drop(uuid, true);
+		//CGroupController.drop(uuid);
 		
 		if(client!=null)
 		{
