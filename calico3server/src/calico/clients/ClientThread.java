@@ -410,7 +410,8 @@ public class ClientThread extends Thread
 						try
 						{
 							//Only canvas specific commands are sent to a canvas thread. 
-							if (com >= 200 && com <= 3000 && currentCanvasUUID != 0l && com != 1200)
+							//if (com >= 200 && com <= 3000 && currentCanvasUUID != 0l && com != 1200)
+							if (currentCanvasUUID != 0l && CalicoServer.canvasCommands.containsKey(com))
 							{
 								synchronized(CalicoServer.canvasThreads)
 								{

@@ -15,12 +15,15 @@ import java.awt.*;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.NetworkInterface;
 import java.net.URL;
 import java.util.*;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.apache.log4j.*;
 import org.shodor.util11.PolygonUtils;
@@ -1048,23 +1051,50 @@ public class CGroupController
 //			imageURL = CImageController.getImageURL(uuid);
 			URL url= new URL(imageURL);
 			Image image = null;
-			try
+			/*try
 			{
 				image = ImageIO.read(new File(CImageController.getImagePath(uuid)));
 			}
 			catch (IOException e)
 			{
 				e.printStackTrace();
+			}*/
+			
+			int width = -1;
+			int height = -1;
+			FileInputStream fis = new FileInputStream(CImageController.getImagePath(uuid));
+			ImageInputStream in = ImageIO.createImageInputStream(fis);
+			try {
+			        final Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
+			        if (readers.hasNext()) {
+			                ImageReader reader = (ImageReader) readers.next();
+			                try {
+			                        reader.setInput(in);
+			                        width = reader.getWidth(0);
+			                        height = reader.getHeight(0);
+			                } finally {
+			                        reader.dispose();
+			                }
+			        }
+			} finally {
+			        if (in != null) in.close();
+			        if (fis != null) fis.close();
+			        if (width == -1 && height == -1)
+			        {
+			        	System.out.println("Could not retrieve image dimensions");
+			        	throw new Exception();
+			        }
 			}
+
 //			Image image = Toolkit.getDefaultToolkit().createImage(url);
 //			Image image = Toolkit.getDefaultToolkit().createImage(imageURL);
-			
 			//this will run once we have the image ready
 //			image.getWidth(CImageController.getImageInitializer(uuid, cuuid, CImageController.getImageURL(uuid), x, y));
-			CGroupController.createImageGroup(uuid, cuuid, 0L, imageURL, x, y, image.getWidth(null), image.getHeight(null));		
+			CGroupController.createImageGroup(uuid, cuuid, 0L, imageURL, x, y, width, height);
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 	}
@@ -1155,10 +1185,10 @@ public class CGroupController
 		CGroupController.no_notify_start(uuid, cuuid, 0l, true);
 		CGroupController.no_notify_append(uuid, x, y);
 		CGroupController.no_notify_set_text(uuid, text);
-		CGroupController.no_notify_finish(uuid, false);
-		CGroupController.no_notify_set_permanent(uuid, true);
+		CGroupController.no_notify_finish(uuid, false, false);
+		//CGroupController.no_notify_set_permanent(uuid, true);
 		Rectangle rect = groups.get(uuid).getBoundsOfContents();
-		CGroupController.makeRectangle(uuid, rect.x, rect.y, rect.width, rect.height);
+		CGroupController.no_notify_make_rectangle(uuid, rect.x, rect.y, rect.width, rect.height);
 		CGroupController.recheck_parent(uuid);
 	}
 	
