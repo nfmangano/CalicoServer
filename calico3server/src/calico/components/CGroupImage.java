@@ -59,14 +59,16 @@ public class CGroupImage extends CGroup {
 		
 		if (!CImageController.imageExists(uuid))
 			CImageController.download_image_no_exception(uuid, imgURL);		
-		try
+		
+		//There is no reason to load the image on the server.
+		/*try
 		{
 			image = ImageIO.read(new File(CImageController.getImagePath(uuid)));
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
-		}
+		}*/
 //		image = Toolkit.getDefaultToolkit().createImage(CImageController.getImagePath(uuid));
 
 	}

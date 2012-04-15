@@ -36,6 +36,7 @@ import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.Selectors;
 import org.apache.log4j.*;
 
+import it.unimi.dsi.fastutil.ints.Int2ReferenceAVLTreeMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.*;
 
@@ -58,6 +59,7 @@ public class CalicoServer
 
 	public static Object2ReferenceOpenHashMap<Client,ClientThread> clientThreads = new Object2ReferenceOpenHashMap<Client,ClientThread>();
 	public static Long2ReferenceAVLTreeMap<CanvasThread> canvasThreads = new Long2ReferenceAVLTreeMap<CanvasThread>();
+	public static Int2ReferenceAVLTreeMap<Object> canvasCommands = CanvasThread.getCanvasCommands();
 	
 	public static String[] args = null;
 
