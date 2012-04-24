@@ -2,11 +2,14 @@ package calico.controllers;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
 
+import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.image.ImageObserver;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -15,6 +18,11 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.apache.commons.vfs.*;
 import org.apache.log4j.Logger;
@@ -147,6 +155,45 @@ public class CImageController
 		int mid= url.lastIndexOf(".");
 	    String fileExt=url.substring(mid+1,url.length());
 		return fileExt;
+	}
+	
+	public static Dimension getImageSize(String image)
+	{
+		int width = -1; 
+		int height = -1;
+		FileInputStream fis;
+		try {
+			fis = new FileInputStream(image);
+		
+			ImageInputStream in = ImageIO.createImageInputStream(fis);
+			try {
+			        final Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
+			        if (readers.hasNext()) {
+			                ImageReader reader = (ImageReader) readers.next();
+			                try {
+			                        reader.setInput(in);
+			                        width = reader.getWidth(0);
+			                        height = reader.getHeight(0);
+			                } finally {
+			                        reader.dispose();
+			                }
+			        }
+			} finally {
+			        if (in != null) in.close();
+			        if (fis != null) fis.close();
+			        if (width == -1 && height == -1)
+			        {
+			        	System.out.println("Could not retrieve image dimensions");
+			        	throw new Exception();
+			        }
+			}
+		
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return new Dimension(width, height);
 	}
 	
 	/**

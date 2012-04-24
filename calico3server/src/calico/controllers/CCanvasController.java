@@ -264,7 +264,7 @@ public class CCanvasController
 			{
 				CGroup temp = CGroupController.groups.get(groups[i]);
 				
-				if(temp.getParentUUID()==0l){
+				if(temp.getParentUUID()==0l && temp.isPermanent()){
 					long new_uuid = UUIDAllocator.getUUID();
 					groupMappings.put(groups[i], new Long(new_uuid));
 					groupMappings.putAll(CGroupController.copy(groups[i], new_uuid, cuidTo, 0, 0,true));

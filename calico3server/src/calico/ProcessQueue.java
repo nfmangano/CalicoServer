@@ -627,7 +627,7 @@ public class ProcessQueue
 		int y = 0;
 		
 		CGroupController.no_notify_start(uuid, cuid, puid, isperm);
-		
+
 		for(int i=0;i<count;i++)
 		{
 			x = p.getInt();
@@ -659,10 +659,14 @@ public class ProcessQueue
 			ClientManager.send_except(client, p);
 			if (isperm)
 				CCanvasController.snapshot_group(uuid);
+			else
+			{
+				ClientManager.getClientThread(client.getClientID()).setTempScrapUUID(uuid);
+			}
 		}
 		
-		if (captureChildren)
-			ClientManager.send( CGroupController.groups.get(uuid).getParentingUpdatePackets() );
+		//if (captureChildren)
+			//ClientManager.send( CGroupController.groups.get(uuid).getParentingUpdatePackets() );
 		
 	}
 	
@@ -713,7 +717,7 @@ public class ProcessQueue
 		CGroupController.no_notify_create_image_group(uuid, cuid, puid, url, imgX, imgY, imgW, imgH);
 		CGroupController.groups.get(uuid).primative_rotate(rotation);
 		CGroupController.groups.get(uuid).primative_scale(scaleX, scaleY);
-		
+
 		if (client != null)
 		{
 			ClientManager.send_except(client, p);
@@ -728,8 +732,9 @@ public class ProcessQueue
 		int x = p.getInt();
 		int y = p.getInt();
 		
-		CGroupController.createImageGroup(uuid, cuuid, imageURL, x, y);
-		
+		if (!CGroupController.createImageGroup(uuid, cuuid, imageURL, x, y))
+			ClientManager.send(client, CalicoPacket.getPacket(NetworkCommand.GROUP_IMAGE_LOAD,0l));
+
 		//Don't broadcast it to the clients... the server will download the image to have it locally and then broadcast the link to that.
 	}
 	
@@ -1311,11 +1316,12 @@ public class ProcessQueue
 		int byteArraySize = p.getInt();
 		byte[] bytes = new byte[byteArraySize];
 		bytes = p.getByteArray(byteArraySize);
-		
+
 		try
 		{
 			CImageController.save_to_disk(uuid, name, bytes);
-			CGroupController.createImageGroup(uuid, cuuid, CImageController.getImageURL(uuid), x, y);
+			if (!CGroupController.createImageGroup(uuid, cuuid, CImageController.getImageURL(uuid), x, y))
+				ClientManager.send(client, CalicoPacket.getPacket(NetworkCommand.GROUP_IMAGE_LOAD,0l));
 		}
 		catch (Exception e)
 		{
