@@ -1049,8 +1049,8 @@ public class CGroupController
 			
 			CImageController.download_image(uuid, imageURL);
 //			imageURL = CImageController.getImageURL(uuid);
-			URL url= new URL(imageURL);
-			Image image = null;
+			//URL url= new URL(imageURL);
+			//Image image = null;
 			/*try
 			{
 				image = ImageIO.read(new File(CImageController.getImagePath(uuid)));
