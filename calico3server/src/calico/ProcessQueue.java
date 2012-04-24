@@ -711,7 +711,7 @@ public class ProcessQueue
 			{
 				e.printStackTrace();
 			}
-			url = CImageController.getImageURL(uuid);
+			url = CImageController.getImageURL(uuid, true);
 		}
 		
 		CGroupController.no_notify_create_image_group(uuid, cuid, puid, url, imgX, imgY, imgW, imgH);
@@ -1320,7 +1320,7 @@ public class ProcessQueue
 		try
 		{
 			CImageController.save_to_disk(uuid, name, bytes);
-			if (!CGroupController.createImageGroup(uuid, cuuid, CImageController.getImageURL(uuid), x, y))
+			if (!CGroupController.createImageGroup(uuid, cuuid, CImageController.getImageURL(uuid, true), x, y))
 				ClientManager.send(client, CalicoPacket.getPacket(NetworkCommand.GROUP_IMAGE_LOAD,0l));
 		}
 		catch (Exception e)
