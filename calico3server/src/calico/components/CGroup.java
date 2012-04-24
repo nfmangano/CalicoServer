@@ -541,12 +541,15 @@ public class CGroup {
 		GeneralPath containerGroup = getPathReference();
 		if (containerGroup == null)
 			return false;
+		int totalNotContained = 0;
 		for(int i=0;i<polygon.npoints;i++)
 		{
 			if (!containerGroup.contains(new Point(polygon.xpoints[i], polygon.ypoints[i])))
 			{
-				return false;
+				totalNotContained++;
 			}
+			if (totalNotContained > polygon.npoints*.1)
+				return false;
 		}
 		return true;
 	}
@@ -652,6 +655,7 @@ public class CGroup {
 			for (int i = 0; i < grouparr.length; i++) {
 				if (grouparr[i] != this.uuid
 						&& CGroupController.groups.get(grouparr[i]).isPermanent()
+						&& this.isPermanent()
 						&& smallestGroupArea > CGroupController.groups.get(grouparr[i]).getArea()
 						&& CGroupController.canParentChild(grouparr[i], this.uuid, x, y)) 
 				{
@@ -704,6 +708,10 @@ public class CGroup {
 			 //the parent must completely contain the child
 			 if (!CGroupController.group_contains_group(this.uuid, child))
 				 return false;
+			//The child should not be a temp scrap
+			 if (!CGroupController.groups.get(child).isPermanent())
+				 return false;
+			 
 			child_parent = CGroupController.groups.get(child).getParentUUID();
 		}
 		
@@ -842,11 +850,10 @@ public class CGroup {
 		if (grouparr.length > 0) {
 			for (int i = 0; i < grouparr.length; i++) {
 				if (CGroupController.canParentChild(this.uuid, grouparr[i], x, y)
-						&& CGroupController.group_contains_group(this.uuid,
-								grouparr[i])) {
+						&& CGroupController.group_contains_group(this.uuid, grouparr[i])) 
+				{
 					// it is contained in the group, so set it's parent
-					CGroupController.no_notify_set_parent(grouparr[i],
-							this.uuid);
+					CGroupController.no_notify_set_parent(grouparr[i], this.uuid);
 				}
 			}
 		}
@@ -858,17 +865,18 @@ public class CGroup {
 				// something else
 				// then we check to see if it contained in this group
 				if (CGroupController.canParentChild(this.uuid, bgearr[i], x, y)
-						&& CGroupController.group_contains_stroke(this.uuid,
-								bgearr[i])) {
+						&& CGroupController.group_contains_stroke(this.uuid, bgearr[i])) 
+				{
 					// it is contained in the group, so set it's parent
 					// CStrokeController.no_notify_set_parent(bgearr[i],
 					// this.uuid);
 					// changed by Nick
 					CStrokeController.no_notify_set_parent(bgearr[i], this.uuid);
-				} else if (/*CStrokeController.strokes.get(bgearr[i])
+				} 
+				else if (/*CStrokeController.strokes.get(bgearr[i])
 						.getParentUUID() != 0L
-						&&*/ CGroupController.group_contains_stroke(this.uuid,
-								bgearr[i])) {
+						&&*/ CGroupController.group_contains_stroke(this.uuid, bgearr[i])) 
+				{
 					// Check to see if the current parent group is larger than
 					// this one.
 					long pguid = CStrokeController.strokes.get(bgearr[i])

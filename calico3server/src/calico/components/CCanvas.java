@@ -314,8 +314,8 @@ public class CCanvas
 			// Send Group Info
 			for(int i=0;i<grouparr.length;i++)
 			{
-				if (!CGroupController.groups.get(grouparr[i]).isPermanent)
-					continue;
+				//if (!CGroupController.groups.get(grouparr[i]).isPermanent)
+				//	continue;
 				// we only want to load root groups
 				if(true /*CGroupController.groups.get(grouparr[i]).getParentUUID()==0L*/)
 				{
@@ -340,8 +340,8 @@ public class CCanvas
 			// Parents
 			for(int i=0;i<grouparr.length;i++)
 			{
-				if (!CGroupController.groups.get(grouparr[i]).isPermanent)
-					continue;
+				//if (!CGroupController.groups.get(grouparr[i]).isPermanent)
+				//	continue;
 				
 				CalicoPacket[] packets = CGroupController.groups.get(grouparr[i]).getParentingUpdatePackets();
 				for(int x=0;x<packets.length;x++)
