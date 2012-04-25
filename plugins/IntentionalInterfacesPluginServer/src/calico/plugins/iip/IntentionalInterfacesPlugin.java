@@ -30,20 +30,20 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		{
 			System.out.println("IntentionalInterfacesPlugin: attempting to listen for " + event.intValue());
 			CalicoEventHandler.getInstance().addListener(event.intValue(), this, CalicoEventHandler.ACTION_PERFORMER_LISTENER);
-			// LongSet canvasKeys = CCanvasController.canvases.keySet();
-			// for (Long canvaskey : canvasKeys)
-			// {
-			// CalicoEventHandler.getInstance().addListener(event.intValue(),
-			// CCanvasController.canvases.get(canvaskey.longValue()),
-			// CalicoEventHandler.PASSIVE_LISTENER);
-			// }
 		}
 
+		// create the intention cells
 		for (CCanvas canvas : CCanvasController.canvases.values())
 		{
-			CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvas.getUUID(), false);
+			CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvas, false);
 			CIntentionCellController.getInstance().addCell(cell);
 		}
+
+		// create the intention types
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "New Perspective");
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "New Alternative");
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "New Idea");
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Design Inside");
 
 		CalicoPluginManager.registerCalicoStateExtension(this);
 	}
@@ -59,8 +59,29 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 			case CIC_MOVE:
 				CIC_MOVE(p, c);
 				break;
+			case CIC_SET_TITLE:
+				CIC_SET_TITLE(p, c);
+				break;
+			case CIC_TAG:
+				CIC_TAG(p, c);
+				break;
+			case CIC_UNTAG:
+				CIC_UNTAG(p, c);
+				break;
 			case CIC_DELETE:
 				CIC_DELETE(p, c);
+				break;
+			case CIT_CREATE:
+				CIT_CREATE(p, c);
+				break;
+			case CIT_RENAME:
+				CIT_RENAME(p, c);
+				break;
+			case CIT_SET_COLOR:
+				CIT_SET_COLOR(p, c);
+				break;
+			case CIT_DELETE:
+				CIT_DELETE(p, c);
 				break;
 			case CLINK_CREATE:
 				CLINK_CREATE(p, c);
@@ -100,6 +121,53 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		}
 	}
 
+	private static void CIC_SET_TITLE(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIC_SET_TITLE.verify(p);
+
+		long uuid = p.getLong();
+		CIntentionCell cell = CIntentionCellController.getInstance().getCellById(uuid);
+
+		cell.setTitle(p.getString());
+
+		if (c != null)
+		{
+			ClientManager.send_except(c, p);
+		}
+	}
+
+	private static void CIC_TAG(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIC_TAG.verify(p);
+
+		long uuid = p.getLong();
+		long typeId = p.getLong();
+
+		CIntentionCell cell = CIntentionCellController.getInstance().getCellById(uuid);
+		cell.addIntentionType(typeId);
+
+		if (c != null)
+		{
+			ClientManager.send_except(c, p);
+		}
+	}
+
+	private static void CIC_UNTAG(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIC_UNTAG.verify(p);
+
+		long uuid = p.getLong();
+		long typeId = p.getLong();
+
+		CIntentionCell cell = CIntentionCellController.getInstance().getCellById(uuid);
+		cell.removeIntentionType(typeId);
+
+		ClientManager.send_except(c, p);
+	}
+
 	private static void CIC_DELETE(CalicoPacket p, Client c)
 	{
 		p.rewind();
@@ -107,6 +175,66 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 
 		long uuid = p.getLong();
 		CIntentionCellController.getInstance().removeCellById(uuid);
+
+		if (c != null)
+		{
+			ClientManager.send_except(c, p);
+		}
+	}
+
+	private static void CIT_CREATE(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIC_CREATE.verify(p);
+
+		long uuid = p.getLong();
+		String name = p.getString();
+
+		CIntentionType type = CIntentionCellController.getInstance().createIntentionType(uuid, name);
+
+		p.putInt(type.getColorIndex());
+
+		ClientManager.send(p);
+	}
+
+	private static void CIT_RENAME(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIT_RENAME.verify(p);
+
+		long uuid = p.getLong();
+		String name = p.getString();
+		CIntentionCellController.getInstance().renameIntentionType(uuid, name);
+
+		if (c != null)
+		{
+			ClientManager.send_except(c, p);
+		}
+	}
+
+	private static void CIT_SET_COLOR(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIT_SET_COLOR.verify(p);
+
+		long uuid = p.getLong();
+		int color = p.getInt();
+		CIntentionCellController.getInstance().setIntentionTypeColor(uuid, color);
+
+		if (c != null)
+		{
+			ClientManager.send_except(c, p);
+		}
+	}
+
+	private static void CIT_DELETE(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIC_DELETE.verify(p);
+
+		long uuid = p.getLong();
+
+		CIntentionCellController.getInstance().removeIntentionType(uuid);
 
 		if (c != null)
 		{
