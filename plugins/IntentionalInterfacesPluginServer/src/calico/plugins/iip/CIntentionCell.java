@@ -22,7 +22,11 @@ public class CIntentionCell
 		this.canvas_uuid = canvas.getUUID();
 		this.inUse = inUse;
 		this.location = null;
-		this.title = "Canvas " + canvas.getCoordText();
+
+		// patch the grid Y position to match the UI display
+		String zeroBasedCoordinateText = canvas.getCoordText();
+		String coordinates = zeroBasedCoordinateText.substring(0, 1) + ((char) (((int) zeroBasedCoordinateText.charAt(1)) + 1));
+		this.title = "Canvas " + coordinates;
 	}
 
 	public long getId()
