@@ -86,9 +86,6 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 			case CLINK_CREATE:
 				CLINK_CREATE(p, c);
 				break;
-			case CLINK_RETYPE:
-				CLINK_RETYPE(p, c);
-				break;
 			case CLINK_MOVE_ANCHOR:
 				CLINK_MOVE_ANCHOR(p, c);
 				break;
@@ -259,28 +256,10 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		IntentionalInterfacesNetworkCommands.Command.CLINK_CREATE.verify(p);
 
 		long uuid = p.getLong();
-		CCanvasLink.LinkType type = CCanvasLink.LinkType.values()[p.getInt()];
 		CCanvasLinkAnchor anchorA = unpackAnchor(p);
 		CCanvasLinkAnchor anchorB = unpackAnchor(p);
-		CCanvasLink link = new CCanvasLink(uuid, type, anchorA, anchorB);
+		CCanvasLink link = new CCanvasLink(uuid, anchorA, anchorB);
 		CCanvasLinkController.getInstance().addLink(link);
-
-		if (c != null)
-		{
-			ClientManager.send_except(c, p);
-		}
-	}
-
-	private static void CLINK_RETYPE(CalicoPacket p, Client c)
-	{
-		p.rewind();
-		IntentionalInterfacesNetworkCommands.Command.CLINK_RETYPE.verify(p);
-
-		long uuid = p.getLong();
-		CCanvasLink link = CCanvasLinkController.getInstance().getLinkById(uuid);
-
-		CCanvasLink.LinkType type = CCanvasLink.LinkType.values()[p.getInt()];
-		link.setLinkType(type);
 
 		if (c != null)
 		{
