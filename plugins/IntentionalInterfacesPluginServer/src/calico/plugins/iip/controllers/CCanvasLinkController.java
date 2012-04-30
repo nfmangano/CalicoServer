@@ -1,6 +1,10 @@
 package calico.plugins.iip.controllers;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import calico.plugins.iip.CCanvasLink;
 import calico.plugins.iip.CCanvasLinkAnchor;
 import calico.plugins.iip.IntentionalInterfaceState;
@@ -54,5 +58,18 @@ public class CCanvasLinkController
 	{
 		CCanvasLinkAnchor anchor = linkAnchors.get(anchor_uuid);
 		anchor.move(canvas_uuid, type, x, y);
+	}
+	
+	public List<Long> getLinkIdsForCanvas(long canvasId)
+	{
+		List<Long> linkIds = new ArrayList<Long>();
+		for (CCanvasLink link : links.values())
+		{
+			if ((link.getAnchorA().getCanvasId() == canvasId) || (link.getAnchorB().getCanvasId() == canvasId))
+			{
+				linkIds.add(link.getId());
+			}
+		}
+		return linkIds;
 	}
 }

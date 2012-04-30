@@ -1,22 +1,30 @@
 package calico.plugins.iip;
 
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 
+import calico.components.CCanvas;
 import calico.networking.netstuff.CalicoPacket;
 
 public class CIntentionCell
 {
+	public static final String DEFAULT_TITLE = "<default>";
+	
 	long uuid;
 	long canvas_uuid;
 	boolean inUse;
 	Point location;
+	String title;
+	final List<Long> intentionTypeIds = new ArrayList<Long>();
 
-	public CIntentionCell(long uuid, long canvas_uuid, boolean inUse)
+	public CIntentionCell(long uuid, CCanvas canvas, boolean inUse)
 	{
 		this.uuid = uuid;
-		this.canvas_uuid = canvas_uuid;
+		this.canvas_uuid = canvas.getUUID();
 		this.inUse = inUse;
 		this.location = null;
+		this.title = DEFAULT_TITLE;
 	}
 
 	public long getId()
@@ -45,20 +53,56 @@ public class CIntentionCell
 		{
 			location = new Point();
 		}
-		
+
 		location.x = x;
 		location.y = y;
 	}
 
-	public CalicoPacket getState()
+	public String getTitle()
+	{
+		return title;
+	}
+	
+	public boolean hasUserTitle()
+	{
+		return !title.equals(DEFAULT_TITLE);
+	}
+
+	public void setTitle(String title)
+	{
+		this.title = title;
+	}
+
+	public void addIntentionType(long typeId)
+	{
+		intentionTypeIds.add(typeId);
+	}
+
+	public boolean hasIntentionType(long typeId)
+	{
+		return intentionTypeIds.contains(typeId);
+	}
+
+	public void removeIntentionType(long typeId)
+	{
+		intentionTypeIds.remove(typeId);
+	}
+
+	public void populateState(IntentionalInterfaceState state)
 	{
 		if (location == null)
 		{
-			return CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_CREATE, uuid, canvas_uuid, inUse, false, 0, 0);
+			state.addCellPacket(CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_CREATE, uuid, canvas_uuid, inUse, false, 0, 0, title));
 		}
 		else
 		{
-			return CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_CREATE, uuid, canvas_uuid, inUse, true, location.x, location.y);
+			state.addCellPacket(CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_CREATE, uuid, canvas_uuid, inUse, true, location.x, location.y,
+					title));
+		}
+
+		for (long typeId : intentionTypeIds)
+		{
+			state.addCellPacket(CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_TAG, uuid, typeId));
 		}
 	}
 }

@@ -4,27 +4,16 @@ import calico.networking.netstuff.CalicoPacket;
 
 public class CCanvasLink
 {
-	public enum LinkType
-	{
-		NEW_IDEA,
-		NEW_PERSPECTIVE,
-		NEW_ALTERNATIVE,
-		DESIGN_INSIDE;
-	}
-
 	private long uuid;
-
-	private LinkType linkType;
 
 	private CCanvasLinkAnchor anchorA;
 	private CCanvasLinkAnchor anchorB;
 	
 	private String label;
 
-	public CCanvasLink(long uuid, LinkType linkType, CCanvasLinkAnchor anchorA, CCanvasLinkAnchor anchorB)
+	public CCanvasLink(long uuid, CCanvasLinkAnchor anchorA, CCanvasLinkAnchor anchorB)
 	{
 		this.uuid = uuid;
-		this.linkType = linkType;
 		this.anchorA = anchorA;
 		this.anchorB = anchorB;
 		this.label = "";
@@ -45,11 +34,6 @@ public class CCanvasLink
 		return anchorB;
 	}
 	
-	public void setLinkType(LinkType linkType)
-	{
-		this.linkType = linkType;
-	}
-	
 	public String getLabel()
 	{
 		return label;
@@ -65,7 +49,6 @@ public class CCanvasLink
 		return CalicoPacket.getPacket(
 				IntentionalInterfacesNetworkCommands.CLINK_CREATE,
 				uuid,
-				linkType.ordinal(),
 				anchorA.getId(),
 				anchorA.getCanvasId(),
 				anchorA.getType().ordinal(),
