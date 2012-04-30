@@ -9,6 +9,8 @@ import calico.networking.netstuff.CalicoPacket;
 
 public class CIntentionCell
 {
+	public static final String DEFAULT_TITLE = "<default>";
+	
 	long uuid;
 	long canvas_uuid;
 	boolean inUse;
@@ -22,11 +24,7 @@ public class CIntentionCell
 		this.canvas_uuid = canvas.getUUID();
 		this.inUse = inUse;
 		this.location = null;
-
-		// patch the grid Y position to match the UI display
-		String zeroBasedCoordinateText = canvas.getCoordText();
-		String coordinates = zeroBasedCoordinateText.substring(0, 1) + ((char) (((int) zeroBasedCoordinateText.charAt(1)) + 1));
-		this.title = "Canvas " + coordinates;
+		this.title = DEFAULT_TITLE;
 	}
 
 	public long getId()
@@ -63,6 +61,11 @@ public class CIntentionCell
 	public String getTitle()
 	{
 		return title;
+	}
+	
+	public boolean hasUserTitle()
+	{
+		return !title.equals(DEFAULT_TITLE);
 	}
 
 	public void setTitle(String title)

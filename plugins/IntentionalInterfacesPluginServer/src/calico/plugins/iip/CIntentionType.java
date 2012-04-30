@@ -4,7 +4,7 @@ import calico.networking.netstuff.CalicoPacket;
 
 public class CIntentionType
 {
-	public static final int[] AVAILABLE_COLORS = new int[] { 0xC4FF5E, 0xFFF024, 0x29FFE2, 0x52DCFF, 0xF896FF, 0xFFBDC1, 0xFFFDBA, 0xC2E4FF, 0xEED9FF };
+	public static final int AVAILABLE_COLOR_COUNT = 9;
 
 	private final long uuid;
 	private String name;

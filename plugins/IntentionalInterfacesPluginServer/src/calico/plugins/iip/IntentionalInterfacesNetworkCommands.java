@@ -5,6 +5,7 @@ import calico.networking.netstuff.CalicoPacket;
 public class IntentionalInterfacesNetworkCommands
 {
 	public static final int CIC_CREATE = Command.CIC_CREATE.id;
+	public static final int CIC_MARK_IN_USE = Command.CIC_MARK_IN_USE.id;
 	public static final int CIC_MOVE = Command.CIC_MOVE.id;
 	public static final int CIC_SET_TITLE = Command.CIC_SET_TITLE.id;
 	public static final int CIC_TAG = Command.CIC_TAG.id;
@@ -25,6 +26,10 @@ public class IntentionalInterfacesNetworkCommands
 		 * IIP plugin init.
 		 */
 		CIC_CREATE,
+		/**
+		 * Mark a CIntentionCell as "in use" (or not)
+		 */
+		CIC_MARK_IN_USE,
 		/**
 		 * Move a CIntentionCell's (x,y) position
 		 */

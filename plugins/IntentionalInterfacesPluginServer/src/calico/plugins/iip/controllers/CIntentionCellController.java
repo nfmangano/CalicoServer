@@ -2,9 +2,8 @@ package calico.plugins.iip.controllers;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 import calico.plugins.iip.CIntentionCell;
 import calico.plugins.iip.CIntentionType;
@@ -61,7 +60,7 @@ public class CIntentionCellController
 	public CIntentionType createIntentionType(long uuid, String name)
 	{
 		int freeColorIndex = 0;
-		boolean[] used = new boolean[CIntentionType.AVAILABLE_COLORS.length];
+		boolean[] used = new boolean[CIntentionType.AVAILABLE_COLOR_COUNT];
 		Arrays.fill(used, false);
 		for (CIntentionType type : activeIntentionTypes.values())
 		{
@@ -79,6 +78,11 @@ public class CIntentionCellController
 		CIntentionType type = new CIntentionType(uuid, name, freeColorIndex);
 		activeIntentionTypes.put(uuid, type);
 		return type;
+	}
+	
+	public Collection<CIntentionType> getActiveIntentionTypes()
+	{
+		return activeIntentionTypes.values();
 	}
 	
 	public void renameIntentionType(long typeId, String name)
