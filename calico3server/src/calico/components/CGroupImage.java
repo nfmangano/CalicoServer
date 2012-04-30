@@ -34,7 +34,7 @@ public class CGroupImage extends CGroup {
 	{
 		//TODO: Figure out why that + 10 is down there. It very likely has to do with the buffer
 		Rectangle bounds = this.getRawPolygon().getBounds();
-		String urlToImage = CImageController.getImageURL(this.uuid);
+		String urlToImage = CImageController.getImageURL(this.uuid, false);
 		CalicoPacket packet = CalicoPacket.getPacket(NetworkCommand.GROUP_IMAGE_LOAD,
 						uuid,
 						cuid,

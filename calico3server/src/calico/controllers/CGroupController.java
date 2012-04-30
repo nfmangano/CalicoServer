@@ -1043,14 +1043,14 @@ public class CGroupController
 //		CGroupController.groups.get(uuid).shrinkToContents();
 //	}
 //	
-	public static void createImageGroup(long uuid, long cuuid, String imageURL, int x, int y)
+	public static boolean createImageGroup(long uuid, long cuuid, String imageURL, int x, int y)
 	{
 		try{
 			
 			CImageController.download_image(uuid, imageURL);
 //			imageURL = CImageController.getImageURL(uuid);
-			URL url= new URL(imageURL);
-			Image image = null;
+			//URL url= new URL(imageURL);
+			//Image image = null;
 			/*try
 			{
 				image = ImageIO.read(new File(CImageController.getImagePath(uuid)));
@@ -1060,43 +1060,27 @@ public class CGroupController
 				e.printStackTrace();
 			}*/
 			
-			int width = -1;
-			int height = -1;
-			FileInputStream fis = new FileInputStream(CImageController.getImagePath(uuid));
-			ImageInputStream in = ImageIO.createImageInputStream(fis);
-			try {
-			        final Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
-			        if (readers.hasNext()) {
-			                ImageReader reader = (ImageReader) readers.next();
-			                try {
-			                        reader.setInput(in);
-			                        width = reader.getWidth(0);
-			                        height = reader.getHeight(0);
-			                } finally {
-			                        reader.dispose();
-			                }
-			        }
-			} finally {
-			        if (in != null) in.close();
-			        if (fis != null) fis.close();
-			        if (width == -1 && height == -1)
-			        {
-			        	System.out.println("Could not retrieve image dimensions");
-			        	throw new Exception();
-			        }
+			Dimension imageSize = CImageController.getImageSize(CImageController.getImagePath(uuid));
+			
+			if (imageSize.width > 1920 || imageSize.height > 1080)
+			{
+				return false;
 			}
-
-//			Image image = Toolkit.getDefaultToolkit().createImage(url);
-//			Image image = Toolkit.getDefaultToolkit().createImage(imageURL);
-			//this will run once we have the image ready
-//			image.getWidth(CImageController.getImageInitializer(uuid, cuuid, CImageController.getImageURL(uuid), x, y));
-			CGroupController.createImageGroup(uuid, cuuid, 0L, imageURL, x, y, width, height);
+			else
+			{
+	//			Image image = Toolkit.getDefaultToolkit().createImage(url);
+	//			Image image = Toolkit.getDefaultToolkit().createImage(imageURL);
+				//this will run once we have the image ready
+	//			image.getWidth(CImageController.getImageInitializer(uuid, cuuid, CImageController.getImageURL(uuid), x, y));
+				CGroupController.createImageGroup(uuid, cuuid, 0L, imageURL, x, y, imageSize.width, imageSize.height);
+			}
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
+		return true;
 	}
 
 	public static void createImageGroup(long uuid, long cuid,

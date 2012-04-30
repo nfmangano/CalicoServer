@@ -10,6 +10,7 @@ import calico.clients.*;
 import calico.uuid.*;
 import calico.components.*;
 import calico.controllers.CCanvasController;
+import calico.controllers.CGroupController;
 import calico.sessions.*;
 
 import java.nio.*;
@@ -59,6 +60,8 @@ public class ClientThread extends Thread
 	private InetSocketAddress udpSocketAddress = null;
 	
 	private long currentCanvasUUID = 0L;
+	
+	private long tempScrapUUID = 0L;
 	
 	private BlockingQueue<CalicoPacket> outboundPackets = new LinkedBlockingQueue<CalicoPacket>();
 //	private ObjectArrayList<CalicoPacket> outboundPackets = new ObjectArrayList<CalicoPacket>();
@@ -177,6 +180,11 @@ public class ClientThread extends Thread
 	{
 		this.username = username;
 		makeClientString();
+	}
+	
+	public void setTempScrapUUID(long uuid)
+	{
+		tempScrapUUID = uuid;
 	}
 	
 	public String toString()
@@ -478,6 +486,12 @@ public class ClientThread extends Thread
 		}
 		finally
 		{
+			if (tempScrapUUID != 0l && CGroupController.exists(tempScrapUUID)
+					&& !CGroupController.groups.get(tempScrapUUID).isPermanent())
+			{
+				CGroupController.drop(tempScrapUUID);
+				tempScrapUUID = 0L;
+			}
 			//System.out.println("CALLING THE FINALLY");
 			ClientManager.drop(clientid, "");
 		}
