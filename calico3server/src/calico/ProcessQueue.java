@@ -221,7 +221,7 @@ public class ProcessQueue
 		CCanvasController.snapshot(uuid);
 		
 		// Resend to all (even the sender)
-		ClientManager.send(p);
+		ClientManager.send_except(c, p);
 		
 	}
 	public static void CANVAS_COPY(CalicoPacket p, Client c)
@@ -678,6 +678,8 @@ public class ProcessQueue
 		long cuid = p.getLong();
 		long puid = p.getLong();
 		String url = p.getString();
+		int port = p.getInt(); //Not used on the server
+		String localPath = p.getString(); //Not used on the server
 		int imgX = p.getInt();
 		int imgY = p.getInt();
 		int imgW = p.getInt();
@@ -711,7 +713,7 @@ public class ProcessQueue
 			{
 				e.printStackTrace();
 			}
-			url = CImageController.getImageURL(uuid, true);
+			url = CImageController.getImageURL(uuid);
 		}
 		
 		CGroupController.no_notify_create_image_group(uuid, cuid, puid, url, imgX, imgY, imgW, imgH);
@@ -1320,7 +1322,7 @@ public class ProcessQueue
 		try
 		{
 			CImageController.save_to_disk(uuid, name, bytes);
-			if (!CGroupController.createImageGroup(uuid, cuuid, CImageController.getImageURL(uuid, true), x, y))
+			if (!CGroupController.createImageGroup(uuid, cuuid, CImageController.getImageURL(uuid), x, y))
 				ClientManager.send(client, CalicoPacket.getPacket(NetworkCommand.GROUP_IMAGE_LOAD,0l));
 		}
 		catch (Exception e)

@@ -219,7 +219,37 @@ public class CImageController
 		return (new CImageController()).new ImageInitializer(uuid, cuid, imageURL, x, y);
 	}
 	
-	public static String getImageURL(final long uuid, boolean includeHost)
+	public static String getImageURL(final long uuid)
+	{
+		/*File[] files = (new File(COptions.server.images.download_folder + "/")).listFiles(new FilenameFilter() {
+	           public boolean accept(File dir, String name) {
+	                return name.toLowerCase().startsWith(Long.toString(uuid) + ".");
+	                }
+	           }
+	        );
+		
+		String localPath = files[0].getPath();
+		if (File.separatorChar != '/')
+		{
+			localPath = localPath.replace(File.separatorChar, '/');
+		}*/
+		String localPath = getImageLocalPath(uuid);
+		
+		String ipaddress = "0.0.0.0";
+		try
+		{
+			ipaddress = InetAddress.getLocalHost().getCanonicalHostName();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+//		String localPath = getImagePath(uuid);
+		return "http://" + ipaddress + ":" + COptions.admin.serversocket.getLocalPort() + "/" + localPath;
+	}
+	
+	public static String getImageLocalPath(final long uuid)
 	{
 		File[] files = (new File(COptions.server.images.download_folder + "/")).listFiles(new FilenameFilter() {
 	           public boolean accept(File dir, String name) {
@@ -233,21 +263,8 @@ public class CImageController
 		{
 			localPath = localPath.replace(File.separatorChar, '/');
 		}
-		String ipaddress = "0.0.0.0";
-		try
-		{
-			ipaddress = InetAddress.getLocalHost().getCanonicalHostName();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
 		
-//		String localPath = getImagePath(uuid);
-		if (includeHost)
-			return "http://" + ipaddress + ":" + COptions.admin.serversocket.getLocalPort() + "/" + localPath;
-		else
-			return ":" + COptions.admin.serversocket.getLocalPort() + "/" + localPath;
+		return localPath;
 	}
 	
 	class ImageInitializer implements ImageObserver
