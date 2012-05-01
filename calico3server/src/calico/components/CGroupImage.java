@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import calico.COptions;
 import calico.controllers.CImageController;
 import calico.networking.netstuff.CalicoPacket;
 import calico.networking.netstuff.NetworkCommand;
@@ -34,12 +35,15 @@ public class CGroupImage extends CGroup {
 	{
 		//TODO: Figure out why that + 10 is down there. It very likely has to do with the buffer
 		Rectangle bounds = this.getRawPolygon().getBounds();
-		String urlToImage = CImageController.getImageURL(this.uuid, false);
+		String urlToImage = CImageController.getImageURL(this.uuid);
+		String imageLocalPath = CImageController.getImageLocalPath(this.uuid);
 		CalicoPacket packet = CalicoPacket.getPacket(NetworkCommand.GROUP_IMAGE_LOAD,
 						uuid,
 						cuid,
 						puid,
 						urlToImage,
+						COptions.admin.serversocket.getLocalPort(),
+						imageLocalPath,
 //						this.imgURL,
 						bounds.x + dx,	//going to be honest here, I'm not sure exactly why the + 10's are necessary, but they are
 						bounds.y + dy, // 
