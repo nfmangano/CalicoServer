@@ -557,6 +557,33 @@ public class CGroupController
 				}
 			}
 		}
+		
+		//Connectors
+		if (isRoot)
+		{
+			long[] connector_uuids  = CCanvasController.canvases.get(canvasuuid).getChildConnectors();
+			for (int i = 0; i < connector_uuids.length; i++)
+			{
+				CConnector tempConnector = CConnectorController.connectors.get(connector_uuids[i]);
+				if ((UUIDMappings.containsKey(tempConnector.getAnchorUUID(CConnector.TYPE_HEAD)) || tempConnector.getAnchorUUID(CConnector.TYPE_HEAD) == uuid) && 
+					(UUIDMappings.containsKey(tempConnector.getAnchorUUID(CConnector.TYPE_TAIL)) || tempConnector.getAnchorUUID(CConnector.TYPE_TAIL) == uuid))
+				{
+					long new_connector_uuid = UUIDMappings.get(connector_uuids[i]).longValue();
+					
+					
+					if (UUIDMappings.containsKey(tempConnector.getAnchorUUID(CConnector.TYPE_HEAD)) && 
+						UUIDMappings.containsKey(tempConnector.getAnchorUUID(CConnector.TYPE_TAIL)))
+					{
+						Point head = (Point) tempConnector.getHead().clone();
+						Point tail = (Point) tempConnector.getTail().clone();
+						
+						CConnectorController.no_notify_create(new_connector_uuid, canvasuuid, tempConnector.getColor(), tempConnector.getThickness(), head, tail,
+								tempConnector.getOrthogonalDistance(), tempConnector.getTravelDistance(), 
+								UUIDMappings.get(tempConnector.getAnchorUUID(CConnector.TYPE_HEAD)), UUIDMappings.get(tempConnector.getAnchorUUID(CConnector.TYPE_TAIL)));
+					}
+				}
+			}
+		}
 	}//no_notify_copy
 	
 	private static ArrayList<Long> getSubGroups(long uuid)
@@ -682,6 +709,8 @@ public class CGroupController
 			}
 		}
 		
+		// Connectors: The client will turn the connector into a stroke and notify the server. Therefore
+		// we don't need to reparent the connector here.
 		
 	}
 	
@@ -897,6 +926,20 @@ public class CGroupController
 		if(!exists(uuid)){return;}
 		
 		groups.get(uuid).addChildArrow(cguuid);
+	}
+	
+	public static void no_notify_add_child_connector(long uuid, long cguuid)
+	{
+		if(!exists(uuid)){return;}
+		
+		groups.get(uuid).addChildConnector(cguuid);
+	}
+	
+	public static void no_notify_remove_child_connector(long uuid, long cguuid)
+	{
+		if(!exists(uuid)){return;}
+		
+		groups.get(uuid).deleteChildConnector(cguuid);
 	}
 	
 	public static boolean group_contains_group(final long containerUUID, final long checkUUID)

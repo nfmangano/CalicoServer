@@ -148,6 +148,11 @@ public class CanvasThread extends Thread {
 		commands.put(NetworkCommand.ARROW_SET_TYPE, null);
 		commands.put(NetworkCommand.ARROW_SET_COLOR, null);
 		
+		//Connector commands
+		commands.put(NetworkCommand.CONNECTOR_LOAD, null);
+		commands.put(NetworkCommand.CONNECTOR_DELETE, null);
+		commands.put(NetworkCommand.CONNECTOR_LINEARIZE, null);
+		
 		//Canvas Commands
 		commands.put(NetworkCommand.CANVAS_SET, null);
 		commands.put(NetworkCommand.CANVAS_LIST, null);

@@ -120,6 +120,10 @@ public class ProcessQueue
 				case NetworkCommand.ARROW_SET_TYPE:ARROW_SET_TYPE(pdata,client);break;
 				case NetworkCommand.ARROW_SET_COLOR:ARROW_SET_COLOR(pdata,client);break;
 				
+				case NetworkCommand.CONNECTOR_LOAD:CONNECTOR_LOAD(pdata,client);break;
+				case NetworkCommand.CONNECTOR_DELETE:CONNECTOR_DELETE(pdata,client);break;
+				case NetworkCommand.CONNECTOR_LINEARIZE:CONNECTOR_LINEARIZE(pdata,client);break;
+				
 				case NetworkCommand.UDP_CHALLENGE:UDP_CHALLENGE(pdata, client);break;
 				
 				
@@ -268,12 +272,21 @@ public class ProcessQueue
 		{
 			packets[i].rewind();
 			int comm = packets[i].getInt();
-
 			
 			// As long as its not the canvas_info, we should just send it along
 			if(comm!=NetworkCommand.CANVAS_INFO)
 			{
 				ProcessQueue.receive(comm, null, packets[i]);
+			}
+		}
+		
+		//Remove temp scraps after undo/redo
+		long[] guuid = CCanvasController.canvases.get(cuuid).getChildGroups();
+		for (int i = 0; i < guuid.length; i++)
+		{
+			if (!CGroupController.groups.get(guuid[i]).isPermanent())
+			{
+				CGroupController.drop(guuid[i]);
 			}
 		}
 		
@@ -986,6 +999,64 @@ public class ProcessQueue
 		CArrowController.arrows.get(u).setColor(r, g, b);
 
 		ClientManager.send_except(client, p);
+	}
+	
+	public static void CONNECTOR_LOAD(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		long cuid = p.getLong();
+		Color color = p.getColor();
+		float thickness = p.getFloat();
+		
+		Point head = new Point(p.getInt(), p.getInt());
+		Point tail = new Point(p.getInt(), p.getInt());
+		
+		int nPoints = p.getInt();
+		double[] orthogonalDistance = new double[nPoints];
+		double[] travelDistance = new double[nPoints];
+		for (int i = 0; i < nPoints; i++)
+		{
+			orthogonalDistance[i] = p.getDouble();
+			travelDistance[i] = p.getDouble();
+		}
+		
+		long anchorHead = p.getLong();
+		long anchorTail = p.getLong();
+		
+		CConnectorController.no_notify_create(uuid, cuid, color, thickness, head, tail, orthogonalDistance, travelDistance, anchorHead, anchorTail);
+		
+		ClientManager.send_except(client, p);
+		
+		if(client!=null)
+		{
+			CCanvasController.snapshot_connector(uuid);
+		}
+	}
+	
+	public static void CONNECTOR_DELETE(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		CConnectorController.no_notify_delete(uuid);
+
+		ClientManager.send_except(client, p);
+		
+		if(client!=null)
+		{
+			CCanvasController.snapshot_connector(uuid);
+		}
+	}
+	
+	public static void CONNECTOR_LINEARIZE(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		CConnectorController.no_notify_linearize(uuid);
+
+		ClientManager.send_except(client, p);
+		
+		if(client!=null)
+		{
+			CCanvasController.snapshot_connector(uuid);
+		}
 	}
 	
 

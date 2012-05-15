@@ -204,6 +204,10 @@ public class NetworkCommand
 	public static final int ARROW_SET_TYPE			= 802;// UUID ARROW_TYPE
 	public static final int ARROW_SET_COLOR			= 803;// UUID RED GREEN BLUE
 
+	// CONNECTORS
+	public static final int CONNECTOR_LOAD			= 810; 
+	public static final int CONNECTOR_DELETE		= 811; 
+	public static final int CONNECTOR_LINEARIZE		= 812; 
 
 	// Click Tracking
 	public static final int CLICK_TRACK = 900; // CLICK ID
