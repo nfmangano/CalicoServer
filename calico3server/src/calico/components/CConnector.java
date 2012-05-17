@@ -182,6 +182,18 @@ public class CConnector extends PComposite{
 		}
 	}
 	
+	public void moveAnchor(int type, int deltaX, int deltaY)
+	{
+		if (type == TYPE_HEAD)
+		{
+			pointHead.setLocation(pointHead.x + deltaX, pointHead.y + deltaY);
+		}
+		else if (type == TYPE_TAIL)
+		{
+			pointTail.setLocation(pointTail.x + deltaX, pointTail.y + deltaY);
+		}
+	}
+	
 	
 	public CalicoPacket[] getUpdatePackets(long uuid, long cuid)
 	{			

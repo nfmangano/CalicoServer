@@ -123,6 +123,9 @@ public class ProcessQueue
 				case NetworkCommand.CONNECTOR_LOAD:CONNECTOR_LOAD(pdata,client);break;
 				case NetworkCommand.CONNECTOR_DELETE:CONNECTOR_DELETE(pdata,client);break;
 				case NetworkCommand.CONNECTOR_LINEARIZE:CONNECTOR_LINEARIZE(pdata,client);break;
+				case NetworkCommand.CONNECTOR_MOVE_ANCHOR:CONNECTOR_MOVE_ANCHOR(pdata,client);break;
+				case NetworkCommand.CONNECTOR_MOVE_ANCHOR_START:CONNECTOR_MOVE_ANCHOR_START(pdata,client);break;
+				case NetworkCommand.CONNECTOR_MOVE_ANCHOR_END:CONNECTOR_MOVE_ANCHOR_END(pdata,client);break;
 				
 				case NetworkCommand.UDP_CHALLENGE:UDP_CHALLENGE(pdata, client);break;
 				
@@ -1050,6 +1053,49 @@ public class ProcessQueue
 	{
 		long uuid = p.getLong();
 		CConnectorController.no_notify_linearize(uuid);
+
+		ClientManager.send_except(client, p);
+		
+		if(client!=null)
+		{
+			CCanvasController.snapshot_connector(uuid);
+		}
+	}
+	
+	public static void CONNECTOR_MOVE_ANCHOR(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		int type = p.getInt();
+		int x = p.getInt();
+		int y = p.getInt();
+		
+		CConnectorController.no_notify_move_group_anchor(uuid, type, x, y);
+
+		ClientManager.send_except(client, p);
+		
+		if(client!=null)
+		{
+			CCanvasController.snapshot_connector(uuid);
+		}
+	}
+	
+	public static void CONNECTOR_MOVE_ANCHOR_START(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		int type = p.getInt();
+		
+		CConnectorController.no_notify_move_group_anchor_start(uuid, type);
+
+		ClientManager.send_except(client, p);
+
+	}
+	
+	public static void CONNECTOR_MOVE_ANCHOR_END(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		int type = p.getInt();
+		
+		CConnectorController.no_notify_move_group_anchor_end(uuid, type);
 
 		ClientManager.send_except(client, p);
 		

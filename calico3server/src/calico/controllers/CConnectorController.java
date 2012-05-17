@@ -89,12 +89,62 @@ public class CConnectorController {
 		connectors.get(uuid).linearize();
 	}
 	
+	public static void no_notify_move_group_anchor_start(long uuid, int type)
+	{
+		CConnector tempConnector = CConnectorController.connectors.get(uuid);
+		if (tempConnector.getAnchorUUID(CConnector.TYPE_HEAD) != tempConnector.getAnchorUUID(CConnector.TYPE_TAIL))
+		{
+			CGroupController.no_notify_remove_child_connector(tempConnector.getAnchorUUID(type), uuid);
+		}
+	}
+	
+	public static void move_group_anchor(long uuid, int type, int x, int y)
+	{
+		if (!exists(uuid))
+			return;
+		
+		no_notify_move_group_anchor(uuid, type, x, y);
+		
+		//SEND PACKET HERE
+	}
+	
+	public static void no_notify_move_group_anchor(long uuid, int type, int x, int y)
+	{
+		if (!exists(uuid))
+			return;
+		
+		connectors.get(uuid).moveAnchor(type, x, y);
+	}
+	
 	public static void no_notify_move_group_anchor(long uuid, long guuid, int x, int y)
 	{
 		if (!exists(uuid))
 			return;
 		
 		connectors.get(uuid).moveAnchor(guuid, x, y);
+	}
+	
+	public static void no_notify_move_group_anchor_end(long uuid, int type)
+	{
+		CConnector tempConnector = CConnectorController.connectors.get(uuid);
+		
+		Point p;
+		if (type == CConnector.TYPE_HEAD)
+			p = tempConnector.getHead();
+		else if (type == CConnector.TYPE_TAIL)
+			p = tempConnector.getTail();
+		else return;
+		
+		long guuid = CGroupController.get_smallest_containing_group_for_point(tempConnector.getCanvasUUID(), p);
+		if (guuid == 0l)
+		{
+			//The client will tell the server to make the stroke
+		}
+		else
+		{
+			tempConnector.setAnchorUUID(guuid, type);
+			CGroupController.no_notify_add_child_connector(guuid, uuid);
+		}
 	}
 	
 	

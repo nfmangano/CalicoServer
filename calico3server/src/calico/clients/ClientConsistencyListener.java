@@ -17,6 +17,8 @@ public class ClientConsistencyListener implements CalicoEventListener {
 		CalicoEventHandler.getInstance().addListener(NetworkCommand.GROUP_MOVE_END, this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListener(NetworkCommand.ERASE_START, this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListener(NetworkCommand.ERASE_END, this, CalicoEventHandler.PASSIVE_LISTENER);
+		CalicoEventHandler.getInstance().addListener(NetworkCommand.CONNECTOR_MOVE_ANCHOR_START, this, CalicoEventHandler.PASSIVE_LISTENER);
+		CalicoEventHandler.getInstance().addListener(NetworkCommand.CONNECTOR_MOVE_ANCHOR_END, this, CalicoEventHandler.PASSIVE_LISTENER);
 		
 //		System.out.println("~~~~~~~~~~~~ Instanciated Consisteny listener!! ~~~~~~~~~~~~");
 	}
@@ -44,6 +46,12 @@ public class ClientConsistencyListener implements CalicoEventListener {
 				ignoreConsistencyCheck = true;
 				break;
 			case NetworkCommand.ERASE_END:
+				ignoreConsistencyCheck = false;
+				break;
+			case NetworkCommand.CONNECTOR_MOVE_ANCHOR_START:
+				ignoreConsistencyCheck = true;
+				break;
+			case NetworkCommand.CONNECTOR_MOVE_ANCHOR_END:
 				ignoreConsistencyCheck = false;
 				break;
 			default:
