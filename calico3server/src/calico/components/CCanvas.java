@@ -35,6 +35,7 @@ public class CCanvas
 	private LongArraySet groups = new LongArraySet();
 	private LongArraySet arrows = new LongArraySet();
 	private LongArraySet lists = new LongArraySet();
+	private LongArraySet connectors = new LongArraySet();
 	
 	public ObjectArrayList<Object> keypairs = new ObjectArrayList<Object>();
 	
@@ -202,6 +203,10 @@ public class CCanvas
 		this.strokes.add(s);
 	}
 	
+	public void addChildConnector(long s)
+	{
+		this.connectors.add(s);
+	}
 	
 	public void addChildGroup(long s)
 	{
@@ -217,9 +222,15 @@ public class CCanvas
 	{
 		this.groups.remove(s);
 	}
+	
 	public void deleteChildStroke(long s)
 	{
 		this.strokes.remove(s);
+	}
+	
+	public void deleteChildConnector(long s)
+	{
+		this.connectors.remove(s);
 	}
 		
 	public long[] getChildStrokes()
@@ -237,7 +248,10 @@ public class CCanvas
 		return this.lists.toLongArray();
 	}
 
-	
+	public long[] getChildConnectors()
+	{
+		return this.connectors.toLongArray();
+	}
 
 	
 	
@@ -307,6 +321,7 @@ public class CCanvas
 		long[] grouparr = getChildGroups();
 		long[] bgearr = getChildStrokes();
 		long[] arlist = getChildArrows();
+		long[] ctrlist = getChildConnectors();
 		
 		// GROUPS
 		if(grouparr.length>0)
@@ -365,6 +380,19 @@ public class CCanvas
 			}
 		}
 		
+		// CONNECTORS
+		if(ctrlist.length>0)
+		{
+			for(int i=0;i<ctrlist.length;i++)
+			{
+				CalicoPacket[] packets = CConnectorController.connectors.get(ctrlist[i]).getUpdatePackets();
+				if(packets!=null && packets.length>0)
+				{
+					packetlist.addElements(packetlist.size(), packets);
+				}
+			}
+		}
+		
 		// Send the BGElement Parents
 		if(bgearr.length>0)
 		{
@@ -397,6 +425,7 @@ public class CCanvas
 		props.setProperty("child.groups", Arrays.toString(getChildGroups()) );
 		props.setProperty("child.strokes", Arrays.toString(getChildStrokes()) );
 		props.setProperty("child.arrows", Arrays.toString(getChildArrows()) );
+		props.setProperty("child.connectors", Arrays.toString(getChildConnectors()) );
 		return props;
 	}
 
@@ -446,6 +475,7 @@ public class CCanvas
 		CalicoEventHandler.getInstance().addListenerForType("GROUP", this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListenerForType("STROKE", this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListenerForType("ARROW", this, CalicoEventHandler.PASSIVE_LISTENER);
+		CalicoEventHandler.getInstance().addListenerForType("CONNECTOR", this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListenerForType("CANVAS", this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListenerForType("LIST", this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListenerForType("PALETTE", this, CalicoEventHandler.PASSIVE_LISTENER);
@@ -480,6 +510,7 @@ public class CCanvas
 		long[] strokear = getChildStrokes();
 		long[] groupar = getChildGroups();
 		long[] arrar = getChildArrows();
+		long[] ctrar = getChildConnectors();
 		
 		int stroke_sig = 0;
 		for(int i=0;i<strokear.length;i++)
@@ -499,7 +530,13 @@ public class CCanvas
 			arrow_sig = arrow_sig + CArrowController.get_signature(arrar[i]);
 		}
 		
-		return stroke_sig + group_sig + arrow_sig;
+		int connector_sig = 0;
+		for (int i=0;i<ctrar.length;i++)
+		{
+			connector_sig = connector_sig + CConnectorController.get_signature(ctrar[i]);
+		}
+		
+		return stroke_sig + group_sig + arrow_sig + connector_sig;
 	}
 	
 	public CalicoPacket getConsistencyDebugPacket()
