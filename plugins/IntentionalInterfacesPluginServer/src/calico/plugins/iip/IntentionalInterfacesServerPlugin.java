@@ -1,8 +1,9 @@
 package calico.plugins.iip;
 
+import java.util.Set;
+
 import calico.clients.Client;
 import calico.clients.ClientManager;
-import calico.components.CCanvas;
 import calico.controllers.CCanvasController;
 import calico.events.CalicoEventHandler;
 import calico.events.CalicoEventListener;
@@ -13,13 +14,14 @@ import calico.plugins.CalicoPluginManager;
 import calico.plugins.CalicoStateElement;
 import calico.plugins.iip.controllers.CCanvasLinkController;
 import calico.plugins.iip.controllers.CIntentionCellController;
+import calico.plugins.iip.graph.layout.CIntentionLayout;
 import calico.uuid.UUIDAllocator;
 
-public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements CalicoEventListener, CalicoStateElement
+public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin implements CalicoEventListener, CalicoStateElement
 {
 	private final IntentionalInterfaceState state = new IntentionalInterfaceState();
 
-	public IntentionalInterfacesPlugin()
+	public IntentionalInterfacesServerPlugin()
 	{
 		PluginInfo.name = "Intentional Interfaces";
 	}
@@ -27,6 +29,8 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	public void onPluginStart()
 	{
 		CalicoEventHandler.getInstance().addListener(NetworkCommand.CANVAS_CLEAR, this, CalicoEventHandler.PASSIVE_LISTENER);
+		CalicoEventHandler.getInstance().addListener(NetworkCommand.CANVAS_CREATE, this, CalicoEventHandler.PASSIVE_LISTENER);
+		CalicoEventHandler.getInstance().addListener(NetworkCommand.CANVAS_DELETE, this, CalicoEventHandler.PASSIVE_LISTENER);
 
 		for (Integer event : this.getNetworkCommands())
 		{
@@ -34,79 +38,104 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 			CalicoEventHandler.getInstance().addListener(event.intValue(), this, CalicoEventHandler.ACTION_PERFORMER_LISTENER);
 		}
 
-		// create the intention cells
-		for (CCanvas canvas : CCanvasController.canvases.values())
-		{
-			CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvas, false);
-			CIntentionCellController.getInstance().addCell(cell);
-		}
-
-		// create the intention types
+		// create the default intention types
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "New Perspective");
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "New Alternative");
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "New Idea");
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Design Inside");
 
 		CalicoPluginManager.registerCalicoStateExtension(this);
+
+		for (long canvasId : CCanvasController.canvases.keySet())
+		{
+			createIntentionCell(canvasId);
+		}
 	}
 
 	@Override
 	public void handleCalicoEvent(int event, CalicoPacket p, Client c)
 	{
-		if (event == NetworkCommand.CANVAS_CLEAR)
+		if (IntentionalInterfacesNetworkCommands.Command.isInDomain(event))
 		{
-			CANVAS_CLEAR(p, c);
-			return;
+			switch (IntentionalInterfacesNetworkCommands.Command.forId(event))
+			{
+				case CIC_CREATE:
+					CIC_CREATE(p, c);
+					break;
+				case CIC_MOVE:
+					CIC_MOVE(p, c);
+					break;
+				case CIC_SET_TITLE:
+					CIC_SET_TITLE(p, c, true);
+					break;
+				case CIC_TAG:
+					CIC_TAG(p, c);
+					break;
+				case CIC_UNTAG:
+					CIC_UNTAG(p, c, true);
+					break;
+				case CIC_DELETE:
+					CIC_DELETE(p, c);
+					break;
+				case CIT_CREATE:
+					CIT_CREATE(p, c);
+					break;
+				case CIT_RENAME:
+					CIT_RENAME(p, c);
+					break;
+				case CIT_SET_COLOR:
+					CIT_SET_COLOR(p, c);
+					break;
+				case CIT_DELETE:
+					CIT_DELETE(p, c);
+					break;
+				case CLINK_CREATE:
+					CLINK_CREATE(p, c);
+					break;
+				case CLINK_MOVE_ANCHOR:
+					CLINK_MOVE_ANCHOR(p, c);
+					break;
+				case CLINK_LABEL:
+					CLINK_LABEL(p, c);
+					break;
+				case CLINK_DELETE:
+					CLINK_DELETE(p, c, true);
+					break;
+			}
 		}
+		else
+		{
+			p.rewind();
+			p.getInt();
+			long canvasId = p.getLong();
 
-		switch (IntentionalInterfacesNetworkCommands.Command.forId(event))
-		{
-			case CIC_CREATE:
-				throw new UnsupportedOperationException(
-						"A client has attempted to dynamically construct a CIntentionCell. The current policy only allows the server to create CIC's on IIP plugin init.");
-			case CIC_MARK_IN_USE:
-				CIC_MARK_IN_USE(p, c, true);
-				break;
-			case CIC_MOVE:
-				CIC_MOVE(p, c);
-				break;
-			case CIC_SET_TITLE:
-				CIC_SET_TITLE(p, c, true);
-				break;
-			case CIC_TAG:
-				CIC_TAG(p, c);
-				break;
-			case CIC_UNTAG:
-				CIC_UNTAG(p, c, true);
-				break;
-			case CIC_DELETE:
-				CIC_DELETE(p, c);
-				break;
-			case CIT_CREATE:
-				CIT_CREATE(p, c);
-				break;
-			case CIT_RENAME:
-				CIT_RENAME(p, c);
-				break;
-			case CIT_SET_COLOR:
-				CIT_SET_COLOR(p, c);
-				break;
-			case CIT_DELETE:
-				CIT_DELETE(p, c);
-				break;
-			case CLINK_CREATE:
-				CLINK_CREATE(p, c);
-				break;
-			case CLINK_MOVE_ANCHOR:
-				CLINK_MOVE_ANCHOR(p, c);
-				break;
-			case CLINK_LABEL:
-				CLINK_LABEL(p, c);
-				break;
-			case CLINK_DELETE:
-				CLINK_DELETE(p, c, true);
-				break;
+			switch (event)
+			{
+				case NetworkCommand.CANVAS_CLEAR:
+					CANVAS_CLEAR(p, c);
+					break;
+				case NetworkCommand.CANVAS_CREATE:
+					createIntentionCell(canvasId);
+					break;
+				case NetworkCommand.CANVAS_DELETE:
+					CIntentionCellController.getInstance().removeCellById(CIntentionCellController.getInstance().getCellByCanvasId(canvasId).getId());
+					break;
+			}
 		}
+	}
+
+	private void createIntentionCell(long canvasId)
+	{
+		CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvasId, false);
+		CIntentionCellController.getInstance().addCell(cell);
+
+		CalicoPacket p = cell.getCreatePacket();
+		forward(p);
+	}
+
+	private static void CIC_CREATE(CalicoPacket p, Client c)
+	{
+		layoutGraph();
 	}
 
 	private static void CANVAS_CLEAR(CalicoPacket p, Client c)
@@ -151,32 +180,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 			CIC_SET_TITLE(resetTitle, null, false);
 		}
 
-		if (cell.isInUse())
-		{
-			CalicoPacket hideCell = new CalicoPacket();
-			hideCell.putInt(IntentionalInterfacesNetworkCommands.CIC_SET_TITLE);
-			hideCell.putLong(cell.getId());
-			hideCell.putBoolean(false);
-			CIC_MARK_IN_USE(hideCell, null, false);
-		}
-
 		System.out.println("Done clearing canvas " + canvasId);
-	}
-
-	private static void CIC_MARK_IN_USE(CalicoPacket p, Client c, boolean forward)
-	{
-		p.rewind();
-		IntentionalInterfacesNetworkCommands.Command.CIC_MOVE.verify(p);
-
-		long uuid = p.getLong();
-		CIntentionCell cell = CIntentionCellController.getInstance().getCellById(uuid);
-
-		cell.setInUse(p.getBoolean());
-
-		if (forward)
-		{
-			forward(p, c);
-		}
 	}
 
 	private static void CIC_MOVE(CalicoPacket p, Client c)
@@ -249,13 +253,15 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		long uuid = p.getLong();
 		CIntentionCellController.getInstance().removeCellById(uuid);
 
+		layoutGraph();
+
 		forward(p, c);
 	}
 
 	private static void CIT_CREATE(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.Command.CIC_CREATE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CIT_CREATE.verify(p);
 
 		long uuid = p.getLong();
 		String name = p.getString();
@@ -294,7 +300,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 	private static void CIT_DELETE(CalicoPacket p, Client c)
 	{
 		p.rewind();
-		IntentionalInterfacesNetworkCommands.Command.CIC_DELETE.verify(p);
+		IntentionalInterfacesNetworkCommands.Command.CIT_DELETE.verify(p);
 
 		long uuid = p.getLong();
 
@@ -303,7 +309,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		forward(p, c);
 	}
 
-	private static CCanvasLinkAnchor unpackAnchor(CalicoPacket p)
+	private static CCanvasLinkAnchor unpackAnchor(long link_uuid, CalicoPacket p)
 	{
 		long uuid = p.getLong();
 		long canvas_uuid = p.getLong();
@@ -311,7 +317,7 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		int x = p.getInt();
 		int y = p.getInt();
 		long group_uuid = p.getLong();
-		return new CCanvasLinkAnchor(uuid, canvas_uuid, type, x, y, group_uuid);
+		return new CCanvasLinkAnchor(uuid, link_uuid, canvas_uuid, type, x, y, group_uuid);
 	}
 
 	private static void CLINK_CREATE(CalicoPacket p, Client c)
@@ -320,10 +326,12 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		IntentionalInterfacesNetworkCommands.Command.CLINK_CREATE.verify(p);
 
 		long uuid = p.getLong();
-		CCanvasLinkAnchor anchorA = unpackAnchor(p);
-		CCanvasLinkAnchor anchorB = unpackAnchor(p);
+		CCanvasLinkAnchor anchorA = unpackAnchor(uuid, p);
+		CCanvasLinkAnchor anchorB = unpackAnchor(uuid, p);
 		CCanvasLink link = new CCanvasLink(uuid, anchorA, anchorB);
 		CCanvasLinkController.getInstance().addLink(link);
+
+		layoutGraph();
 
 		forward(p, c);
 	}
@@ -364,10 +372,17 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		long uuid = p.getLong();
 		CCanvasLinkController.getInstance().removeLinkById(uuid);
 
+		layoutGraph();
+
 		if (forward)
 		{
 			forward(p, c);
 		}
+	}
+
+	private static void forward(CalicoPacket p)
+	{
+		forward(p, null);
 	}
 
 	private static void forward(CalicoPacket p, Client c)
@@ -379,6 +394,25 @@ public class IntentionalInterfacesPlugin extends AbstractCalicoPlugin implements
 		else
 		{
 			ClientManager.send_except(c, p);
+		}
+	}
+
+	private static void layoutGraph()
+	{
+		CIntentionLayout.getInstance().populateLayout();
+		Set<Long> movedCells = CIntentionLayout.getInstance().layoutGraph();
+
+		for (CIntentionCell cell : CIntentionCellController.getInstance().getAllCells())
+		{
+			if (movedCells.contains(cell.getCanvasId()))
+			{
+				CalicoPacket p = new CalicoPacket();
+				p.putInt(IntentionalInterfacesNetworkCommands.CIC_MOVE);
+				p.putLong(cell.getId());
+				p.putInt(cell.getLocation().x);
+				p.putInt(cell.getLocation().y);
+				forward(p);
+			}
 		}
 	}
 
