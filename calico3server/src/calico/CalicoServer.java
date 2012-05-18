@@ -161,25 +161,9 @@ public class CalicoServer
 		
 		Thread udprecv = new Thread(new UDPReceiveQueue());
 		udprecv.start();
-		
-		/////////// 
-		// TODO: DEVELOPMENT USAGE ONLY
-		// This automatically starts the default session, so that we dont need the admin system
-		//SessionManager.createSession("default",5,5);
 
-		for(int i=0;i<COptions.GridRows;i++)
-		{
-			for(int y=0;y<COptions.GridCols;y++)
-			{
-				// Make the canvas
-				CCanvas can = new CCanvas(UUIDAllocator.getUUID());
-				can.setGridPos(i, y);
-				
-				// Add to the main list
-				CCanvasController.canvases.put(can.getUUID(), can);
-			}
-		}
-		
+		CCanvas initialCanvas = new CCanvas(UUIDAllocator.getUUID());
+		CCanvasController.canvases.put(initialCanvas.getUUID(), initialCanvas);
 
 		CalicoPluginManager.setup();
 		

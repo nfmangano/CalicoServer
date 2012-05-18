@@ -27,7 +27,7 @@
 
 	<!-- Build calico stuff-->
 	<target name="compile-calico" depends="build-templates">
-		<javac srcdir="${src}" destdir="${build}" debug="on" debuglevel="lines,vars,source" includes="calico/**/*.java">
+		<javac srcdir="${src}" destdir="${build}" debug="on" debuglevel="lines,vars,source" includes="calico/**/*.java" compiler="javac1.6" source="1.6" target="1.6">
 			<classpath>
 				<fileset dir="${libs}"><include name="*.jar"/></fileset>
 			</classpath>

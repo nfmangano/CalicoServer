@@ -123,7 +123,7 @@ public class ProcessQueue
 				case NetworkCommand.UDP_CHALLENGE:UDP_CHALLENGE(pdata, client);break;
 				
 				
-
+				case NetworkCommand.CANVAS_CREATE:CANVAS_CREATE(pdata,client);break;
 				case NetworkCommand.CANVAS_SET:CANVAS_SET(pdata,client);break;
 				case NetworkCommand.CANVAS_LIST:CANVAS_LIST(pdata,client);break;
 				case NetworkCommand.CANVAS_UNDO:CANVAS_UNDO(pdata,client);break;
@@ -132,6 +132,7 @@ public class ProcessQueue
 				case NetworkCommand.CANVAS_COPY:CANVAS_COPY(pdata,client);break;
 				case NetworkCommand.CANVAS_LOCK:CANVAS_LOCK(pdata,client);break;
 				case NetworkCommand.CANVAS_LOAD:CANVAS_LOAD(pdata,client);break;
+				case NetworkCommand.CANVAS_DELETE:CANVAS_DELETE(pdata,client);break;
 
 				case NetworkCommand.CONSISTENCY_CHECK:CONSISTENCY_CHECK(pdata,client);break;
 				case NetworkCommand.CONSISTENCY_RESYNC_CANVAS:CONSISTENCY_RESYNC_CANVAS(pdata, client);break;
@@ -207,6 +208,16 @@ public class ProcessQueue
 	public static void STROKE_REQUEST_HASH_CHECK(CalicoPacket p, Client client)
 	{
 
+	}
+	
+	public static void CANVAS_CREATE(CalicoPacket p, Client c)
+	{
+		long canvasId = p.getLong();
+		
+		CCanvas canvas = new CCanvas(canvasId);
+		CCanvasController.canvases.put(canvasId, canvas);
+		
+		ClientManager.send(canvas.getInfoPacket());
 	}
 	
 	public static void CANVAS_CLEAR(CalicoPacket p, Client c)
@@ -311,6 +322,22 @@ public class ProcessQueue
 		{
 			ClientManager.send(c, CalicoPacket.getPacket(NetworkCommand.STATUS_MESSAGE, "No more redo history"));
 		}
+	}
+	
+	public static void CANVAS_DELETE(CalicoPacket p, Client c)
+	{
+		long uuid = p.getLong();
+		
+		synchronized(CalicoServer.canvasThreads)
+		{
+			CanvasThread thread = CalicoServer.canvasThreads.remove(uuid);
+			if (thread != null)
+			{
+				// seems like it should be stopped or something
+			}
+		}
+		
+		CCanvasController.canvases.remove(uuid);
 	}
 	
 	public static void CONSISTENCY_RESYNC_CANVAS(CalicoPacket p, Client c)
