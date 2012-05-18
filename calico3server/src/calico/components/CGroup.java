@@ -8,6 +8,7 @@ import calico.clients.*;
 import calico.components.decorators.CGroupDecorator;
 import calico.controllers.CArrowController;
 import calico.controllers.CCanvasController;
+import calico.controllers.CConnectorController;
 import calico.controllers.CGroupController;
 import calico.controllers.CStrokeController;
 import calico.utils.CalicoUtils;
@@ -66,6 +67,8 @@ public class CGroup {
 
 	// the child BGElements, this ARE NOT bgelements that are in child groups
 	protected LongArraySet childStrokes = new LongArraySet();
+	
+	protected LongArraySet childConnectors = new LongArraySet();
 
 	protected boolean isDeleted = false;
 
@@ -99,7 +102,7 @@ public class CGroup {
 	}
 
 	public byte[] getHashCode() {
-		CalicoPacket pack = new CalicoPacket(16);
+		CalicoPacket pack = new CalicoPacket(18);
 		pack.putInt(Arrays.hashCode(new long[] { this.uuid, this.cuid,
 				this.puid }));
 		pack.putInt(Arrays.hashCode(this.points.xpoints));
@@ -107,6 +110,7 @@ public class CGroup {
 		pack.putInt(Arrays.hashCode(getChildStrokes()));
 		pack.putInt(Arrays.hashCode(getChildGroups()));
 		pack.putInt(Arrays.hashCode(getChildArrows()));
+		pack.putInt(Arrays.hashCode(getChildConnectors()));
 
 		return pack.getBuffer();
 	}
@@ -144,6 +148,13 @@ public class CGroup {
 			long[] auid = childArrows.toLongArray();
 			for (int i = 0; i < auid.length; i++) {
 				CArrowController.no_notify_move_group(auid[i], this.uuid, x, y);
+			}
+		}
+		
+		if (childConnectors.size() > 0) {
+			long[] cuid = childConnectors.toLongArray();
+			for (int i = 0; i < cuid.length; i++) {
+				CConnectorController.no_notify_move_group_anchor(cuid[i], uuid, x, y);
 			}
 		}
 
@@ -256,6 +267,19 @@ public class CGroup {
 	public long[] getChildArrows() {
 		return this.childArrows.toLongArray();
 	}
+	
+	public void addChildConnector(long uid) {
+		if (!this.childConnectors.contains(uid))
+			this.childConnectors.add(uid);
+	}
+
+	public void deleteChildConnector(long uid) {
+		this.childConnectors.remove(uid);
+	}
+
+	public long[] getChildConnectors() {
+		return this.childConnectors.toLongArray();
+	}
 
 	public void setChildStrokes(long[] bglist) {
 		childStrokes.clear();
@@ -281,6 +305,12 @@ public class CGroup {
 		this.childArrows.clear();
 		for (int i = 0; i < arlist.length; i++)
 			childArrows.add(arlist[i]);
+	}
+	
+	public void setChildConnectors(long[] ctlist, int x, int y) {
+		this.childConnectors.clear();
+		for (int i = 0; i < ctlist.length; i++)
+			childConnectors.add(ctlist[i]);
 	}
 	
 	public long getCanvasUUID() {
@@ -567,6 +597,7 @@ public class CGroup {
 			long[] child_strokes = getChildStrokes();
 			long[] child_groups = getChildGroups();
 			long[] child_arrows = getChildArrows();
+			long[] child_connectors = getChildConnectors();
 
 			// Reparent any strokes
 			if (child_strokes.length > 0) {
@@ -585,6 +616,12 @@ public class CGroup {
 			if (child_arrows.length > 0) {
 				for (int i = 0; i < child_arrows.length; i++) {
 					CArrowController.no_notify_delete(child_arrows[i]);
+				}
+			}
+			
+			if (child_connectors.length > 0) {
+				for (int i = 0; i < child_connectors.length; i++) {
+					CConnectorController.no_notify_delete(child_connectors[i]);
 				}
 			}
 		}
@@ -995,6 +1032,11 @@ public class CGroup {
 		this.childArrows.clear();
 		this.childArrows = new LongArraySet();
 	}
+	
+	public void clearChildConnectors() {
+		this.childConnectors.clear();
+		this.childConnectors = new LongArraySet();
+	}
 
 	// TODO: Finish this
 	public Properties toProperties() {
@@ -1018,6 +1060,7 @@ public class CGroup {
 		props.setProperty("child.groups", Arrays.toString(getChildGroups()));
 		props.setProperty("child.strokes", Arrays.toString(getChildStrokes()));
 		props.setProperty("child.arrows", Arrays.toString(getChildArrows()));
+		props.setProperty("child.connectors", Arrays.toString(getChildConnectors()));
 
 		return props;
 	}
@@ -1210,6 +1253,28 @@ public class CGroup {
 			}
 		}
 		
+		if (childConnectors.size() > 0) {
+			long[] cuid = childConnectors.toLongArray();
+			Point2D ptSrc = new Point2D.Double();
+			Point2D ptDst = new Point2D.Double();
+			for (int i = 0; i < cuid.length; i++) {
+				if (CConnectorController.connectors.get(cuid[i]).getAnchorUUID(CConnector.TYPE_HEAD) == uuid)
+				{
+					ptSrc = new Point(CConnectorController.connectors.get(cuid[i]).getHead());
+					rotateAboutPivot.transform(ptSrc, ptDst);
+					CConnectorController.no_notify_move_group_anchor(cuid[i], CConnector.TYPE_HEAD, Math.round((float)ptDst.getX() - (float)ptSrc.getX()),
+							Math.round((float)ptDst.getY() - (float)ptSrc.getY()));
+				}
+				if (CConnectorController.connectors.get(cuid[i]).getAnchorUUID(CConnector.TYPE_TAIL) == uuid)
+				{
+					ptSrc = new Point(CConnectorController.connectors.get(cuid[i]).getTail());
+					rotateAboutPivot.transform(ptSrc, ptDst);
+					CConnectorController.no_notify_move_group_anchor(cuid[i], CConnector.TYPE_TAIL, Math.round((float)ptDst.getX() - (float)ptSrc.getX()),
+							Math.round((float)ptDst.getY() - (float)ptSrc.getY()));
+				}
+			}
+		}
+		
 		for (long g : childGroups)
 		{
 			if (CGroupController.is_parented_to(g, this.uuid))
@@ -1284,6 +1349,32 @@ public class CGroup {
 			}
 		}
 		
+		if (childConnectors.size() > 0) {
+			long[] cuid = childConnectors.toLongArray();
+			Point2D ptSrc = new Point2D.Double();
+			Point2D ptDst = new Point2D.Double();
+			for (int i = 0; i < cuid.length; i++) {
+				if (CConnectorController.connectors.get(cuid[i]).getAnchorUUID(CConnector.TYPE_HEAD) == uuid)
+				{
+					ptSrc = new Point(CConnectorController.connectors.get(cuid[i]).getHead());
+					ptDst = scaleAboutPivot1.transform(ptSrc, ptDst);
+					ptDst = scaleAboutPivot2.transform(ptDst, null);
+					ptDst = scaleAboutPivot3.transform(ptDst, null);
+					CConnectorController.no_notify_move_group_anchor(cuid[i], CConnector.TYPE_HEAD, Math.round((float)ptDst.getX() - (float)ptSrc.getX()),
+							Math.round((float)ptDst.getY() - (float)ptSrc.getY()));
+				}
+				if (CConnectorController.connectors.get(cuid[i]).getAnchorUUID(CConnector.TYPE_TAIL) == uuid)
+				{
+					ptSrc = new Point(CConnectorController.connectors.get(cuid[i]).getTail());
+					ptDst = scaleAboutPivot1.transform(ptSrc, ptDst);
+					ptDst = scaleAboutPivot2.transform(ptDst, null);
+					ptDst = scaleAboutPivot3.transform(ptDst, null);
+					CConnectorController.no_notify_move_group_anchor(cuid[i], CConnector.TYPE_TAIL, Math.round((float)ptDst.getX() - (float)ptSrc.getX()),
+							Math.round((float)ptDst.getY() - (float)ptSrc.getY()));
+				}
+			}
+		}
+		
 		for (long g : childGroups)
 		{
 			if (CGroupController.is_parented_to(g, this.uuid))
@@ -1332,10 +1423,19 @@ public class CGroup {
 			if (tempArrow.getAnchorB().getUUID() == this.uuid)
 				tempArrow.setAnchorB(new AnchorPoint(CArrow.TYPE_CANVAS, tempArrow.getAnchorB().getPoint(), this.uuid));
 		}
+		for (long childConnector : getChildConnectors())
+		{
+			CConnector tempConnector = CConnectorController.connectors.get(childConnector);
+			if (tempConnector.getAnchorUUID(CConnector.TYPE_HEAD) == this.uuid)
+				tempConnector.setAnchorUUID(0l, CConnector.TYPE_HEAD);
+			if (tempConnector.getAnchorUUID(CConnector.TYPE_TAIL) == this.uuid)
+				tempConnector.setAnchorUUID(0l, CConnector.TYPE_TAIL);
+		}
 		
 		childGroups.clear();
 		childStrokes.clear();
 		childArrows.clear();
+		childConnectors.clear();
 	}
 
 	public double getRotation() {
