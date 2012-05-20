@@ -6,6 +6,7 @@ import java.util.List;
 
 import calico.components.CCanvas;
 import calico.networking.netstuff.CalicoPacket;
+import calico.plugins.iip.graph.layout.CIntentionLayout;
 
 public class CIntentionCell
 {
@@ -21,7 +22,7 @@ public class CIntentionCell
 	{
 		this.uuid = uuid;
 		this.canvas_uuid = canvasId;
-		this.location = new Point();
+		this.location = new Point(-(CIntentionLayout.INTENTION_CELL_SIZE.width / 2), -(CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
 		this.title = DEFAULT_TITLE;
 	}
 
@@ -34,7 +35,7 @@ public class CIntentionCell
 	{
 		return canvas_uuid;
 	}
-	
+
 	public Point getLocation()
 	{
 		return location;

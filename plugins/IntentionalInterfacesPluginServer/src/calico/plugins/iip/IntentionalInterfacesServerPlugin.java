@@ -118,7 +118,7 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 					createIntentionCell(canvasId);
 					break;
 				case NetworkCommand.CANVAS_DELETE:
-					CIntentionCellController.getInstance().removeCellById(CIntentionCellController.getInstance().getCellByCanvasId(canvasId).getId());
+					CANVAS_DELETE(p, c, canvasId);
 					break;
 			}
 		}
@@ -146,15 +146,7 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 
 		System.out.println("Clearing canvas " + canvasId);
 
-		for (Long linkId : CCanvasLinkController.getInstance().getLinkIdsForCanvas(canvasId))
-		{
-			CalicoPacket packet = new CalicoPacket();
-			packet.putInt(IntentionalInterfacesNetworkCommands.CLINK_DELETE);
-			packet.putLong(linkId);
-
-			packet.rewind();
-			CLINK_DELETE(packet, null, false);
-		}
+		deleteAllLinks(canvasId, false);
 
 		CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(canvasId);
 
@@ -181,6 +173,34 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		}
 
 		System.out.println("Done clearing canvas " + canvasId);
+	}
+	
+	private static void CANVAS_DELETE(CalicoPacket p, Client c, long canvasId)
+	{
+		CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(canvasId);
+		CIntentionCellController.getInstance().removeCellById(cell.getId());
+		deleteAllLinks(canvasId, true);
+		
+		CalicoPacket cicDelete = CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_DELETE, cell.getId());
+		forward(cicDelete);
+		
+		layoutGraph();
+	}
+	
+	private static void deleteAllLinks(long canvasId, boolean forward)
+	{
+		for (Long linkId : CCanvasLinkController.getInstance().getLinkIdsForCanvas(canvasId))
+		{
+			CCanvasLinkController.getInstance().removeLinkById(linkId);
+			
+			if (forward)
+			{
+				CalicoPacket packet = new CalicoPacket();
+				packet.putInt(IntentionalInterfacesNetworkCommands.CLINK_DELETE);
+				packet.putLong(linkId);
+				forward(packet);
+			}
+		}
 	}
 
 	private static void CIC_MOVE(CalicoPacket p, Client c)
@@ -380,6 +400,28 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		}
 	}
 
+	public static void layoutGraph()
+	{
+		CIntentionLayout.getInstance().populateLayout();
+		CIntentionLayout.getInstance().layoutGraph();
+		Set<Long> movedCells = CIntentionLayout.getInstance().getMovedCells();
+		
+		for (CIntentionCell cell : CIntentionCellController.getInstance().getAllCells())
+		{
+			if (movedCells.contains(cell.getCanvasId()))
+			{
+				CalicoPacket p = new CalicoPacket();
+				p.putInt(IntentionalInterfacesNetworkCommands.CIC_MOVE);
+				p.putLong(cell.getId());
+				p.putInt(cell.getLocation().x);
+				p.putInt(cell.getLocation().y);
+				forward(p);
+			}
+		}
+		
+		forward(CIntentionLayout.getInstance().getTopology().createPacket());
+	}
+
 	private static void forward(CalicoPacket p)
 	{
 		forward(p, null);
@@ -397,31 +439,13 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		}
 	}
 
-	private static void layoutGraph()
-	{
-		CIntentionLayout.getInstance().populateLayout();
-		Set<Long> movedCells = CIntentionLayout.getInstance().layoutGraph();
-
-		for (CIntentionCell cell : CIntentionCellController.getInstance().getAllCells())
-		{
-			if (movedCells.contains(cell.getCanvasId()))
-			{
-				CalicoPacket p = new CalicoPacket();
-				p.putInt(IntentionalInterfacesNetworkCommands.CIC_MOVE);
-				p.putLong(cell.getId());
-				p.putInt(cell.getLocation().x);
-				p.putInt(cell.getLocation().y);
-				forward(p);
-			}
-		}
-	}
-
 	@Override
 	public CalicoPacket[] getCalicoStateElementUpdatePackets()
 	{
 		state.reset();
 		CIntentionCellController.getInstance().populateState(state);
 		CCanvasLinkController.getInstance().populateState(state);
+		CIntentionLayout.getInstance().populateState(state);
 
 		return state.getAllPackets();
 	}

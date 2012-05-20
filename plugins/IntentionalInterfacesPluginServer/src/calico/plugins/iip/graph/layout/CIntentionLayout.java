@@ -12,6 +12,7 @@ import java.util.Set;
 import calico.components.CCanvas;
 import calico.controllers.CCanvasController;
 import calico.plugins.iip.CIntentionCell;
+import calico.plugins.iip.IntentionalInterfaceState;
 import calico.plugins.iip.controllers.CCanvasLinkController;
 import calico.plugins.iip.controllers.CIntentionCellController;
 
@@ -52,24 +53,42 @@ public class CIntentionLayout
 		return centerCanvasAt(canvasId, x, y);
 	}
 
-	static final Dimension INTENTION_CELL_SIZE = new Dimension(100, 60);
+	public static final Dimension INTENTION_CELL_SIZE = new Dimension(100, 60);
 	static final int INTENTION_CELL_DIAMETER = calculateCellDiameter(INTENTION_CELL_SIZE);
-	static final int RING_SEPARATION = 100 + INTENTION_CELL_DIAMETER;
 	static final LayoutMode LAYOUT_MODE = LayoutMode.CONCENTRIC;
 
 	private static final ClusterSorter CLUSTER_SORTER = new ClusterSorter();
 
 	private final List<CIntentionCluster> clusters = new ArrayList<CIntentionCluster>();
 
+	// transitory per layout execution
+	private final Set<Long> movedCells = new HashSet<Long>();
+	private final CIntentionTopology topology = new CIntentionTopology();
+
+	public Set<Long> getMovedCells()
+	{
+		return movedCells;
+	}
+
+	public CIntentionTopology getTopology()
+	{
+		return topology;
+	}
+
+	public void populateState(IntentionalInterfaceState state)
+	{
+		state.setTopologyPacket(topology.createPacket());
+	}
+
 	public void populateLayout()
 	{
 		clusters.clear();
 		for (CIntentionCell cell : CIntentionCellController.getInstance().getAllCells())
 		{
-			boolean hasIncomingLink = false;
+			boolean hasIncomingLink = false; // getCanvasIndex(cell.getCanvasId())
 			for (Long anchorId : CCanvasLinkController.getInstance().getAnchorIdsForCanvasId(cell.getCanvasId()))
 			{
-				if (CCanvasLinkController.getInstance().isDestination(anchorId))
+				if (CCanvasLinkController.getInstance().isConnectedDestination(anchorId))
 				{
 					hasIncomingLink = true;
 					break;
@@ -91,9 +110,9 @@ public class CIntentionLayout
 		describeClusters();
 	}
 
-	public Set<Long> layoutGraph()
+	public void layoutGraph()
 	{
-		Set<Long> movedCells = new HashSet<Long>();
+		movedCells.clear();
 
 		switch (LAYOUT_MODE)
 		{
@@ -104,8 +123,6 @@ public class CIntentionLayout
 				layoutClusterAsCircles(movedCells);
 				break;
 		}
-
-		return movedCells;
 	}
 
 	private void layoutGraphAsTree(Set<Long> movedCells)
@@ -114,18 +131,30 @@ public class CIntentionLayout
 		for (CIntentionCluster cluster : clusters)
 		{
 			cluster.layoutClusterAsTree(clusterRoot, movedCells);
-			clusterRoot.y += (cluster.getLayoutSize().height + RING_SEPARATION);
+			clusterRoot.y += (cluster.getLayoutSize().height + CIntentionCluster.RING_SEPARATION);
 		}
 	}
 
 	private void layoutClusterAsCircles(Set<Long> movedCells)
 	{
 		Point clusterCenter = new Point();
+		topology.clear();
 
 		CIntentionCluster rootCluster = clusters.get(0);
 		List<Double> ringRadii = rootCluster.getRingRadii();
 		rootCluster.layoutClusterAsCircles(clusterCenter, movedCells, ringRadii);
-		double occupiedRadius = (ringRadii.get(ringRadii.size() - 1) + INTENTION_CELL_DIAMETER);
+
+		double occupiedRadius;
+		if (ringRadii.isEmpty())
+		{
+			occupiedRadius = INTENTION_CELL_DIAMETER / 2.0;
+		}
+		else
+		{
+			occupiedRadius = (ringRadii.get(ringRadii.size() - 1) + INTENTION_CELL_DIAMETER);
+		}
+
+		topology.addCluster(clusterCenter, ringRadii);
 
 		double theta = 0.0;
 		double maxClusterRadius = 0.0;
@@ -133,7 +162,16 @@ public class CIntentionLayout
 		{
 			CIntentionCluster cluster = clusters.get(i);
 			ringRadii = cluster.getRingRadii();
-			double clusterRadius = ringRadii.get(ringRadii.size() - 1);
+
+			double clusterRadius;
+			if (ringRadii.isEmpty())
+			{
+				clusterRadius = INTENTION_CELL_DIAMETER / 2.0;
+			}
+			else
+			{
+				clusterRadius = ringRadii.get(ringRadii.size() - 1);
+			}
 
 			double clusterThetaSpan = 2 * Math.asin((clusterRadius + INTENTION_CELL_DIAMETER) / (occupiedRadius + clusterRadius));
 			if ((theta + clusterThetaSpan) > (2 * Math.PI))
@@ -152,10 +190,12 @@ public class CIntentionLayout
 			clusterCenter.setLocation(Math.sin(theta) * aggregateRadius, -(Math.cos(theta) * aggregateRadius));
 			cluster.layoutClusterAsCircles(clusterCenter, movedCells, ringRadii);
 
+			topology.addCluster(clusterCenter, ringRadii);
+
 			theta += (clusterThetaSpan / 2.0);
 			if (clusterRadius > maxClusterRadius)
 			{
-				maxClusterRadius = clusterRadius ;
+				maxClusterRadius = clusterRadius;
 			}
 		}
 	}
@@ -178,6 +218,10 @@ public class CIntentionLayout
 
 	static int getCanvasIndex(long canvasId)
 	{
+		if (canvasId < 0L)
+		{
+			return -1;
+		}
 		return CCanvasController.canvases.get(canvasId).getIndex();
 	}
 

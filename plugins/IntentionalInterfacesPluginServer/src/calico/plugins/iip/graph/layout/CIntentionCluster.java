@@ -19,6 +19,7 @@ import calico.plugins.iip.controllers.CCanvasLinkController;
 class CIntentionCluster
 {
 	private static final SliceSorter SLICE_SORTER = new SliceSorter();
+	static final int RING_SEPARATION = 40 + CIntentionLayout.INTENTION_CELL_DIAMETER;
 
 	private final List<CIntentionRing> rings = new ArrayList<CIntentionRing>();
 	private final Map<Long, CIntentionSlice> slicesByRootCanvasId = new LinkedHashMap<Long, CIntentionSlice>();
@@ -72,6 +73,10 @@ class CIntentionCluster
 		for (long anchorId : CCanvasLinkController.getInstance().getAnchorIdsForCanvasId(rootCanvasId))
 		{
 			long linkedCanvasId = CCanvasLinkController.getInstance().getOpposite(anchorId).getCanvasId();
+			if (linkedCanvasId < 0L)
+			{
+				continue;
+			}
 
 			CIntentionSlice slice = new CIntentionSlice(linkedCanvasId);
 			slices.add(slice);
@@ -98,7 +103,7 @@ class CIntentionCluster
 	void layoutClusterAsTree(Point clusterCenter, Set<Long> movedCells)
 	{
 		location.setLocation(clusterCenter);
-		
+
 		int maxProjectedRingSpan = 0;
 		for (CIntentionRing ring : rings)
 		{
@@ -122,9 +127,9 @@ class CIntentionCluster
 			movedCells.add(rootCanvasId);
 		}
 
-		layoutSize.setSize(maxProjectedRingSpan, rings.size() * CIntentionLayout.RING_SEPARATION);
+		layoutSize.setSize(maxProjectedRingSpan, rings.size() * RING_SEPARATION);
 
-		Point sliceRoot = new Point(location.x, location.y + CIntentionLayout.RING_SEPARATION);
+		Point sliceRoot = new Point(location.x, location.y + RING_SEPARATION);
 		for (CIntentionSlice slice : slicesByRootCanvasId.values())
 		{
 			slice.layoutSliceAsTree(sliceRoot, maxProjectedRingSpan, movedCells);
@@ -148,9 +153,9 @@ class CIntentionCluster
 			}
 
 			double ringRadius = ringSpan / (2 * Math.PI);
-			if (ringRadius < (lastRingRadius + CIntentionLayout.RING_SEPARATION))
+			if (ringRadius < (lastRingRadius + RING_SEPARATION))
 			{
-				ringRadius = (lastRingRadius + CIntentionLayout.RING_SEPARATION);
+				ringRadius = (lastRingRadius + RING_SEPARATION);
 				ringSpan = (int) (2 * Math.PI * ringRadius);
 			}
 
@@ -163,7 +168,7 @@ class CIntentionCluster
 	void layoutClusterAsCircles(Point clusterCenter, Set<Long> movedCells, List<Double> ringRadii)
 	{
 		location.setLocation(clusterCenter);
-		
+
 		if (CIntentionLayout.centerCanvasAt(rootCanvasId, location.x, location.y))
 		{
 			movedCells.add(rootCanvasId);
@@ -187,7 +192,14 @@ class CIntentionCluster
 			}
 		}
 
-		layoutSize.setSize((int) (ringRadii.get(ringRadii.size() - 1) * 2), (int) (ringRadii.get(ringRadii.size() - 1) * 2));
+		if (ringRadii.isEmpty())
+		{
+			layoutSize.setSize(CIntentionLayout.INTENTION_CELL_DIAMETER, CIntentionLayout.INTENTION_CELL_DIAMETER);
+		}
+		else
+		{
+			layoutSize.setSize((int) (ringRadii.get(ringRadii.size() - 1) * 2), (int) (ringRadii.get(ringRadii.size() - 1) * 2));
+		}
 	}
 
 	private void traverseAndPopulate(long canvasId, int ringIndex, CIntentionSlice slice)
@@ -206,6 +218,10 @@ class CIntentionCluster
 				continue;
 			}
 			long linkedCanvasId = CCanvasLinkController.getInstance().getOpposite(anchorId).getCanvasId();
+			if (linkedCanvasId < 0L)
+			{
+				continue; // this is not a canvas, nothing is here
+			}
 			traverseAndPopulate(linkedCanvasId, ringIndex + 1, slice);
 		}
 	}
@@ -217,11 +233,42 @@ class CIntentionCluster
 			slice.setPopulationWeight(totalInOrbit);
 		}
 
+		double minimumRingRadius = 0.0;
+		double equalSliceWeight = 1.0 / (double) slicesByRootCanvasId.size();
 		for (CIntentionRing ring : rings)
 		{
+			minimumRingRadius += RING_SEPARATION;
+			double minimumRingSpan = 2 * Math.PI * minimumRingRadius;
+			int maxCellsInMinRingSpan = (int) (minimumRingSpan / CIntentionLayout.INTENTION_CELL_DIAMETER);
+			boolean ringCrowded = ring.size() > maxCellsInMinRingSpan;
+
+			int maxCellsInEqualSliceSpan = (maxCellsInMinRingSpan / slicesByRootCanvasId.size());
+			boolean equalSlicesCrowded = false;
 			for (CIntentionSlice slice : slicesByRootCanvasId.values())
 			{
-				slice.setArcWeight(ring.getIndex(), ring.size());
+				if (slice.arcSize(ring.getIndex()) > maxCellsInEqualSliceSpan)
+				{
+					equalSlicesCrowded = true;
+					break;
+				}
+			}
+
+			for (CIntentionSlice slice : slicesByRootCanvasId.values())
+			{
+				double arcWeight;
+				if (ringCrowded)
+				{
+					arcWeight = slice.arcSize(ring.getIndex()) / (double) ring.size();
+				}
+				else if (equalSlicesCrowded)
+				{
+					arcWeight = (slice.arcSize(ring.getIndex()) * CIntentionLayout.INTENTION_CELL_DIAMETER) / minimumRingSpan;
+				}
+				else
+				{
+					arcWeight = equalSliceWeight;
+				}
+				slice.setArcWeight(ring.getIndex(), arcWeight);
 			}
 		}
 
@@ -232,11 +279,21 @@ class CIntentionCluster
 			sumOfMaxWeights += slice.getMaxArcWeight();
 		}
 
-		double reductionRatio = 1.0 / sumOfMaxWeights;
+		double reductionRatio = 1.0 / Math.max(1.0, sumOfMaxWeights);
 		for (CIntentionSlice slice : slicesByRootCanvasId.values())
 		{
 			slice.setWeight(slice.getMaxArcWeight() * reductionRatio);
 		}
+
+		// what percentage of the minimum ring span is occupied by slice a? If it is less than the weighted percentage,
+		// then it only needs that much.
+
+		// Distributions:
+		// 1. weighted
+		// 2. equal
+		// 3. by occupancy at minimum ring size
+
+		// the idea is to choose a distribution per ring, normalize each one, and then balance maximi per slice
 	}
 
 	private CIntentionRing getRing(int ringIndex)

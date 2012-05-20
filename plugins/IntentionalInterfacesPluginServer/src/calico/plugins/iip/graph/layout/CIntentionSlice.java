@@ -45,6 +45,11 @@ public class CIntentionSlice
 	{
 		return canvasIds.size();
 	}
+	
+	int arcSize(int ringIndex)
+	{
+		return getArc(ringIndex).canvases.size();
+	}
 
 	void setPopulationWeight(int totalInOrbit)
 	{
@@ -72,9 +77,9 @@ public class CIntentionSlice
 		}
 	}
 
-	void setArcWeight(int ringIndex, int ringTotalPopulation)
+	void setArcWeight(int ringIndex, double weight)
 	{
-		getArc(ringIndex).setWeight(ringTotalPopulation);
+		getArc(ringIndex).setWeight(weight);
 	}
 
 	void calculateMaxArcWeight()
@@ -125,7 +130,7 @@ public class CIntentionSlice
 					x += CIntentionLayout.INTENTION_CELL_DIAMETER;
 				}
 			}
-			y += CIntentionLayout.RING_SEPARATION;
+			y += CIntentionCluster.RING_SEPARATION;
 		}
 
 		layoutSpan = sliceWidth;
@@ -185,9 +190,9 @@ public class CIntentionSlice
 			canvases.add(canvasId);
 		}
 
-		void setWeight(int ringTotalPopulation)
+		void setWeight(double weight)
 		{
-			weight = (canvases.size() / (double) ringTotalPopulation);
+			this.weight = weight;
 		}
 
 		void calculateArcSpanProjection()
