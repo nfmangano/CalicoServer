@@ -154,7 +154,7 @@ public class CIntentionLayout
 			occupiedRadius = (ringRadii.get(ringRadii.size() - 1) + INTENTION_CELL_DIAMETER);
 		}
 
-		topology.addCluster(clusterCenter, ringRadii);
+		topology.addCluster(rootCluster.getRootCanvasId(), clusterCenter, ringRadii);
 
 		double theta = 0.0;
 		double maxClusterRadius = 0.0;
@@ -190,7 +190,7 @@ public class CIntentionLayout
 			clusterCenter.setLocation(Math.sin(theta) * aggregateRadius, -(Math.cos(theta) * aggregateRadius));
 			cluster.layoutClusterAsCircles(clusterCenter, movedCells, ringRadii);
 
-			topology.addCluster(clusterCenter, ringRadii);
+			topology.addCluster(cluster.getRootCanvasId(), clusterCenter, ringRadii);
 
 			theta += (clusterThetaSpan / 2.0);
 			if (clusterRadius > maxClusterRadius)

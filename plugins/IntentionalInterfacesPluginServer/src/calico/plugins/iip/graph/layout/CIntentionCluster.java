@@ -81,7 +81,7 @@ class CIntentionCluster
 			CIntentionSlice slice = new CIntentionSlice(linkedCanvasId);
 			slices.add(slice);
 
-			traverseAndPopulate(linkedCanvasId, 0, slice);
+			traverseAndPopulate(-1L, linkedCanvasId, 0, slice);
 			totalInOrbit += slice.size();
 		}
 
@@ -202,12 +202,12 @@ class CIntentionCluster
 		}
 	}
 
-	private void traverseAndPopulate(long canvasId, int ringIndex, CIntentionSlice slice)
+	private void traverseAndPopulate(long parentCanvasId, long canvasId, int ringIndex, CIntentionSlice slice)
 	{
 		CIntentionRing ring = getRing(ringIndex);
 		ring.addCanvas(canvasId);
 
-		slice.addCanvas(canvasId, ringIndex);
+		slice.addCanvas(parentCanvasId, canvasId, ringIndex);
 
 		for (long anchorId : CCanvasLinkController.getInstance().getAnchorIdsForCanvasId(canvasId))
 		{
@@ -222,7 +222,7 @@ class CIntentionCluster
 			{
 				continue; // this is not a canvas, nothing is here
 			}
-			traverseAndPopulate(linkedCanvasId, ringIndex + 1, slice);
+			traverseAndPopulate(canvasId, linkedCanvasId, ringIndex + 1, slice);
 		}
 	}
 
