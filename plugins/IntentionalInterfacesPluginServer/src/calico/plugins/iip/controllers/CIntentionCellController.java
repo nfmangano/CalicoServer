@@ -36,6 +36,11 @@ public class CIntentionCellController
 		}
 	}
 	
+	public Collection<CIntentionCell> getAllCells()
+	{
+		return cells.values();
+	}
+	
 	public void addCell(CIntentionCell cell)
 	{
 		cells.put(cell.getId(), cell);

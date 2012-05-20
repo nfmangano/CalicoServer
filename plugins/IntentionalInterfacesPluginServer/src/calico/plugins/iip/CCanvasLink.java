@@ -1,10 +1,15 @@
 package calico.plugins.iip;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import calico.networking.netstuff.CalicoPacket;
 
 public class CCanvasLink
 {
+	private static final AtomicInteger INDEX_COUNTER = new AtomicInteger();
+	
 	private long uuid;
+	private int index; // not visible to clients
 
 	private CCanvasLinkAnchor anchorA;
 	private CCanvasLinkAnchor anchorB;
@@ -14,6 +19,7 @@ public class CCanvasLink
 	public CCanvasLink(long uuid, CCanvasLinkAnchor anchorA, CCanvasLinkAnchor anchorB)
 	{
 		this.uuid = uuid;
+		this.index = INDEX_COUNTER.getAndIncrement();
 		this.anchorA = anchorA;
 		this.anchorB = anchorB;
 		this.label = "";
@@ -22,6 +28,11 @@ public class CCanvasLink
 	public long getId()
 	{
 		return uuid;
+	}
+	
+	public int getIndex()
+	{
+		return index;
 	}
 
 	public CCanvasLinkAnchor getAnchorA()

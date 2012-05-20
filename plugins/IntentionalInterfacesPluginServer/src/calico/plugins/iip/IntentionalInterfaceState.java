@@ -30,6 +30,11 @@ public class IntentionalInterfaceState
 		linkPackets.add(packet);
 	}
 	
+	public void setTopologyPacket(CalicoPacket packet)
+	{
+		packets.add(packet);
+	}
+	
 	public CalicoPacket[] getAllPackets()
 	{
 		packets.addAll(cellPackets);
