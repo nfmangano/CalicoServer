@@ -354,6 +354,7 @@ public class ProcessQueue
 		}
 		
 		CCanvasController.canvases.remove(uuid);
+		ClientManager.send_except(c, p);
 	}
 	
 	public static void CONSISTENCY_RESYNC_CANVAS(CalicoPacket p, Client c)
