@@ -15,12 +15,15 @@ import java.awt.*;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.NetworkInterface;
 import java.net.URL;
 import java.util.*;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.apache.log4j.*;
 import org.shodor.util11.PolygonUtils;
@@ -554,6 +557,33 @@ public class CGroupController
 				}
 			}
 		}
+		
+		//Connectors
+		if (isRoot)
+		{
+			long[] connector_uuids  = CCanvasController.canvases.get(canvasuuid).getChildConnectors();
+			for (int i = 0; i < connector_uuids.length; i++)
+			{
+				CConnector tempConnector = CConnectorController.connectors.get(connector_uuids[i]);
+				if ((UUIDMappings.containsKey(tempConnector.getAnchorUUID(CConnector.TYPE_HEAD)) || tempConnector.getAnchorUUID(CConnector.TYPE_HEAD) == uuid) && 
+					(UUIDMappings.containsKey(tempConnector.getAnchorUUID(CConnector.TYPE_TAIL)) || tempConnector.getAnchorUUID(CConnector.TYPE_TAIL) == uuid))
+				{
+					long new_connector_uuid = UUIDMappings.get(connector_uuids[i]).longValue();
+					
+					
+					if (UUIDMappings.containsKey(tempConnector.getAnchorUUID(CConnector.TYPE_HEAD)) && 
+						UUIDMappings.containsKey(tempConnector.getAnchorUUID(CConnector.TYPE_TAIL)))
+					{
+						Point head = (Point) tempConnector.getHead().clone();
+						Point tail = (Point) tempConnector.getTail().clone();
+						
+						CConnectorController.no_notify_create(new_connector_uuid, canvasuuid, tempConnector.getColor(), tempConnector.getThickness(), head, tail,
+								tempConnector.getOrthogonalDistance(), tempConnector.getTravelDistance(), 
+								UUIDMappings.get(tempConnector.getAnchorUUID(CConnector.TYPE_HEAD)), UUIDMappings.get(tempConnector.getAnchorUUID(CConnector.TYPE_TAIL)));
+					}
+				}
+			}
+		}
 	}//no_notify_copy
 	
 	private static ArrayList<Long> getSubGroups(long uuid)
@@ -679,6 +709,8 @@ public class CGroupController
 			}
 		}
 		
+		// Connectors: The client will turn the connector into a stroke and notify the server. Therefore
+		// we don't need to reparent the connector here.
 		
 	}
 	
@@ -896,6 +928,20 @@ public class CGroupController
 		groups.get(uuid).addChildArrow(cguuid);
 	}
 	
+	public static void no_notify_add_child_connector(long uuid, long cguuid)
+	{
+		if(!exists(uuid)){return;}
+		
+		groups.get(uuid).addChildConnector(cguuid);
+	}
+	
+	public static void no_notify_remove_child_connector(long uuid, long cguuid)
+	{
+		if(!exists(uuid)){return;}
+		
+		groups.get(uuid).deleteChildConnector(cguuid);
+	}
+	
 	public static boolean group_contains_group(final long containerUUID, final long checkUUID)
 	{
 		if(!groups.containsKey(containerUUID) || !groups.containsKey(checkUUID)){return false;}
@@ -1040,33 +1086,44 @@ public class CGroupController
 //		CGroupController.groups.get(uuid).shrinkToContents();
 //	}
 //	
-	public static void createImageGroup(long uuid, long cuuid, String imageURL, int x, int y)
+	public static boolean createImageGroup(long uuid, long cuuid, String imageURL, int x, int y)
 	{
 		try{
 			
 			CImageController.download_image(uuid, imageURL);
 //			imageURL = CImageController.getImageURL(uuid);
-			URL url= new URL(imageURL);
-			Image image = null;
-			try
+			//URL url= new URL(imageURL);
+			//Image image = null;
+			/*try
 			{
 				image = ImageIO.read(new File(CImageController.getImagePath(uuid)));
 			}
 			catch (IOException e)
 			{
 				e.printStackTrace();
-			}
-//			Image image = Toolkit.getDefaultToolkit().createImage(url);
-//			Image image = Toolkit.getDefaultToolkit().createImage(imageURL);
+			}*/
 			
-			//this will run once we have the image ready
-//			image.getWidth(CImageController.getImageInitializer(uuid, cuuid, CImageController.getImageURL(uuid), x, y));
-			CGroupController.createImageGroup(uuid, cuuid, 0L, imageURL, x, y, image.getWidth(null), image.getHeight(null));		
+			Dimension imageSize = CImageController.getImageSize(CImageController.getImagePath(uuid));
+			
+			if (imageSize.width > 1920 || imageSize.height > 1080)
+			{
+				return false;
+			}
+			else
+			{
+	//			Image image = Toolkit.getDefaultToolkit().createImage(url);
+	//			Image image = Toolkit.getDefaultToolkit().createImage(imageURL);
+				//this will run once we have the image ready
+	//			image.getWidth(CImageController.getImageInitializer(uuid, cuuid, CImageController.getImageURL(uuid), x, y));
+				CGroupController.createImageGroup(uuid, cuuid, 0L, imageURL, x, y, imageSize.width, imageSize.height);
+			}
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
+		return true;
 	}
 
 	public static void createImageGroup(long uuid, long cuid,
@@ -1155,10 +1212,10 @@ public class CGroupController
 		CGroupController.no_notify_start(uuid, cuuid, 0l, true);
 		CGroupController.no_notify_append(uuid, x, y);
 		CGroupController.no_notify_set_text(uuid, text);
-		CGroupController.no_notify_finish(uuid, false);
-		CGroupController.no_notify_set_permanent(uuid, true);
+		CGroupController.no_notify_finish(uuid, false, false);
+		//CGroupController.no_notify_set_permanent(uuid, true);
 		Rectangle rect = groups.get(uuid).getBoundsOfContents();
-		CGroupController.makeRectangle(uuid, rect.x, rect.y, rect.width, rect.height);
+		CGroupController.no_notify_make_rectangle(uuid, rect.x, rect.y, rect.width, rect.height);
 		CGroupController.recheck_parent(uuid);
 	}
 	
@@ -1186,7 +1243,8 @@ public class CGroupController
 	}
 	
 	public static void no_notify_move_start(long guuid) {
-		set_parent(guuid, 0);
+		no_notify_set_parent(guuid, 0);
+		//set_parent(guuid, 0);
 	}
 	
 	public static boolean group_is_ancestor_of(long ancestor, long group)

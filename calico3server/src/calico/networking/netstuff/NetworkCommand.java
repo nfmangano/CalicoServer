@@ -176,6 +176,7 @@ public class NetworkCommand
     public static final int CANVAS_SC_FINISH		= 418; // UUID (state change has completed)
     public static final int CANVAS_LOCK				= 419;
     public static final int CANVAS_LOAD				= 420;
+    public static final int CANVAS_DELETE 			= 421; // UUID
 	
 	// Consistency
 	public static final int CONSISTENCY_CHECK		= 510; // Requests that the server send you a consistency check.
@@ -204,6 +205,13 @@ public class NetworkCommand
 	public static final int ARROW_SET_TYPE			= 802;// UUID ARROW_TYPE
 	public static final int ARROW_SET_COLOR			= 803;// UUID RED GREEN BLUE
 
+	// CONNECTORS
+	public static final int CONNECTOR_LOAD					= 810; 
+	public static final int CONNECTOR_DELETE				= 811; 
+	public static final int CONNECTOR_LINEARIZE				= 812; 
+	public static final int CONNECTOR_MOVE_ANCHOR   		= 813;
+	public static final int CONNECTOR_MOVE_ANCHOR_START   	= 814;
+	public static final int CONNECTOR_MOVE_ANCHOR_END    	= 815;
 
 	// Click Tracking
 	public static final int CLICK_TRACK = 900; // CLICK ID

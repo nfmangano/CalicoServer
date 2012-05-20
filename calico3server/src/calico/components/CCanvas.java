@@ -8,6 +8,7 @@ import java.awt.*;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import calico.COptions;
 import calico.clients.Client;
@@ -21,11 +22,10 @@ import calico.uuid.UUIDAllocator;
 public class CCanvas
 	implements CalicoEventListener
 {
+	private static final AtomicInteger INDEX_COUNTER = new AtomicInteger(1);
 
 	private long uuid = 0L;
-	private String gridCoordTxt = "";
-	private int gridx = 0;
-	private int gridy = 0;
+	private int index = 0;
 	private boolean lock_value = false;
 	private String lock_last_set_by_user = "";
 	private long lock_last_set_at_time = 0l;
@@ -35,6 +35,7 @@ public class CCanvas
 	private LongArraySet groups = new LongArraySet();
 	private LongArraySet arrows = new LongArraySet();
 	private LongArraySet lists = new LongArraySet();
+	private LongArraySet connectors = new LongArraySet();
 	
 	public ObjectArrayList<Object> keypairs = new ObjectArrayList<Object>();
 	
@@ -65,6 +66,7 @@ public class CCanvas
 	public CCanvas(long u)
 	{
 		this.uuid = u;
+		this.index = INDEX_COUNTER.getAndIncrement();
 
 		snapshots.add(0, getBackupState());
 		
@@ -81,14 +83,9 @@ public class CCanvas
 
 	}
 	
-	public int getGridX()
+	public int getIndex()
 	{
-		return gridx;
-	}
-	
-	public int getGridY()
-	{
-		return gridy;
+		return index;
 	}
 	
 	public CCanvasBackupState getBackupState()
@@ -172,26 +169,6 @@ public class CCanvas
 		}
 	}
 	
-	
-	
-	
-	public String getCoordText()
-	{
-		return this.gridCoordTxt;
-	}
-	
-	public void setGridPos(int x, int y)
-	{
-		// Get the Txt coord from this.
-		this.gridx = x;
-		this.gridy = y;
-		
-		// Generate the offset and coords
-		// TODO: WE NEED TO ACCOUNT FOR MORE THAN 26 COLUMNS
-		this.gridCoordTxt = (Character.valueOf( (char) (x+65)) ).toString()+""+y;
-	}
-	
-	
 	public long getUUID()
 	{
 		return this.uuid;
@@ -202,6 +179,10 @@ public class CCanvas
 		this.strokes.add(s);
 	}
 	
+	public void addChildConnector(long s)
+	{
+		this.connectors.add(s);
+	}
 	
 	public void addChildGroup(long s)
 	{
@@ -217,9 +198,15 @@ public class CCanvas
 	{
 		this.groups.remove(s);
 	}
+	
 	public void deleteChildStroke(long s)
 	{
 		this.strokes.remove(s);
+	}
+	
+	public void deleteChildConnector(long s)
+	{
+		this.connectors.remove(s);
 	}
 		
 	public long[] getChildStrokes()
@@ -237,7 +224,10 @@ public class CCanvas
 		return this.lists.toLongArray();
 	}
 
-	
+	public long[] getChildConnectors()
+	{
+		return this.connectors.toLongArray();
+	}
 
 	
 	
@@ -254,20 +244,14 @@ public class CCanvas
 		return this.arrows.toLongArray();
 	}
 	
-	
-	
 	public CalicoPacket getInfoPacket()
 	{
 		return CalicoPacket.getPacket(
 			NetworkCommand.CANVAS_INFO,
 			this.uuid,
-			this.gridCoordTxt,
-			this.gridx,
-			this.gridy
+			this.index
 		);
 	}
-	
-	
 	
 	public void render(Graphics2D g)
 	{
@@ -278,7 +262,7 @@ public class CCanvas
 		Font renderFont = new Font("Verdana",Font.BOLD, 12);
 		g.setFont(renderFont);
 		g.setColor(Color.BLACK);
-		g.drawString("Calico Canvas ("+getCoordText()+") - Rendered on "+formattedDate, 10, 14);
+		g.drawString("Calico Canvas ("+index+") - Rendered on "+formattedDate, 10, 14);
 		g.translate(0, 14);
 
 		long[] groupa = groups.toLongArray();
@@ -307,6 +291,7 @@ public class CCanvas
 		long[] grouparr = getChildGroups();
 		long[] bgearr = getChildStrokes();
 		long[] arlist = getChildArrows();
+		long[] ctrlist = getChildConnectors();
 		
 		// GROUPS
 		if(grouparr.length>0)
@@ -314,8 +299,8 @@ public class CCanvas
 			// Send Group Info
 			for(int i=0;i<grouparr.length;i++)
 			{
-				if (!CGroupController.groups.get(grouparr[i]).isPermanent)
-					continue;
+				//if (!CGroupController.groups.get(grouparr[i]).isPermanent)
+				//	continue;
 				// we only want to load root groups
 				if(true /*CGroupController.groups.get(grouparr[i]).getParentUUID()==0L*/)
 				{
@@ -340,8 +325,8 @@ public class CCanvas
 			// Parents
 			for(int i=0;i<grouparr.length;i++)
 			{
-				if (!CGroupController.groups.get(grouparr[i]).isPermanent)
-					continue;
+				//if (!CGroupController.groups.get(grouparr[i]).isPermanent)
+				//	continue;
 				
 				CalicoPacket[] packets = CGroupController.groups.get(grouparr[i]).getParentingUpdatePackets();
 				for(int x=0;x<packets.length;x++)
@@ -358,6 +343,19 @@ public class CCanvas
 			for(int i=0;i<arlist.length;i++)
 			{
 				CalicoPacket[] packets = CArrowController.arrows.get(arlist[i]).getUpdatePackets();
+				if(packets!=null && packets.length>0)
+				{
+					packetlist.addElements(packetlist.size(), packets);
+				}
+			}
+		}
+		
+		// CONNECTORS
+		if(ctrlist.length>0)
+		{
+			for(int i=0;i<ctrlist.length;i++)
+			{
+				CalicoPacket[] packets = CConnectorController.connectors.get(ctrlist[i]).getUpdatePackets();
 				if(packets!=null && packets.length>0)
 				{
 					packetlist.addElements(packetlist.size(), packets);
@@ -389,14 +387,13 @@ public class CCanvas
 		Properties props = new Properties();
 
 		props.setProperty("uuid", ""+this.uuid);
-		props.setProperty("grid.x", ""+this.gridx);
-		props.setProperty("grid.y", ""+this.gridy);
-		props.setProperty("grid.txt", this.gridCoordTxt);
+		props.setProperty("grid.index", ""+this.index);
 		
 
 		props.setProperty("child.groups", Arrays.toString(getChildGroups()) );
 		props.setProperty("child.strokes", Arrays.toString(getChildStrokes()) );
 		props.setProperty("child.arrows", Arrays.toString(getChildArrows()) );
+		props.setProperty("child.connectors", Arrays.toString(getChildConnectors()) );
 		return props;
 	}
 
@@ -446,6 +443,7 @@ public class CCanvas
 		CalicoEventHandler.getInstance().addListenerForType("GROUP", this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListenerForType("STROKE", this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListenerForType("ARROW", this, CalicoEventHandler.PASSIVE_LISTENER);
+		CalicoEventHandler.getInstance().addListenerForType("CONNECTOR", this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListenerForType("CANVAS", this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListenerForType("LIST", this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListenerForType("PALETTE", this, CalicoEventHandler.PASSIVE_LISTENER);
@@ -480,6 +478,7 @@ public class CCanvas
 		long[] strokear = getChildStrokes();
 		long[] groupar = getChildGroups();
 		long[] arrar = getChildArrows();
+		long[] ctrar = getChildConnectors();
 		
 		int stroke_sig = 0;
 		for(int i=0;i<strokear.length;i++)
@@ -499,7 +498,13 @@ public class CCanvas
 			arrow_sig = arrow_sig + CArrowController.get_signature(arrar[i]);
 		}
 		
-		return stroke_sig + group_sig + arrow_sig;
+		int connector_sig = 0;
+		for (int i=0;i<ctrar.length;i++)
+		{
+			connector_sig = connector_sig + CConnectorController.get_signature(ctrar[i]);
+		}
+		
+		return stroke_sig + group_sig + arrow_sig + connector_sig;
 	}
 	
 	public CalicoPacket getConsistencyDebugPacket()

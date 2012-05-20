@@ -23,6 +23,7 @@ public class CCanvasController
 	
 	public static Long2ReferenceArrayMap<CCanvas> canvases = new Long2ReferenceArrayMap<CCanvas>();
 	private static Long2LongAVLTreeMap arrow_canvas = new Long2LongAVLTreeMap();
+	private static Long2LongAVLTreeMap connector_canvas = new Long2LongAVLTreeMap();
 	private static Long2LongAVLTreeMap group_canvas = new Long2LongAVLTreeMap();
 	private static Long2LongAVLTreeMap stroke_canvas = new Long2LongAVLTreeMap();
 	private static Long2LongAVLTreeMap list_canvas = new Long2LongAVLTreeMap();
@@ -32,11 +33,16 @@ public class CCanvasController
 		arrow_canvas.defaultReturnValue(0L);
 		group_canvas.defaultReturnValue(0L);
 		stroke_canvas.defaultReturnValue(0L);
+		connector_canvas.defaultReturnValue(0L);
 	}
 	
 	public static void set_arrow_canvas(long uuid, long cuid)
 	{
 		arrow_canvas.put(uuid, cuid);
+	}
+	public static void set_connector_canvas(long uuid, long cuid)
+	{
+		connector_canvas.put(uuid, cuid);
 	}
 	public static void set_stroke_canvas(long uuid, long cuid)
 	{
@@ -53,6 +59,10 @@ public class CCanvasController
 	public static long get_arrow_canvas(long uuid)
 	{
 		return arrow_canvas.get(uuid);
+	}
+	public static long get_connector_canvas(long uuid)
+	{
+		return connector_canvas.get(uuid);
 	}
 	public static long get_stroke_canvas(long uuid)
 	{
@@ -100,6 +110,16 @@ public class CCanvasController
 	public static void no_notify_remove_child_stroke(long uuid, long suuid)
 	{
 		canvases.get(uuid).deleteChildStroke(suuid);
+	}
+	
+	public static void no_notify_add_child_connector(long uuid, long cuuid)
+	{
+		canvases.get(uuid).addChildConnector(cuuid);
+	}
+	
+	public static void no_notify_remove_child_connector(long uuid, long cuuid)
+	{
+		canvases.get(uuid).deleteChildConnector(cuuid);
 	}
 	
 	public static void no_notify_add_child_list(long uuid, long luuid)
@@ -188,6 +208,16 @@ public class CCanvasController
 		}
 		canvases.get( get_arrow_canvas(uuid) ).saveCurrentCanvasState();
 	}
+	public static void snapshot_connector(long uuid)
+	{
+		long cuid = get_connector_canvas(uuid);
+		
+		if (!canvases.containsKey(cuid))
+		{
+			return;
+		}
+		canvases.get( get_connector_canvas(uuid) ).saveCurrentCanvasState();
+	}
 	public static void snapshot_list(long uuid)
 	{
 		canvases.get( get_list_canvas(uuid) ).saveCurrentCanvasState();
@@ -201,6 +231,7 @@ public class CCanvasController
 		long[] groups = canvases.get(uuid).getChildGroups();
 		long[] strokes = canvases.get(uuid).getChildStrokes();
 		long[] arrows  = canvases.get(uuid).getChildArrows();
+		long[] connectors = canvases.get(uuid).getChildConnectors();
 		
 		if(strokes.length>0)
 		{
@@ -223,6 +254,14 @@ public class CCanvasController
 			for(int i=0;i<groups.length;i++)
 			{
 				CGroupController.no_notify_delete(groups[i]);
+			}
+		}
+		
+		if(connectors.length>0)
+		{
+			for(int i=0;i<connectors.length;i++)
+			{
+				CConnectorController.no_notify_delete(connectors[i]);
 			}
 		}
 	}
@@ -256,6 +295,7 @@ public class CCanvasController
 		long[] groups = canvases.get(cuidFrom).getChildGroups();
 		long[] strokes = canvases.get(cuidFrom).getChildStrokes();
 		long[] arrows  = canvases.get(cuidFrom).getChildArrows();
+		long[] connectors = canvases.get(cuidFrom).getChildConnectors();
 		Long2ReferenceArrayMap<Long> groupMappings = new Long2ReferenceArrayMap<Long>();
 		
 		if(groups.length>0)
@@ -264,7 +304,7 @@ public class CCanvasController
 			{
 				CGroup temp = CGroupController.groups.get(groups[i]);
 				
-				if(temp.getParentUUID()==0l){
+				if(temp.getParentUUID()==0l && temp.isPermanent()){
 					long new_uuid = UUIDAllocator.getUUID();
 					groupMappings.put(groups[i], new Long(new_uuid));
 					groupMappings.putAll(CGroupController.copy(groups[i], new_uuid, cuidTo, 0, 0,true));
@@ -307,7 +347,27 @@ public class CCanvasController
 					CArrowController.reload(new_uuid);
 				}				
 			}
-		}		
+		}	
+		
+		if(connectors.length>0)
+		{			
+			for(int i=0;i<connectors.length;i++)
+			{	
+				CConnector temp = CConnectorController.connectors.get(connectors[i]);				
+				long new_uuid = UUIDAllocator.getUUID();
+				
+				if (groupMappings.containsKey(temp.getAnchorUUID(CConnector.TYPE_HEAD)) && 
+						groupMappings.containsKey(temp.getAnchorUUID(CConnector.TYPE_TAIL)))
+				{
+					Point head = (Point) temp.getHead().clone();
+					Point tail = (Point) temp.getTail().clone();
+					
+					CConnectorController.create(new_uuid, cuidTo, temp.getColor(), temp.getThickness(), head, tail,
+							temp.getOrthogonalDistance(), temp.getTravelDistance(), 
+							groupMappings.get(temp.getAnchorUUID(CConnector.TYPE_HEAD)), groupMappings.get(temp.getAnchorUUID(CConnector.TYPE_TAIL)));	
+				}
+			}
+		}
 	}
 
 	public static void no_notify_lock_canvas(long canvas, boolean lock, String lockedBy, long time) {

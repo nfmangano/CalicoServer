@@ -1,15 +1,19 @@
 package calico;
 
+import it.unimi.dsi.fastutil.ints.Int2ReferenceAVLTreeMap;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import calico.clients.Client;
 import calico.networking.netstuff.CalicoPacket;
+import calico.networking.netstuff.NetworkCommand;
 
 public class CanvasThread extends Thread {
 	
-	private Queue<CanvasPacket> packetQueue;
+	private static ArrayBlockingQueue<CanvasPacket> packetQueue;
 	
 	private int sleepCount;
 	private long canvasid;
@@ -17,8 +21,7 @@ public class CanvasThread extends Thread {
 	public CanvasThread(long canvasid) throws IOException
 	{
 		super("CanvasThread-"+canvasid);
-		
-		packetQueue = new LinkedList<CanvasPacket>();
+		packetQueue = new ArrayBlockingQueue<CanvasPacket>(4096);
 		
 		this.canvasid = canvasid;
 		sleepCount = 0;
@@ -28,7 +31,7 @@ public class CanvasThread extends Thread {
 	
 	public void addPacketToQueue(int command,Client client,CalicoPacket packet)
 	{
-		packetQueue.add(new CanvasPacket(command, client, packet));
+		packetQueue.offer(new CanvasPacket(command, client, packet));
 	}
 	
 	public void run()
@@ -38,22 +41,23 @@ public class CanvasThread extends Thread {
 			if (!packetQueue.isEmpty())
 			{
 				sleepCount = 0;
-				CanvasPacket packet = null;
 				try
 				{
-					packet = packetQueue.poll();
+					CanvasPacket packet = packetQueue.poll();
+					if (packet != null)
+					{
+						ProcessQueue.receive(packet.command, packet.client, packet.packet);
+					}
 				}
 				//Catch possible concurrency issue.
 				catch(Exception e)
 				{
 					e.printStackTrace();
-					packet = null;
+					//If there is an error, we kill the thread, otherwise there may be an infinite loop of errors.
+					//Of course this means none of the packets in the queue will be processed, but it is better than infinite loop.
+					return;
 				}
-				if (packet != null)
-				{
-					
-					ProcessQueue.receive(packet.command, packet.client, packet.packet);
-				}
+			
 			}
 			else
 			{
@@ -62,7 +66,10 @@ public class CanvasThread extends Thread {
 				//Kill the thread if no packets are queued for 5 seconds. 
 				if (sleepCount >= COptions.canvas.max_sleep_count)
 				{
-					CalicoServer.canvasThreads.remove(canvasid);
+					synchronized(CalicoServer.canvasThreads)
+					{
+						CalicoServer.canvasThreads.remove(canvasid);
+					}
 					return;
 				}
 				
@@ -74,6 +81,98 @@ public class CanvasThread extends Thread {
 				}
 			}
 		}
+	}
+	
+	public static Int2ReferenceAVLTreeMap<Object> getCanvasCommands()
+	{
+		Int2ReferenceAVLTreeMap<Object> commands = new Int2ReferenceAVLTreeMap<Object>();
+		
+		commands.put(NetworkCommand.UUID_GET_BLOCK, null);
+		
+		//Stroke commands
+		commands.put(NetworkCommand.STROKE_START, null);
+		commands.put(NetworkCommand.STROKE_APPEND, null);
+		commands.put(NetworkCommand.STROKE_DELETE, null);
+		commands.put(NetworkCommand.STROKE_FINISH, null);
+		commands.put(NetworkCommand.STROKE_MOVE, null);
+		commands.put(NetworkCommand.STROKE_SET_COLOR, null);
+		commands.put(NetworkCommand.STROKE_SET_PARENT, null);
+		commands.put(NetworkCommand.STROKE_LOAD, null);
+		commands.put(NetworkCommand.STROKE_REQUEST_HASH_CHECK, null);
+		commands.put(NetworkCommand.STROKE_MAKE_SCRAP, null);
+		commands.put(NetworkCommand.STROKE_MAKE_SHRUNK_SCRAP, null);
+		commands.put(NetworkCommand.STROKE_DELETE_AREA, null);
+		commands.put(NetworkCommand.STROKE_ROTATE, null);
+		commands.put(NetworkCommand.STROKE_SCALE, null);
+		commands.put(NetworkCommand.STROKE_SET_AS_POINTER, null);
+		commands.put(NetworkCommand.STROKE_HIDE, null);
+		commands.put(NetworkCommand.STROKE_UNHIDE, null);
+		
+		//Erase Canvas commands
+		commands.put(NetworkCommand.ERASE_START, null);
+		commands.put(NetworkCommand.ERASE_END, null);
+		
+		//Group commands
+		commands.put(NetworkCommand.GROUP_START, null);
+		commands.put(NetworkCommand.GROUP_APPEND, null);
+		commands.put(NetworkCommand.GROUP_APPEND_CLUSTER, null);
+		commands.put(NetworkCommand.GROUP_FINISH, null);
+		commands.put(NetworkCommand.GROUP_DROP, null);
+		commands.put(NetworkCommand.GROUP_DELETE, null);
+		commands.put(NetworkCommand.GROUP_MOVE, null);
+		commands.put(NetworkCommand.GROUP_MOVE_END, null);
+		commands.put(NetworkCommand.GROUP_MOVE_START, null);
+		commands.put(NetworkCommand.GROUP_SET_CHILD_GROUPS, null);
+		commands.put(NetworkCommand.GROUP_SET_CHILD_STROKES, null);
+		commands.put(NetworkCommand.GROUP_SET_CHILD_ARROWS, null);
+		commands.put(NetworkCommand.GROUP_SET_PARENT, null);
+		commands.put(NetworkCommand.GROUP_SET_PERM, null);
+		commands.put(NetworkCommand.GROUP_RECTIFY, null);
+		commands.put(NetworkCommand.GROUP_CIRCLIFY, null);
+		commands.put(NetworkCommand.GROUP_CHILDREN_COLOR, null);
+		commands.put(NetworkCommand.GROUP_LOAD, null);
+		commands.put(NetworkCommand.GROUP_IMAGE_LOAD, null);
+		commands.put(NetworkCommand.GROUP_IMAGE_DOWNLOAD, null);
+		commands.put(NetworkCommand.GROUP_REQUEST_HASH_CHECK, null);
+		commands.put(NetworkCommand.GROUP_COPY_TO_CANVAS, null);
+		commands.put(NetworkCommand.GROUP_SET_TEXT, null);
+		commands.put(NetworkCommand.GROUP_ROTATE, null);
+		commands.put(NetworkCommand.GROUP_SCALE, null);
+		commands.put(NetworkCommand.GROUP_CREATE_TEXT_GROUP, null);
+		commands.put(NetworkCommand.GROUP_MAKE_RECTANGLE, null);
+		commands.put(NetworkCommand.GROUP_COPY_WITH_MAPPINGS, null);
+		
+		//Arrow commands
+		commands.put(NetworkCommand.ARROW_CREATE, null);
+		commands.put(NetworkCommand.ARROW_DELETE, null);
+		commands.put(NetworkCommand.ARROW_SET_TYPE, null);
+		commands.put(NetworkCommand.ARROW_SET_COLOR, null);
+		
+		//Connector commands
+		commands.put(NetworkCommand.CONNECTOR_LOAD, null);
+		commands.put(NetworkCommand.CONNECTOR_DELETE, null);
+		commands.put(NetworkCommand.CONNECTOR_LINEARIZE, null);
+		commands.put(NetworkCommand.CONNECTOR_MOVE_ANCHOR, null);
+		commands.put(NetworkCommand.CONNECTOR_MOVE_ANCHOR_START, null);
+		commands.put(NetworkCommand.CONNECTOR_MOVE_ANCHOR_END, null);
+		
+		//Canvas Commands
+		commands.put(NetworkCommand.CANVAS_SET, null);
+		commands.put(NetworkCommand.CANVAS_LIST, null);
+		commands.put(NetworkCommand.CANVAS_UNDO, null);
+		commands.put(NetworkCommand.CANVAS_REDO, null);
+		commands.put(NetworkCommand.CANVAS_CLEAR, null);
+		commands.put(NetworkCommand.CANVAS_COPY, null);
+		commands.put(NetworkCommand.CANVAS_LOCK, null);
+		commands.put(NetworkCommand.CANVAS_LOAD, null);
+		
+		commands.put(NetworkCommand.LIST_CREATE, null);
+		commands.put(NetworkCommand.LIST_LOAD, null);
+		commands.put(NetworkCommand.LIST_CHECK_SET, null);
+		
+		//commands.put(NetworkCommand.IMAGE_TRANSFER, null);
+		
+		return commands;
 	}
 	
 	private class CanvasPacket{

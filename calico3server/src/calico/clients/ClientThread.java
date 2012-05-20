@@ -10,6 +10,7 @@ import calico.clients.*;
 import calico.uuid.*;
 import calico.components.*;
 import calico.controllers.CCanvasController;
+import calico.controllers.CGroupController;
 import calico.sessions.*;
 
 import java.nio.*;
@@ -59,6 +60,8 @@ public class ClientThread extends Thread
 	private InetSocketAddress udpSocketAddress = null;
 	
 	private long currentCanvasUUID = 0L;
+	
+	private long tempScrapUUID = 0L;
 	
 	private BlockingQueue<CalicoPacket> outboundPackets = new LinkedBlockingQueue<CalicoPacket>();
 //	private ObjectArrayList<CalicoPacket> outboundPackets = new ObjectArrayList<CalicoPacket>();
@@ -177,6 +180,11 @@ public class ClientThread extends Thread
 	{
 		this.username = username;
 		makeClientString();
+	}
+	
+	public void setTempScrapUUID(long uuid)
+	{
+		tempScrapUUID = uuid;
 	}
 	
 	public String toString()
@@ -410,7 +418,8 @@ public class ClientThread extends Thread
 						try
 						{
 							//Only canvas specific commands are sent to a canvas thread. 
-							if (com >= 200 && com <= 3000 && currentCanvasUUID != 0l)
+							//if (com >= 200 && com <= 3000 && currentCanvasUUID != 0l && com != 1200)
+							if (currentCanvasUUID != 0l && CalicoServer.canvasCommands.containsKey(com))
 							{
 								synchronized(CalicoServer.canvasThreads)
 								{
@@ -418,12 +427,7 @@ public class ClientThread extends Thread
 									{
 										CalicoServer.canvasThreads.put(currentCanvasUUID, new CanvasThread(currentCanvasUUID));
 									}
-									CanvasThread canvasThread = CalicoServer.canvasThreads.get(currentCanvasUUID);
-									//CalicoServer.canvasThreads.get(currentCanvasUUID).addPacketToQueue(com, this.client, packet);
-									synchronized(canvasThread)
-									{
-										canvasThread.addPacketToQueue(com, this.client, packet);
-									}
+									CalicoServer.canvasThreads.get(currentCanvasUUID).addPacketToQueue(com, this.client, packet);
 								}
 							}
 							else
@@ -482,6 +486,12 @@ public class ClientThread extends Thread
 		}
 		finally
 		{
+			if (tempScrapUUID != 0l && CGroupController.exists(tempScrapUUID)
+					&& !CGroupController.groups.get(tempScrapUUID).isPermanent())
+			{
+				CGroupController.drop(tempScrapUUID);
+				tempScrapUUID = 0L;
+			}
 			//System.out.println("CALLING THE FINALLY");
 			ClientManager.drop(clientid, "");
 		}

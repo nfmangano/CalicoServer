@@ -120,10 +120,17 @@ public class ProcessQueue
 				case NetworkCommand.ARROW_SET_TYPE:ARROW_SET_TYPE(pdata,client);break;
 				case NetworkCommand.ARROW_SET_COLOR:ARROW_SET_COLOR(pdata,client);break;
 				
+				case NetworkCommand.CONNECTOR_LOAD:CONNECTOR_LOAD(pdata,client);break;
+				case NetworkCommand.CONNECTOR_DELETE:CONNECTOR_DELETE(pdata,client);break;
+				case NetworkCommand.CONNECTOR_LINEARIZE:CONNECTOR_LINEARIZE(pdata,client);break;
+				case NetworkCommand.CONNECTOR_MOVE_ANCHOR:CONNECTOR_MOVE_ANCHOR(pdata,client);break;
+				case NetworkCommand.CONNECTOR_MOVE_ANCHOR_START:CONNECTOR_MOVE_ANCHOR_START(pdata,client);break;
+				case NetworkCommand.CONNECTOR_MOVE_ANCHOR_END:CONNECTOR_MOVE_ANCHOR_END(pdata,client);break;
+				
 				case NetworkCommand.UDP_CHALLENGE:UDP_CHALLENGE(pdata, client);break;
 				
 				
-
+				case NetworkCommand.CANVAS_CREATE:CANVAS_CREATE(pdata,client);break;
 				case NetworkCommand.CANVAS_SET:CANVAS_SET(pdata,client);break;
 				case NetworkCommand.CANVAS_LIST:CANVAS_LIST(pdata,client);break;
 				case NetworkCommand.CANVAS_UNDO:CANVAS_UNDO(pdata,client);break;
@@ -132,6 +139,7 @@ public class ProcessQueue
 				case NetworkCommand.CANVAS_COPY:CANVAS_COPY(pdata,client);break;
 				case NetworkCommand.CANVAS_LOCK:CANVAS_LOCK(pdata,client);break;
 				case NetworkCommand.CANVAS_LOAD:CANVAS_LOAD(pdata,client);break;
+				case NetworkCommand.CANVAS_DELETE:CANVAS_DELETE(pdata,client);break;
 
 				case NetworkCommand.CONSISTENCY_CHECK:CONSISTENCY_CHECK(pdata,client);break;
 				case NetworkCommand.CONSISTENCY_RESYNC_CANVAS:CONSISTENCY_RESYNC_CANVAS(pdata, client);break;
@@ -209,6 +217,16 @@ public class ProcessQueue
 
 	}
 	
+	public static void CANVAS_CREATE(CalicoPacket p, Client c)
+	{
+		long canvasId = p.getLong();
+		
+		CCanvas canvas = new CCanvas(canvasId);
+		CCanvasController.canvases.put(canvasId, canvas);
+		
+		ClientManager.send(canvas.getInfoPacket());
+	}
+	
 	public static void CANVAS_CLEAR(CalicoPacket p, Client c)
 	{
 		long uuid = p.getLong();
@@ -221,7 +239,7 @@ public class ProcessQueue
 		CCanvasController.snapshot(uuid);
 		
 		// Resend to all (even the sender)
-		ClientManager.send(p);
+		ClientManager.send_except(c, p);
 		
 	}
 	public static void CANVAS_COPY(CalicoPacket p, Client c)
@@ -268,12 +286,21 @@ public class ProcessQueue
 		{
 			packets[i].rewind();
 			int comm = packets[i].getInt();
-
 			
 			// As long as its not the canvas_info, we should just send it along
 			if(comm!=NetworkCommand.CANVAS_INFO)
 			{
 				ProcessQueue.receive(comm, null, packets[i]);
+			}
+		}
+		
+		//Remove temp scraps after undo/redo
+		long[] guuid = CCanvasController.canvases.get(cuuid).getChildGroups();
+		for (int i = 0; i < guuid.length; i++)
+		{
+			if (!CGroupController.groups.get(guuid[i]).isPermanent())
+			{
+				CGroupController.drop(guuid[i]);
 			}
 		}
 		
@@ -311,6 +338,23 @@ public class ProcessQueue
 		{
 			ClientManager.send(c, CalicoPacket.getPacket(NetworkCommand.STATUS_MESSAGE, "No more redo history"));
 		}
+	}
+	
+	public static void CANVAS_DELETE(CalicoPacket p, Client c)
+	{
+		long uuid = p.getLong();
+		
+		synchronized(CalicoServer.canvasThreads)
+		{
+			CanvasThread thread = CalicoServer.canvasThreads.remove(uuid);
+			if (thread != null)
+			{
+				// seems like it should be stopped or something
+			}
+		}
+		
+		CCanvasController.canvases.remove(uuid);
+		ClientManager.send_except(c, p);
 	}
 	
 	public static void CONSISTENCY_RESYNC_CANVAS(CalicoPacket p, Client c)
@@ -381,6 +425,8 @@ public class ProcessQueue
 		long guuid = p.getLong();
 		
 		CGroupController.no_notify_move_start(guuid);
+		
+		ClientManager.send_except(client, p);
 	}
 	public static void GROUP_MOVE_END(CalicoPacket p, Client client)
 	{
@@ -402,7 +448,8 @@ public class ProcessQueue
 		else
 			return;
 		
-		CGroupController.drop(uuid);
+		CGroupController.no_notify_drop(uuid, true);
+		//CGroupController.drop(uuid);
 		
 		if(client!=null)
 		{
@@ -624,7 +671,7 @@ public class ProcessQueue
 		int y = 0;
 		
 		CGroupController.no_notify_start(uuid, cuid, puid, isperm);
-		
+
 		for(int i=0;i<count;i++)
 		{
 			x = p.getInt();
@@ -656,10 +703,14 @@ public class ProcessQueue
 			ClientManager.send_except(client, p);
 			if (isperm)
 				CCanvasController.snapshot_group(uuid);
+			else
+			{
+				ClientManager.getClientThread(client.getClientID()).setTempScrapUUID(uuid);
+			}
 		}
 		
-		if (captureChildren)
-			ClientManager.send( CGroupController.groups.get(uuid).getParentingUpdatePackets() );
+		//if (captureChildren)
+			//ClientManager.send( CGroupController.groups.get(uuid).getParentingUpdatePackets() );
 		
 	}
 	
@@ -671,6 +722,8 @@ public class ProcessQueue
 		long cuid = p.getLong();
 		long puid = p.getLong();
 		String url = p.getString();
+		int port = p.getInt(); //Not used on the server
+		String localPath = p.getString(); //Not used on the server
 		int imgX = p.getInt();
 		int imgY = p.getInt();
 		int imgW = p.getInt();
@@ -710,7 +763,7 @@ public class ProcessQueue
 		CGroupController.no_notify_create_image_group(uuid, cuid, puid, url, imgX, imgY, imgW, imgH);
 		CGroupController.groups.get(uuid).primative_rotate(rotation);
 		CGroupController.groups.get(uuid).primative_scale(scaleX, scaleY);
-		
+
 		if (client != null)
 		{
 			ClientManager.send_except(client, p);
@@ -725,8 +778,9 @@ public class ProcessQueue
 		int x = p.getInt();
 		int y = p.getInt();
 		
-		CGroupController.createImageGroup(uuid, cuuid, imageURL, x, y);
-		
+		if (!CGroupController.createImageGroup(uuid, cuuid, imageURL, x, y))
+			ClientManager.send(client, CalicoPacket.getPacket(NetworkCommand.GROUP_IMAGE_LOAD,0l));
+
 		//Don't broadcast it to the clients... the server will download the image to have it locally and then broadcast the link to that.
 	}
 	
@@ -976,6 +1030,107 @@ public class ProcessQueue
 		CArrowController.arrows.get(u).setColor(r, g, b);
 
 		ClientManager.send_except(client, p);
+	}
+	
+	public static void CONNECTOR_LOAD(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		long cuid = p.getLong();
+		Color color = p.getColor();
+		float thickness = p.getFloat();
+		
+		Point head = new Point(p.getInt(), p.getInt());
+		Point tail = new Point(p.getInt(), p.getInt());
+		
+		int nPoints = p.getInt();
+		double[] orthogonalDistance = new double[nPoints];
+		double[] travelDistance = new double[nPoints];
+		for (int i = 0; i < nPoints; i++)
+		{
+			orthogonalDistance[i] = p.getDouble();
+			travelDistance[i] = p.getDouble();
+		}
+		
+		long anchorHead = p.getLong();
+		long anchorTail = p.getLong();
+		
+		CConnectorController.no_notify_create(uuid, cuid, color, thickness, head, tail, orthogonalDistance, travelDistance, anchorHead, anchorTail);
+		
+		ClientManager.send_except(client, p);
+		
+		if(client!=null)
+		{
+			CCanvasController.snapshot_connector(uuid);
+		}
+	}
+	
+	public static void CONNECTOR_DELETE(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		CConnectorController.no_notify_delete(uuid);
+
+		ClientManager.send_except(client, p);
+		
+		if(client!=null)
+		{
+			CCanvasController.snapshot_connector(uuid);
+		}
+	}
+	
+	public static void CONNECTOR_LINEARIZE(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		CConnectorController.no_notify_linearize(uuid);
+
+		ClientManager.send_except(client, p);
+		
+		if(client!=null)
+		{
+			CCanvasController.snapshot_connector(uuid);
+		}
+	}
+	
+	public static void CONNECTOR_MOVE_ANCHOR(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		int type = p.getInt();
+		int x = p.getInt();
+		int y = p.getInt();
+		
+		CConnectorController.no_notify_move_group_anchor(uuid, type, x, y);
+
+		ClientManager.send_except(client, p);
+		
+		if(client!=null)
+		{
+			CCanvasController.snapshot_connector(uuid);
+		}
+	}
+	
+	public static void CONNECTOR_MOVE_ANCHOR_START(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		int type = p.getInt();
+		
+		CConnectorController.no_notify_move_group_anchor_start(uuid, type);
+
+		ClientManager.send_except(client, p);
+
+	}
+	
+	public static void CONNECTOR_MOVE_ANCHOR_END(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		int type = p.getInt();
+		
+		CConnectorController.no_notify_move_group_anchor_end(uuid, type);
+
+		ClientManager.send_except(client, p);
+		
+		if(client!=null)
+		{
+			CCanvasController.snapshot_connector(uuid);
+		}
 	}
 	
 
@@ -1308,11 +1463,12 @@ public class ProcessQueue
 		int byteArraySize = p.getInt();
 		byte[] bytes = new byte[byteArraySize];
 		bytes = p.getByteArray(byteArraySize);
-		
+
 		try
 		{
 			CImageController.save_to_disk(uuid, name, bytes);
-			CGroupController.createImageGroup(uuid, cuuid, CImageController.getImageURL(uuid), x, y);
+			if (!CGroupController.createImageGroup(uuid, cuuid, CImageController.getImageURL(uuid), x, y))
+				ClientManager.send(client, CalicoPacket.getPacket(NetworkCommand.GROUP_IMAGE_LOAD,0l));
 		}
 		catch (Exception e)
 		{

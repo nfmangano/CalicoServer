@@ -177,6 +177,7 @@ public class CalicoPluginManager
 			catch(Exception e)
 			{
 				classObj.onException(e);
+				e.printStackTrace();
 			}
 			
 			plugins.put(pluginClass, classObj);
