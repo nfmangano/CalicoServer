@@ -187,7 +187,7 @@ class CIntentionCluster
 				{
 					arcTransformer = new CIntentionArcTransformer(location, ringRadius, ringSpan, slice.calculateLayoutSpan(ringSpan));
 				}
-				slice.layoutArc(arcTransformer, i, ringSpan, sliceStart, movedCells);
+				slice.layoutArc(arcTransformer, i, ringSpan, sliceStart, movedCells, (i == 0) ? null : ringRadii.get(i - 1));
 				sliceStart += slice.getLayoutSpan();
 			}
 		}

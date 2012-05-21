@@ -43,15 +43,11 @@ public class CIntentionLayout
 		return cell.setLocation(x - (CIntentionLayout.INTENTION_CELL_SIZE.width / 2), y - (CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
 	}
 
-	public static boolean centerCanvasAt(long canvasId, int xArc, Point center, double radius)
+	public static Point getCanvasCenter(long canvasId)
 	{
-		double theta = xArc / radius;
-		int x = center.x + (int) (radius * Math.cos(theta));
-		int y = center.y + (int) (radius * Math.sin(theta));
-
-		System.out.println(String.format("[%d] (%d, %d) for xArc %d and radius %f", getCanvasIndex(canvasId), x, y, xArc, radius));
-
-		return centerCanvasAt(canvasId, x, y);
+		CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(canvasId);
+		return new Point(cell.getLocation().x - (CIntentionLayout.INTENTION_CELL_SIZE.width / 2), cell.getLocation().y
+				- (CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
 	}
 
 	public static final Dimension INTENTION_CELL_SIZE = new Dimension(200, 130);
