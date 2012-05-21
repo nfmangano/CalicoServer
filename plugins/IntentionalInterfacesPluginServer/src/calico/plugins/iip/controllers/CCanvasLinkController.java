@@ -43,6 +43,24 @@ public class CCanvasLinkController
 	{
 		return links.get(linkId);
 	}
+	
+	public Long getIncomingLink(long canvasId)
+	{
+		Set<Long> anchorIds = anchorIdsByCanvasId.get(canvasId);
+		if (anchorIds == null)
+		{
+			return null;
+		}
+		
+		for (Long anchorId : anchorIdsByCanvasId.get(canvasId))
+		{
+			if (isDestination(anchorId))
+			{
+				return linkAnchors.get(anchorId).getLinkId();
+			}
+		}
+		return null;
+	}
 
 	public CCanvasLinkAnchor getOpposite(long anchorId)
 	{
