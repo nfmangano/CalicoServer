@@ -129,6 +129,8 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvasId, false);
 		CIntentionCellController.getInstance().addCell(cell);
 
+		CIntentionLayout.getInstance().insertNewCluster(cell);
+
 		CalicoPacket p = cell.getCreatePacket();
 		forward(p);
 	}
@@ -348,6 +350,15 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		long uuid = p.getLong();
 		CCanvasLinkAnchor anchorA = unpackAnchor(uuid, p);
 		CCanvasLinkAnchor anchorB = unpackAnchor(uuid, p);
+		
+		Long incomingLinkId = CCanvasLinkController.getInstance().getIncomingLink(anchorB.getCanvasId());
+		if (incomingLinkId != null)
+		{
+			CCanvasLinkController.getInstance().removeLinkById(incomingLinkId);
+			CalicoPacket deleteIncoming = CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CLINK_DELETE, incomingLinkId);
+			forward(deleteIncoming);
+		}
+		
 		CCanvasLink link = new CCanvasLink(uuid, anchorA, anchorB);
 		CCanvasLinkController.getInstance().addLink(link);
 

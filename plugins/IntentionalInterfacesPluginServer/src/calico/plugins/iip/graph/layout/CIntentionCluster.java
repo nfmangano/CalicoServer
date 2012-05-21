@@ -19,7 +19,7 @@ import calico.plugins.iip.controllers.CCanvasLinkController;
 class CIntentionCluster
 {
 	private static final SliceSorter SLICE_SORTER = new SliceSorter();
-	static final int RING_SEPARATION = 40 + CIntentionLayout.INTENTION_CELL_DIAMETER;
+	static final int RING_SEPARATION = 80 + CIntentionLayout.INTENTION_CELL_DIAMETER;
 
 	private final List<CIntentionRing> rings = new ArrayList<CIntentionRing>();
 	private final Map<Long, CIntentionSlice> slicesByRootCanvasId = new LinkedHashMap<Long, CIntentionSlice>();

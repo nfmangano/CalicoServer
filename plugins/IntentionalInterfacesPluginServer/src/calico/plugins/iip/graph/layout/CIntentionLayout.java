@@ -2,6 +2,7 @@ package calico.plugins.iip.graph.layout;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,7 +54,7 @@ public class CIntentionLayout
 		return centerCanvasAt(canvasId, x, y);
 	}
 
-	public static final Dimension INTENTION_CELL_SIZE = new Dimension(100, 60);
+	public static final Dimension INTENTION_CELL_SIZE = new Dimension(200, 130);
 	static final int INTENTION_CELL_DIAMETER = calculateCellDiameter(INTENTION_CELL_SIZE);
 	static final LayoutMode LAYOUT_MODE = LayoutMode.CONCENTRIC;
 
@@ -64,6 +65,9 @@ public class CIntentionLayout
 	// transitory per layout execution
 	private final Set<Long> movedCells = new HashSet<Long>();
 	private final CIntentionTopology topology = new CIntentionTopology();
+	private double occupiedRadius;
+	private double theta;
+	private double maxClusterRadius;
 
 	public Set<Long> getMovedCells()
 	{
@@ -73,6 +77,13 @@ public class CIntentionLayout
 	public CIntentionTopology getTopology()
 	{
 		return topology;
+	}
+
+	public void insertNewCluster(CIntentionCell cell)
+	{
+		CIntentionCluster cluster = new CIntentionCluster(cell.getCanvasId());
+		clusters.add(cluster);
+		layoutCluster(cluster);
 	}
 
 	public void populateState(IntentionalInterfaceState state)
@@ -144,7 +155,6 @@ public class CIntentionLayout
 		List<Double> ringRadii = rootCluster.getRingRadii();
 		rootCluster.layoutClusterAsCircles(clusterCenter, movedCells, ringRadii);
 
-		double occupiedRadius;
 		if (ringRadii.isEmpty())
 		{
 			occupiedRadius = INTENTION_CELL_DIAMETER / 2.0;
@@ -156,47 +166,52 @@ public class CIntentionLayout
 
 		topology.addCluster(rootCluster.getRootCanvasId(), clusterCenter, ringRadii);
 
-		double theta = 0.0;
-		double maxClusterRadius = 0.0;
+		theta = 0.0;
+		maxClusterRadius = 0.0;
 		for (int i = 1; i < clusters.size(); i++)
 		{
-			CIntentionCluster cluster = clusters.get(i);
-			ringRadii = cluster.getRingRadii();
+			layoutCluster(clusters.get(i));
+		}
+	}
 
-			double clusterRadius;
-			if (ringRadii.isEmpty())
-			{
-				clusterRadius = INTENTION_CELL_DIAMETER / 2.0;
-			}
-			else
-			{
-				clusterRadius = ringRadii.get(ringRadii.size() - 1);
-			}
+	private void layoutCluster(CIntentionCluster cluster)
+	{
+		List<Double> ringRadii = cluster.getRingRadii();
 
-			double clusterThetaSpan = 2 * Math.asin((clusterRadius + INTENTION_CELL_DIAMETER) / (occupiedRadius + clusterRadius));
-			if ((theta + clusterThetaSpan) > (2 * Math.PI))
-			{
-				occupiedRadius += (maxClusterRadius + INTENTION_CELL_DIAMETER);
-				maxClusterRadius = 0.0;
-				theta = 0.0;
-			}
+		double clusterRadius;
+		if (ringRadii.isEmpty())
+		{
+			clusterRadius = INTENTION_CELL_DIAMETER / 2.0;
+		}
+		else
+		{
+			clusterRadius = ringRadii.get(ringRadii.size() - 1);
+		}
 
-			if (theta > 0.0)
-			{
-				theta += (clusterThetaSpan / 2.0);
-			}
+		double clusterThetaSpan = 2 * Math.asin((clusterRadius + INTENTION_CELL_DIAMETER) / (occupiedRadius + clusterRadius));
+		if ((theta + clusterThetaSpan) > (2 * Math.PI))
+		{
+			occupiedRadius += ((2 * maxClusterRadius) + INTENTION_CELL_DIAMETER);
+			maxClusterRadius = 0.0;
+			theta = 0.0;
+		}
 
-			double aggregateRadius = occupiedRadius + clusterRadius;
-			clusterCenter.setLocation(Math.sin(theta) * aggregateRadius, -(Math.cos(theta) * aggregateRadius));
-			cluster.layoutClusterAsCircles(clusterCenter, movedCells, ringRadii);
-
-			topology.addCluster(cluster.getRootCanvasId(), clusterCenter, ringRadii);
-
+		if (theta > 0.0)
+		{
 			theta += (clusterThetaSpan / 2.0);
-			if (clusterRadius > maxClusterRadius)
-			{
-				maxClusterRadius = clusterRadius;
-			}
+		}
+
+		double aggregateRadius = occupiedRadius + clusterRadius;
+		Point clusterCenter = new Point();
+		clusterCenter.setLocation(Math.sin(theta) * aggregateRadius, -(Math.cos(theta) * aggregateRadius));
+		cluster.layoutClusterAsCircles(clusterCenter, movedCells, ringRadii);
+
+		topology.addCluster(cluster.getRootCanvasId(), clusterCenter, ringRadii);
+
+		theta += (clusterThetaSpan / 2.0);
+		if (clusterRadius > maxClusterRadius)
+		{
+			maxClusterRadius = clusterRadius;
 		}
 	}
 
