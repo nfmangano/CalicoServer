@@ -15,9 +15,9 @@ public class CIntentionCellController
 	{
 		return INSTANCE;
 	}
-	
+
 	private static final CIntentionCellController INSTANCE = new CIntentionCellController();
-	
+
 	private static Long2ReferenceArrayMap<CIntentionType> activeIntentionTypes = new Long2ReferenceArrayMap<CIntentionType>();
 
 	private static Long2ReferenceArrayMap<CIntentionCell> cells = new Long2ReferenceArrayMap<CIntentionCell>();
@@ -25,44 +25,63 @@ public class CIntentionCellController
 
 	public void populateState(IntentionalInterfaceState state)
 	{
-		for (CIntentionCell cell : cells.values())
-		{
-			cell.populateState(state);
-		}
-		
 		for (CIntentionType type : activeIntentionTypes.values())
 		{
 			state.addCellPacket(type.getState());
 		}
+		
+		for (CIntentionCell cell : cells.values())
+		{
+			cell.populateState(state);
+		}
 	}
 	
+	public void clearState()
+	{
+		activeIntentionTypes.clear();
+		cells.clear();
+		cellsByCanvasId.clear();
+	}
+
 	public Collection<CIntentionCell> getAllCells()
 	{
 		return cells.values();
 	}
-	
+
 	public void addCell(CIntentionCell cell)
 	{
 		cells.put(cell.getId(), cell);
 		cellsByCanvasId.put(cell.getCanvasId(), cell);
 	}
-	
+
 	public CIntentionCell getCellById(long uuid)
 	{
 		return cells.get(uuid);
 	}
-	
+
 	public CIntentionCell getCellByCanvasId(long canvas_uuid)
 	{
 		return cellsByCanvasId.get(canvas_uuid);
 	}
-	
+
 	public void removeCellById(long uuid)
 	{
 		cells.remove(uuid);
 	}
+
+	public CIntentionType createIntentionType(long uuid, String name, int colorIndex)
+	{
+		if (colorIndex < 0)
+		{
+			colorIndex = chooseColorIndex();
+		}
+
+		CIntentionType type = new CIntentionType(uuid, name, colorIndex);
+		activeIntentionTypes.put(uuid, type);
+		return type;
+	}
 	
-	public CIntentionType createIntentionType(long uuid, String name)
+	private int chooseColorIndex()
 	{
 		int freeColorIndex = 0;
 		boolean[] used = new boolean[CIntentionType.AVAILABLE_COLOR_COUNT];
@@ -75,38 +94,39 @@ public class CIntentionCellController
 		{
 			if (!used[i])
 			{
-				freeColorIndex = i;
-				break;
+				return i;
 			}
 		}
 		
-		CIntentionType type = new CIntentionType(uuid, name, freeColorIndex);
-		activeIntentionTypes.put(uuid, type);
-		return type;
+		System.out.println("Warning: no unused CIntentionType colors to choose from!");
+		return 0;
 	}
-	
+
 	public Collection<CIntentionType> getActiveIntentionTypes()
 	{
 		return activeIntentionTypes.values();
 	}
-	
+
 	public void renameIntentionType(long typeId, String name)
 	{
 		activeIntentionTypes.get(typeId).setName(name);
 	}
-	
+
 	public void setIntentionTypeColor(long typeId, int color)
 	{
 		activeIntentionTypes.get(typeId).setColorIndex(color);
 	}
-	
+
 	public void removeIntentionType(long typeId)
 	{
 		activeIntentionTypes.remove(typeId);
-		
+
 		for (CIntentionCell cell : cells.values())
 		{
-			cell.removeIntentionType(typeId);
+			if (cell.hasIntentionType())
+			{
+				cell.clearIntentionType();
+			}
 		}
 	}
 }

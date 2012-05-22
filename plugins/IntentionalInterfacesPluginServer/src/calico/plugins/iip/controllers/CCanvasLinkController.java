@@ -33,6 +33,13 @@ public class CCanvasLinkController
 			state.addLinkPacket(link.getState());
 		}
 	}
+	
+	public void clearState()
+	{
+		links.clear();
+		linkAnchors.clear();
+		anchorIdsByCanvasId.clear();
+	}
 
 	public CCanvasLinkAnchor getAnchor(long anchorId)
 	{

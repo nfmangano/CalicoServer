@@ -16,9 +16,9 @@ public class CIntentionCell
 	long canvas_uuid;
 	final Point location;
 	String title;
-	final List<Long> intentionTypeIds = new ArrayList<Long>();
+	Long intentionTypeId = null;
 
-	public CIntentionCell(long uuid, long canvasId, boolean inUse)
+	public CIntentionCell(long uuid, long canvasId)
 	{
 		this.uuid = uuid;
 		this.canvas_uuid = canvasId;
@@ -71,20 +71,25 @@ public class CIntentionCell
 	{
 		this.title = title;
 	}
-
-	public void addIntentionType(long typeId)
+	
+	public boolean hasIntentionType()
 	{
-		intentionTypeIds.add(typeId);
+		return (intentionTypeId != null);
+	}
+	
+	public Long getIntentionTypeId()
+	{
+		return intentionTypeId;
 	}
 
-	public boolean hasIntentionType(long typeId)
+	public void setIntentionType(long intentionTypeId)
 	{
-		return intentionTypeIds.contains(typeId);
+		this.intentionTypeId = intentionTypeId;
 	}
 
-	public void removeIntentionType(long typeId)
+	public void clearIntentionType()
 	{
-		intentionTypeIds.remove(typeId);
+		intentionTypeId = null;
 	}
 
 	public CalicoPacket getCreatePacket()
@@ -96,9 +101,9 @@ public class CIntentionCell
 	{
 		state.addCellPacket(getCreatePacket());
 
-		for (long typeId : intentionTypeIds)
+		if (intentionTypeId != null)
 		{
-			state.addCellPacket(CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_TAG, uuid, typeId));
+			state.addCellPacket(CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_TAG, uuid, intentionTypeId));
 		}
 	}
 }

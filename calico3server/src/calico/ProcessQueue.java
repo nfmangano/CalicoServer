@@ -131,6 +131,7 @@ public class ProcessQueue
 				
 				
 				case NetworkCommand.CANVAS_CREATE:CANVAS_CREATE(pdata,client);break;
+				case NetworkCommand.CANVAS_INFO:CANVAS_INFO(pdata,client);break;
 				case NetworkCommand.CANVAS_SET:CANVAS_SET(pdata,client);break;
 				case NetworkCommand.CANVAS_LIST:CANVAS_LIST(pdata,client);break;
 				case NetworkCommand.CANVAS_UNDO:CANVAS_UNDO(pdata,client);break;
@@ -143,6 +144,8 @@ public class ProcessQueue
 
 				case NetworkCommand.CONSISTENCY_CHECK:CONSISTENCY_CHECK(pdata,client);break;
 				case NetworkCommand.CONSISTENCY_RESYNC_CANVAS:CONSISTENCY_RESYNC_CANVAS(pdata, client);break;
+				
+				case NetworkCommand.RESTORE_START:RESTORE_START(pdata);break;
 
 				case NetworkCommand.GRID_SIZE:GRID_SIZE(pdata,client);break;
 				case NetworkCommand.PLUGIN_EVENT:PLUGIN_EVENT(pdata,client);break;
@@ -225,6 +228,18 @@ public class ProcessQueue
 		CCanvasController.canvases.put(canvasId, canvas);
 		
 		ClientManager.send(canvas.getInfoPacket());
+	}
+	
+	// this event occurs on server restore
+	public static void CANVAS_INFO(CalicoPacket p, Client c)
+	{
+		long canvasId = p.getLong();
+		int index = p.getInt();
+		
+		CCanvas canvas = new CCanvas(canvasId);
+		CCanvasController.canvases.put(canvasId, canvas);
+
+		System.out.println("Warning: canvas with uuid " + canvas.getUUID() + " received the wrong index " + canvas.getIndex() + ". It should be " + index + ".");
 	}
 	
 	public static void CANVAS_CLEAR(CalicoPacket p, Client c)
@@ -353,6 +368,7 @@ public class ProcessQueue
 			}
 		}
 		
+		CCanvasController.no_notify_clear(uuid);
 		CCanvasController.canvases.remove(uuid);
 		ClientManager.send_except(c, p);
 	}
@@ -1237,6 +1253,12 @@ public class ProcessQueue
 		long cuid = p.getLong();
 		long puid = p.getLong();
 		
+		if (!CCanvasController.canvases.containsKey(cuid))
+		{
+			// canvas has been deleted
+			return;
+		}
+		
 		Color color = p.getColor();
 		
 		float thickness = p.getFloat();
@@ -1402,6 +1424,12 @@ public class ProcessQueue
 		
 		ClientManager.setClientChallenge(client.getClientID(), challenge);
 		
+	}
+	
+	public static void RESTORE_START(CalicoPacket p)
+	{
+		CCanvasController.canvases.clear();
+		CCanvas.clearState();
 	}
 	
 	public static void LIST_CREATE(CalicoPacket p, Client client)

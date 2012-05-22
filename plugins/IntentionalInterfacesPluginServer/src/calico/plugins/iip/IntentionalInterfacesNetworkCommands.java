@@ -105,7 +105,7 @@ public class IntentionalInterfacesNetworkCommands
 		
 		public static boolean isInDomain(int id)
 		{
-			return (id > OFFSET) && (id < (OFFSET + 100));
+			return (id >= OFFSET) && (id < (OFFSET + 100));
 		}
 	}
 }
