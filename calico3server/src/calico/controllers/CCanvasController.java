@@ -83,48 +83,84 @@ public class CCanvasController
 	
 	public static void no_notify_add_child_group(long uuid, long guuid)
 	{
-		canvases.get(uuid).addChildGroup(guuid);
+		CCanvas canvas = canvases.get(uuid);
+		if (canvas != null)
+		{
+			canvas.addChildGroup(guuid);
+		}
 	}
 	
 	public static void no_notify_remove_child_group(long uuid, long guuid)
 	{
-		canvases.get(uuid).deleteChildGroup(guuid);
+		CCanvas canvas = canvases.get(uuid);
+		if (canvas != null)
+		{
+			canvas.deleteChildGroup(guuid);
+		}
 	}
 	
 	
 	public static void no_notify_remove_child_arrow(long uuid, long guuid)
 	{
-		canvases.get(uuid).deleteChildArrow(guuid);
+		CCanvas canvas = canvases.get(uuid);
+		if (canvas != null)
+		{
+			canvas.deleteChildArrow(guuid);
+		}
 	}
 	public static void no_notify_add_child_arrow(long uuid, long guuid)
 	{
-		canvases.get(uuid).addChildArrow(guuid);
+		CCanvas canvas = canvases.get(uuid);
+		if (canvas != null)
+		{
+			canvas.addChildArrow(guuid);
+		}
 	}
 	
 	
 	public static void no_notify_add_child_stroke(long uuid, long suuid)
 	{
-		canvases.get(uuid).addChildStroke(suuid);
+		CCanvas canvas = canvases.get(uuid);
+		if (canvas != null)
+		{
+			canvas.addChildStroke(suuid);
+		}
 	}
 	
 	public static void no_notify_remove_child_stroke(long uuid, long suuid)
 	{
-		canvases.get(uuid).deleteChildStroke(suuid);
+		CCanvas canvas = canvases.get(uuid);
+		if (canvas != null)
+		{
+			canvas.deleteChildStroke(suuid);
+		}
 	}
 	
 	public static void no_notify_add_child_connector(long uuid, long cuuid)
 	{
-		canvases.get(uuid).addChildConnector(cuuid);
+		CCanvas canvas = canvases.get(uuid);
+		if (canvas != null)
+		{
+			canvas.addChildConnector(cuuid);
+		}
 	}
 	
 	public static void no_notify_remove_child_connector(long uuid, long cuuid)
 	{
-		canvases.get(uuid).deleteChildConnector(cuuid);
+		CCanvas canvas = canvases.get(uuid);
+		if (canvas != null)
+		{
+			canvas.deleteChildConnector(cuuid);
+		}
 	}
 	
 	public static void no_notify_add_child_list(long uuid, long luuid)
 	{
-		canvases.get(uuid).addChildList(luuid);
+		CCanvas canvas = canvases.get(uuid);
+		if (canvas != null)
+		{
+			canvas.addChildList(luuid);
+		}
 	}
 	
 	public static boolean undo(long uuid)

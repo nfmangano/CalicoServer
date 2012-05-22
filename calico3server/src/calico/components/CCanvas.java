@@ -23,6 +23,11 @@ public class CCanvas
 	implements CalicoEventListener
 {
 	private static final AtomicInteger INDEX_COUNTER = new AtomicInteger(1);
+	
+	public static void clearState()
+	{
+		INDEX_COUNTER.set(1);
+	}
 
 	private long uuid = 0L;
 	private int index = 0;
@@ -243,7 +248,7 @@ public class CCanvas
 	{
 		return this.arrows.toLongArray();
 	}
-	
+
 	public CalicoPacket getInfoPacket()
 	{
 		return CalicoPacket.getPacket(

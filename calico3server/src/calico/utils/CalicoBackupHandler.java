@@ -86,6 +86,8 @@ public class CalicoBackupHandler
 		writePacketToStream(fos, CalicoPacket.getPacket(NetworkCommand.BACKUP_FILE_ATTR, "TestAttr", "Test Value"));
 		writePacketToStream(fos, CalicoPacket.getPacket(NetworkCommand.BACKUP_FILE_ATTR, "NextUUID", Long.toString(UUIDAllocator.getUUID())));
 		
+		writePacketToStream(fos, CalicoPacket.getPacket(NetworkCommand.RESTORE_START));
+		
 		long[] canvasids = CCanvasController.canvases.keySet().toLongArray();
 		
 		

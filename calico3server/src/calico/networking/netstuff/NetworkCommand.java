@@ -285,6 +285,7 @@ public class NetworkCommand
 	public static final int BACKUP_FILE_START	= 1601;
 	public static final int BACKUP_FILE_END		= 1602;
 	public static final int BACKUP_FILE_ATTR	= 1603; // KEY, VALUE (strings?)
+	public static final int RESTORE_START		= 1604; 
 	
 
 	public static final int DEBUG_UNITTEST_START = 1700;
@@ -295,7 +296,6 @@ public class NetworkCommand
 	public static final int UDP_CHALLENGE = 1800; // LONG - crc32
 	
 	public static final int PLUGIN_EVENT = 1900;// <EventName> <data>
-	
 
 
 	public static final int LIST_CREATE = 2000;
