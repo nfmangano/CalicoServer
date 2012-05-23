@@ -127,7 +127,7 @@ public class CIntentionLayout
 				layoutGraphAsTree(movedCells);
 				break;
 			case CONCENTRIC:
-				layoutClusterAsCircles(movedCells);
+				layoutGraphAsCircles(movedCells);
 				break;
 		}
 	}
@@ -142,7 +142,7 @@ public class CIntentionLayout
 		}
 	}
 
-	private void layoutClusterAsCircles(Set<Long> movedCells)
+	private void layoutGraphAsCircles(Set<Long> movedCells)
 	{
 		Point clusterCenter = new Point();
 		topology.clear();
@@ -174,18 +174,21 @@ public class CIntentionLayout
 	{
 		List<Double> ringRadii = cluster.getRingRadii();
 
-		double clusterRadius;
+		double clusterRadius; // includes extra space to avoid crowding
 		if (ringRadii.isEmpty())
 		{
-			clusterRadius = INTENTION_CELL_DIAMETER / 2.0;
+			clusterRadius = INTENTION_CELL_DIAMETER;
 		}
 		else
 		{
-			clusterRadius = ringRadii.get(ringRadii.size() - 1);
+			clusterRadius = ringRadii.get(ringRadii.size() - 1) + (INTENTION_CELL_DIAMETER / 2.0);
 		}
 
-		double clusterThetaSpan = 2 * Math.asin((clusterRadius + INTENTION_CELL_DIAMETER) / (occupiedRadius + clusterRadius));
-		if ((theta + clusterThetaSpan) > (2 * Math.PI))
+		double orbitHypotenuse = (occupiedRadius + clusterRadius);
+		double clusterThetaSpan = 2 * Math.asin(clusterRadius / orbitHypotenuse);
+		double clusterSpacing = 2 * Math.sin((INTENTION_CELL_DIAMETER / 2) / orbitHypotenuse);
+		double occupiedThetaSpan = clusterThetaSpan + clusterSpacing;
+		if ((theta + occupiedThetaSpan) > (2 * Math.PI))
 		{
 			occupiedRadius += ((2 * maxClusterRadius) + INTENTION_CELL_DIAMETER);
 			maxClusterRadius = 0.0;
@@ -194,7 +197,7 @@ public class CIntentionLayout
 
 		if (theta > 0.0)
 		{
-			theta += (clusterThetaSpan / 2.0);
+			theta += (occupiedThetaSpan / 2.0);
 		}
 
 		double aggregateRadius = occupiedRadius + clusterRadius;
@@ -204,7 +207,7 @@ public class CIntentionLayout
 
 		topology.addCluster(cluster.getRootCanvasId(), clusterCenter, ringRadii);
 
-		theta += (clusterThetaSpan / 2.0);
+		theta += (occupiedThetaSpan / 2.0);
 		if (clusterRadius > maxClusterRadius)
 		{
 			maxClusterRadius = clusterRadius;
