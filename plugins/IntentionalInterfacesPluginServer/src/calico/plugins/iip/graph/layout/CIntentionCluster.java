@@ -19,7 +19,7 @@ import calico.plugins.iip.controllers.CCanvasLinkController;
 class CIntentionCluster
 {
 	private static final SliceSorter SLICE_SORTER = new SliceSorter();
-	static final int RING_SEPARATION = 40 + CIntentionLayout.INTENTION_CELL_DIAMETER;
+	static final int RING_SEPARATION = 80 + CIntentionLayout.INTENTION_CELL_DIAMETER;
 
 	private final List<CIntentionRing> rings = new ArrayList<CIntentionRing>();
 	private final Map<Long, CIntentionSlice> slicesByRootCanvasId = new LinkedHashMap<Long, CIntentionSlice>();
@@ -81,7 +81,7 @@ class CIntentionCluster
 			CIntentionSlice slice = new CIntentionSlice(linkedCanvasId);
 			slices.add(slice);
 
-			traverseAndPopulate(linkedCanvasId, 0, slice);
+			traverseAndPopulate(-1L, linkedCanvasId, 0, slice);
 			totalInOrbit += slice.size();
 		}
 
@@ -187,7 +187,7 @@ class CIntentionCluster
 				{
 					arcTransformer = new CIntentionArcTransformer(location, ringRadius, ringSpan, slice.calculateLayoutSpan(ringSpan));
 				}
-				slice.layoutArc(arcTransformer, i, ringSpan, sliceStart, movedCells);
+				slice.layoutArc(arcTransformer, i, ringSpan, sliceStart, movedCells, (i == 0) ? null : ringRadii.get(i - 1));
 				sliceStart += slice.getLayoutSpan();
 			}
 		}
@@ -202,12 +202,12 @@ class CIntentionCluster
 		}
 	}
 
-	private void traverseAndPopulate(long canvasId, int ringIndex, CIntentionSlice slice)
+	private void traverseAndPopulate(long parentCanvasId, long canvasId, int ringIndex, CIntentionSlice slice)
 	{
 		CIntentionRing ring = getRing(ringIndex);
 		ring.addCanvas(canvasId);
 
-		slice.addCanvas(canvasId, ringIndex);
+		slice.addCanvas(parentCanvasId, canvasId, ringIndex);
 
 		for (long anchorId : CCanvasLinkController.getInstance().getAnchorIdsForCanvasId(canvasId))
 		{
@@ -222,7 +222,7 @@ class CIntentionCluster
 			{
 				continue; // this is not a canvas, nothing is here
 			}
-			traverseAndPopulate(linkedCanvasId, ringIndex + 1, slice);
+			traverseAndPopulate(canvasId, linkedCanvasId, ringIndex + 1, slice);
 		}
 	}
 

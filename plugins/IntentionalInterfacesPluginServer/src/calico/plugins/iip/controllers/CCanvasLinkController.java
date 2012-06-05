@@ -33,6 +33,13 @@ public class CCanvasLinkController
 			state.addLinkPacket(link.getState());
 		}
 	}
+	
+	public void clearState()
+	{
+		links.clear();
+		linkAnchors.clear();
+		anchorIdsByCanvasId.clear();
+	}
 
 	public CCanvasLinkAnchor getAnchor(long anchorId)
 	{
@@ -42,6 +49,24 @@ public class CCanvasLinkController
 	public CCanvasLink getLink(long linkId)
 	{
 		return links.get(linkId);
+	}
+	
+	public Long getIncomingLink(long canvasId)
+	{
+		Set<Long> anchorIds = anchorIdsByCanvasId.get(canvasId);
+		if (anchorIds == null)
+		{
+			return null;
+		}
+		
+		for (Long anchorId : anchorIdsByCanvasId.get(canvasId))
+		{
+			if (isDestination(anchorId))
+			{
+				return linkAnchors.get(anchorId).getLinkId();
+			}
+		}
+		return null;
 	}
 
 	public CCanvasLinkAnchor getOpposite(long anchorId)

@@ -2,6 +2,7 @@ package calico.plugins.iip.graph.layout;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,18 +43,14 @@ public class CIntentionLayout
 		return cell.setLocation(x - (CIntentionLayout.INTENTION_CELL_SIZE.width / 2), y - (CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
 	}
 
-	public static boolean centerCanvasAt(long canvasId, int xArc, Point center, double radius)
+	public static Point getCanvasCenter(long canvasId)
 	{
-		double theta = xArc / radius;
-		int x = center.x + (int) (radius * Math.cos(theta));
-		int y = center.y + (int) (radius * Math.sin(theta));
-
-		System.out.println(String.format("[%d] (%d, %d) for xArc %d and radius %f", getCanvasIndex(canvasId), x, y, xArc, radius));
-
-		return centerCanvasAt(canvasId, x, y);
+		CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(canvasId);
+		return new Point(cell.getLocation().x - (CIntentionLayout.INTENTION_CELL_SIZE.width / 2), cell.getLocation().y
+				- (CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
 	}
 
-	public static final Dimension INTENTION_CELL_SIZE = new Dimension(100, 60);
+	public static final Dimension INTENTION_CELL_SIZE = new Dimension(200, 130);
 	static final int INTENTION_CELL_DIAMETER = calculateCellDiameter(INTENTION_CELL_SIZE);
 	static final LayoutMode LAYOUT_MODE = LayoutMode.CONCENTRIC;
 
@@ -64,6 +61,9 @@ public class CIntentionLayout
 	// transitory per layout execution
 	private final Set<Long> movedCells = new HashSet<Long>();
 	private final CIntentionTopology topology = new CIntentionTopology();
+	private double occupiedRadius;
+	private double theta;
+	private double maxClusterRadius;
 
 	public Set<Long> getMovedCells()
 	{
@@ -73,6 +73,13 @@ public class CIntentionLayout
 	public CIntentionTopology getTopology()
 	{
 		return topology;
+	}
+
+	public void insertNewCluster(CIntentionCell cell)
+	{
+		CIntentionCluster cluster = new CIntentionCluster(cell.getCanvasId());
+		clusters.add(cluster);
+		layoutCluster(cluster);
 	}
 
 	public void populateState(IntentionalInterfaceState state)
@@ -120,7 +127,7 @@ public class CIntentionLayout
 				layoutGraphAsTree(movedCells);
 				break;
 			case CONCENTRIC:
-				layoutClusterAsCircles(movedCells);
+				layoutGraphAsCircles(movedCells);
 				break;
 		}
 	}
@@ -135,7 +142,7 @@ public class CIntentionLayout
 		}
 	}
 
-	private void layoutClusterAsCircles(Set<Long> movedCells)
+	private void layoutGraphAsCircles(Set<Long> movedCells)
 	{
 		Point clusterCenter = new Point();
 		topology.clear();
@@ -144,7 +151,6 @@ public class CIntentionLayout
 		List<Double> ringRadii = rootCluster.getRingRadii();
 		rootCluster.layoutClusterAsCircles(clusterCenter, movedCells, ringRadii);
 
-		double occupiedRadius;
 		if (ringRadii.isEmpty())
 		{
 			occupiedRadius = INTENTION_CELL_DIAMETER / 2.0;
@@ -154,49 +160,57 @@ public class CIntentionLayout
 			occupiedRadius = (ringRadii.get(ringRadii.size() - 1) + INTENTION_CELL_DIAMETER);
 		}
 
-		topology.addCluster(clusterCenter, ringRadii);
+		topology.addCluster(rootCluster.getRootCanvasId(), clusterCenter, ringRadii);
 
-		double theta = 0.0;
-		double maxClusterRadius = 0.0;
+		theta = 0.0;
+		maxClusterRadius = 0.0;
 		for (int i = 1; i < clusters.size(); i++)
 		{
-			CIntentionCluster cluster = clusters.get(i);
-			ringRadii = cluster.getRingRadii();
+			layoutCluster(clusters.get(i));
+		}
+	}
 
-			double clusterRadius;
-			if (ringRadii.isEmpty())
-			{
-				clusterRadius = INTENTION_CELL_DIAMETER / 2.0;
-			}
-			else
-			{
-				clusterRadius = ringRadii.get(ringRadii.size() - 1);
-			}
+	private void layoutCluster(CIntentionCluster cluster)
+	{
+		List<Double> ringRadii = cluster.getRingRadii();
 
-			double clusterThetaSpan = 2 * Math.asin((clusterRadius + INTENTION_CELL_DIAMETER) / (occupiedRadius + clusterRadius));
-			if ((theta + clusterThetaSpan) > (2 * Math.PI))
-			{
-				occupiedRadius += (maxClusterRadius + INTENTION_CELL_DIAMETER);
-				maxClusterRadius = 0.0;
-				theta = 0.0;
-			}
+		double clusterRadius; // includes extra space to avoid crowding
+		if (ringRadii.isEmpty())
+		{
+			clusterRadius = INTENTION_CELL_DIAMETER;
+		}
+		else
+		{
+			clusterRadius = ringRadii.get(ringRadii.size() - 1) + (INTENTION_CELL_DIAMETER / 2.0);
+		}
 
-			if (theta > 0.0)
-			{
-				theta += (clusterThetaSpan / 2.0);
-			}
+		double orbitHypotenuse = (occupiedRadius + clusterRadius);
+		double clusterThetaSpan = 2 * Math.asin(clusterRadius / orbitHypotenuse);
+		double clusterSpacing = 2 * Math.sin((INTENTION_CELL_DIAMETER / 2) / orbitHypotenuse);
+		double occupiedThetaSpan = clusterThetaSpan + clusterSpacing;
+		if ((theta + occupiedThetaSpan) > (2 * Math.PI))
+		{
+			occupiedRadius += ((2 * maxClusterRadius) + INTENTION_CELL_DIAMETER);
+			maxClusterRadius = 0.0;
+			theta = 0.0;
+		}
 
-			double aggregateRadius = occupiedRadius + clusterRadius;
-			clusterCenter.setLocation(Math.sin(theta) * aggregateRadius, -(Math.cos(theta) * aggregateRadius));
-			cluster.layoutClusterAsCircles(clusterCenter, movedCells, ringRadii);
+		if (theta > 0.0)
+		{
+			theta += (occupiedThetaSpan / 2.0);
+		}
 
-			topology.addCluster(clusterCenter, ringRadii);
+		double aggregateRadius = occupiedRadius + clusterRadius;
+		Point clusterCenter = new Point();
+		clusterCenter.setLocation(Math.sin(theta) * aggregateRadius, -(Math.cos(theta) * aggregateRadius));
+		cluster.layoutClusterAsCircles(clusterCenter, movedCells, ringRadii);
 
-			theta += (clusterThetaSpan / 2.0);
-			if (clusterRadius > maxClusterRadius)
-			{
-				maxClusterRadius = clusterRadius;
-			}
+		topology.addCluster(cluster.getRootCanvasId(), clusterCenter, ringRadii);
+
+		theta += (occupiedThetaSpan / 2.0);
+		if (clusterRadius > maxClusterRadius)
+		{
+			maxClusterRadius = clusterRadius;
 		}
 	}
 

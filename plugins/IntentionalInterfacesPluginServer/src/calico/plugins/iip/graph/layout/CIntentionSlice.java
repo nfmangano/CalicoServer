@@ -1,9 +1,13 @@
 package calico.plugins.iip.graph.layout;
 
 import java.awt.Point;
+import java.lang.management.GarbageCollectorMXBean;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class CIntentionSlice
@@ -13,6 +17,7 @@ public class CIntentionSlice
 	private final long rootCanvasId;
 	private final List<Long> canvasIds = new ArrayList<Long>();
 	private final List<Arc> arcs = new ArrayList<Arc>();
+	private final Map<Long, Integer> arcPositions = new HashMap<Long, Integer>();
 
 	// transitory per layout execution
 	private double populationWeight;
@@ -30,10 +35,10 @@ public class CIntentionSlice
 		return rootCanvasId;
 	}
 
-	void addCanvas(long canvasId, int ringIndex)
+	void addCanvas(long parentCanvasId, long canvasId, int ringIndex)
 	{
 		canvasIds.add(canvasId);
-		getArc(ringIndex).addCanvas(canvasId);
+		getArc(ringIndex).addCanvas(parentCanvasId, canvasId);
 	}
 
 	int getLayoutSpan()
@@ -45,10 +50,10 @@ public class CIntentionSlice
 	{
 		return canvasIds.size();
 	}
-	
+
 	int arcSize(int ringIndex)
 	{
-		return getArc(ringIndex).canvases.size();
+		return getArc(ringIndex).canvasCount;
 	}
 
 	void setPopulationWeight(int totalInOrbit)
@@ -114,20 +119,22 @@ public class CIntentionSlice
 
 		for (Arc arc : arcs)
 		{
-			if (!arc.canvases.isEmpty())
+			if (!arc.isEmpty())
 			{
 				maxOccupiedArc = arc.ringIndex;
-				int arcOccupancySpan = arc.canvases.size() * CIntentionLayout.INTENTION_CELL_DIAMETER;
+				int arcOccupancySpan = arc.canvasCount * CIntentionLayout.INTENTION_CELL_DIAMETER;
 				int x = root.x + ((sliceWidth - arcOccupancySpan) / 2);
 
-				for (Long canvasId : arc.canvases)
+				for (CanvasGroup group : arc.canvasGroups.values())
 				{
-					// System.out.println("Placing slice child at " + x + ", " + y);
-					if (CIntentionLayout.centerCanvasAt(canvasId, x, y))
+					for (Long canvasId : group.groupCanvasIds)
 					{
-						movedCells.add(canvasId);
+						if (CIntentionLayout.centerCanvasAt(canvasId, x, y))
+						{
+							movedCells.add(canvasId);
+						}
+						x += CIntentionLayout.INTENTION_CELL_DIAMETER;
 					}
-					x += CIntentionLayout.INTENTION_CELL_DIAMETER;
 				}
 			}
 			y += CIntentionCluster.RING_SEPARATION;
@@ -135,32 +142,167 @@ public class CIntentionSlice
 
 		layoutSpan = sliceWidth;
 	}
-	
+
 	int calculateLayoutSpan(int ringSpan)
 	{
 		return (int) (ringSpan * assignedWeight);
 	}
-	
-	void layoutArc(CIntentionArcTransformer arcTransformer, int ringIndex, int ringSpan, int arcStart, Set<Long> movedCells)
+
+	private class GroupCollision
+	{
+		private final CanvasGroup ideallyPlacedGroup;
+		private final List<Displacement> displacements = new ArrayList<Displacement>();
+
+		// transitory during computation
+		private double currentLeftBoundary;
+
+		GroupCollision(CanvasGroup ideallyPlacedGroup)
+		{
+			this.ideallyPlacedGroup = ideallyPlacedGroup;
+		}
+
+		void displace(CanvasGroup group, double span)
+		{
+			displacements.add(new Displacement(group, span));
+		}
+
+		void describe()
+		{
+			double totalSpan = 0.0;
+			for (Displacement displacement : displacements)
+			{
+				totalSpan += displacement.displacementSpan;
+			}
+
+			System.out.println("Collision for group with parent " + CIntentionLayout.getCanvasIndex(ideallyPlacedGroup.parentCanvasId) + ": "
+					+ displacements.size() + " displacements totaling " + ((int) totalSpan) + " arc pixels.");
+		}
+	}
+
+	private class Displacement
+	{
+		private final CanvasGroup displacedGroup;
+		private final double displacementSpan;
+
+		Displacement(CanvasGroup displacedGroup, double displacementSpan)
+		{
+			this.displacedGroup = displacedGroup;
+			this.displacementSpan = displacementSpan;
+		}
+	}
+
+	void layoutArc(CIntentionArcTransformer arcTransformer, int ringIndex, int ringSpan, int arcStart, Set<Long> movedCells, Double parentRingRadius)
 	{
 		int sliceWidth = calculateLayoutSpan(ringSpan);
 
 		Arc arc = arcs.get(ringIndex);
-		if (!arc.canvases.isEmpty())
+		if (!arc.isEmpty())
 		{
-			int arcOccupancySpan = (arc.canvases.size() - 1) * CIntentionLayout.INTENTION_CELL_DIAMETER;
+			int arcOccupancySpan = (arc.canvasCount - 1) * CIntentionLayout.INTENTION_CELL_DIAMETER;
 			int xArc = arcStart + ((sliceWidth - arcOccupancySpan) / 2);
 
-			for (Long canvasId : arc.canvases)
+			List<GroupCollision> calculatedCollisions = new ArrayList<GroupCollision>();
+			if (parentRingRadius != null)
 			{
-				if (arcTransformer.centerCanvasAt(canvasId, xArc))
+				List<GroupCollision> collisionsInEffect = new ArrayList<GroupCollision>();
+
+				double leftBoundary = arcStart;
+				CanvasGroup previousGroup = null;
+				for (CanvasGroup group : arc.canvasGroups.values())
 				{
-					movedCells.add(canvasId);
+					group.idealPosition = arcTransformer.calculateIdealPosition(arcPositions.get(group.parentCanvasId), parentRingRadius);
+
+					System.out.println("Ideal position for group of arc " + ringIndex + " in slice for canvas " + CIntentionLayout.getCanvasIndex(rootCanvasId)
+							+ ": " + group.idealPosition + " in (" + arcStart + " - " + (arcStart + sliceWidth) + ")");
+
+					double idealStart = group.idealPosition - (group.getSpan() / 2.0);
+
+					for (int i = (collisionsInEffect.size() - 1); i >= 0; i--)
+					{
+						GroupCollision collision = collisionsInEffect.get(i);
+						if (collision.currentLeftBoundary > idealStart)
+						{
+							collision.displace(group, collision.currentLeftBoundary - idealStart);
+							collision.currentLeftBoundary += group.getSpan();
+						}
+						else
+						{
+							collisionsInEffect.remove(i);
+							calculatedCollisions.add(collision);
+						}
+					}
+
+					if (idealStart < leftBoundary)
+					{
+						if (leftBoundary != arcStart)
+						{
+							GroupCollision collision = new GroupCollision(previousGroup);
+							collision.displace(group, (leftBoundary - idealStart));
+							collision.currentLeftBoundary = leftBoundary + group.getSpan();
+							collisionsInEffect.add(collision);
+						}
+
+						idealStart = leftBoundary;
+					}
+
+					leftBoundary = idealStart + group.getSpan();
+					previousGroup = group;
 				}
-				xArc += CIntentionLayout.INTENTION_CELL_DIAMETER;
+
+				calculatedCollisions.addAll(collisionsInEffect);
+				collisionsInEffect.clear();
+
+				for (GroupCollision collision : calculatedCollisions)
+				{
+					collision.describe();
+				}
+			}
+
+			Map<CanvasGroup, Integer> displacements = new HashMap<CanvasGroup, Integer>();
+			if (parentRingRadius == null)
+			{
+				displacements = null;
+			}
+			else
+			{
+				for (GroupCollision collision : calculatedCollisions)
+				{
+					if (collision.displacements.size() > 1)
+					{
+						displacements = null;
+						break;
+					}
+
+					Displacement displacement = collision.displacements.get(0);
+					displacements.put(displacement.displacedGroup, (int) displacement.displacementSpan);
+				}
+			}
+
+			for (CanvasGroup group : arc.canvasGroups.values())
+			{
+				if (displacements != null)
+				{
+					xArc = (int) (group.idealPosition + (CIntentionLayout.INTENTION_CELL_DIAMETER / 2.0) - (group.getSpan() / 2.0));
+
+					Integer displacement = displacements.get(group);
+					if (displacement != null)
+					{
+						xArc += displacement;
+					}
+				}
+
+				for (Long canvasId : group.groupCanvasIds)
+				{
+					if (arcTransformer.centerCanvasAt(canvasId, xArc))
+					{
+						movedCells.add(canvasId);
+					}
+					arcPositions.put(canvasId, xArc);
+					xArc += CIntentionLayout.INTENTION_CELL_DIAMETER;
+				}
 			}
 		}
-		
+
 		layoutSpan = sliceWidth;
 	}
 
@@ -176,7 +318,8 @@ public class CIntentionSlice
 	private class Arc
 	{
 		private int ringIndex;
-		private final List<Long> canvases = new ArrayList<Long>();
+		private final Map<Long, CanvasGroup> canvasGroups = new LinkedHashMap<Long, CanvasGroup>();
+		int canvasCount = 0;
 		private double weight;
 		private int arcSpanProjection;
 
@@ -185,9 +328,15 @@ public class CIntentionSlice
 			this.ringIndex = ringIndex;
 		}
 
-		void addCanvas(long canvasId)
+		void addCanvas(long parentCanvasId, long canvasId)
 		{
-			canvases.add(canvasId);
+			canvasCount++;
+			getCanvasGroup(parentCanvasId).addCanvas(canvasId);
+		}
+
+		boolean isEmpty()
+		{
+			return canvasGroups.isEmpty();
 		}
 
 		void setWeight(double weight)
@@ -197,7 +346,42 @@ public class CIntentionSlice
 
 		void calculateArcSpanProjection()
 		{
-			arcSpanProjection = (int) ((canvases.size() * CIntentionLayout.INTENTION_CELL_DIAMETER) * (1.0 / assignedWeight));
+			arcSpanProjection = (int) ((canvasCount * CIntentionLayout.INTENTION_CELL_DIAMETER) * (1.0 / assignedWeight));
+		}
+
+		private CanvasGroup getCanvasGroup(long parentCanvasId)
+		{
+			CanvasGroup group = canvasGroups.get(parentCanvasId);
+			if (group == null)
+			{
+				group = new CanvasGroup(parentCanvasId);
+				canvasGroups.put(parentCanvasId, group);
+			}
+			return group;
+		}
+	}
+
+	private class CanvasGroup
+	{
+		private final long parentCanvasId;
+		private final List<Long> groupCanvasIds = new ArrayList<Long>();
+
+		// transitory
+		double idealPosition;
+
+		CanvasGroup(long parentCanvasId)
+		{
+			this.parentCanvasId = parentCanvasId;
+		}
+
+		void addCanvas(long canvasId)
+		{
+			groupCanvasIds.add(canvasId);
+		}
+
+		int getSpan()
+		{
+			return groupCanvasIds.size() * CIntentionLayout.INTENTION_CELL_DIAMETER;
 		}
 	}
 
