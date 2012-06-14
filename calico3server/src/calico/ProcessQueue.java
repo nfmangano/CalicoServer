@@ -6,6 +6,8 @@ import calico.plugins.CalicoPluginManager;
 import calico.plugins.events.CalicoEvent;
 import calico.plugins.events.clients.ClientConnect;
 import calico.components.*;
+import calico.components.composable.ComposableElement;
+import calico.components.composable.ComposableElementController;
 import calico.controllers.*;
 import calico.admin.*;
 import calico.clients.*;
@@ -126,6 +128,9 @@ public class ProcessQueue
 				case NetworkCommand.CONNECTOR_MOVE_ANCHOR:CONNECTOR_MOVE_ANCHOR(pdata,client);break;
 				case NetworkCommand.CONNECTOR_MOVE_ANCHOR_START:CONNECTOR_MOVE_ANCHOR_START(pdata,client);break;
 				case NetworkCommand.CONNECTOR_MOVE_ANCHOR_END:CONNECTOR_MOVE_ANCHOR_END(pdata,client);break;
+				
+				case NetworkCommand.ELEMENT_ADD:ELEMENT_ADD(pdata,client);break;
+				case NetworkCommand.ELEMENT_REMOVE:ELEMENT_REMOVE(pdata,client);break;
 				
 				case NetworkCommand.UDP_CHALLENGE:UDP_CHALLENGE(pdata, client);break;
 				
@@ -1147,6 +1152,28 @@ public class ProcessQueue
 		{
 			CCanvasController.snapshot_connector(uuid);
 		}
+	}
+	
+	public static void ELEMENT_ADD(CalicoPacket p, Client client)
+	{
+		ComposableElement element = ComposableElementController.getElementFromPacket(p);
+		
+		if (element != null)
+		{
+			ComposableElementController.no_notify_addElement(element);
+		}
+		
+		ClientManager.send_except(client, p);
+	}
+	
+	public static void ELEMENT_REMOVE(CalicoPacket p, Client client)
+	{
+		long euuid = p.getLong();
+		long cuuid = p.getLong();
+		
+		ComposableElementController.no_notify_removeElement(euuid, cuuid);
+		
+		ClientManager.send_except(client, p);
 	}
 	
 

@@ -3,6 +3,8 @@ package calico.controllers;
 import calico.*;
 import calico.clients.*;
 import calico.components.*;
+import calico.components.composable.ComposableElement;
+import calico.components.composable.ComposableElementController;
 import calico.components.decorators.CGroupDecorator;
 import calico.components.decorators.CListDecorator;
 import calico.networking.*;
@@ -580,6 +582,19 @@ public class CGroupController
 						CConnectorController.no_notify_create(new_connector_uuid, canvasuuid, tempConnector.getColor(), tempConnector.getThickness(), head, tail,
 								tempConnector.getOrthogonalDistance(), tempConnector.getTravelDistance(), 
 								UUIDMappings.get(tempConnector.getAnchorUUID(CConnector.TYPE_HEAD)), UUIDMappings.get(tempConnector.getAnchorUUID(CConnector.TYPE_TAIL)));
+						if (ComposableElementController.elementList.containsKey(connector_uuids[i]))
+						{
+							Long2ReferenceAVLTreeMap<ComposableElement> componentElements = ComposableElementController.elementList.get(connector_uuids[i]);
+							for (Map.Entry<Long, ComposableElement> entry : componentElements.entrySet())
+							{
+								if (UUIDMappings.containsKey(entry.getKey()))
+								{
+									long new_element_uuid = UUIDMappings.get(entry.getKey()).longValue();
+									packets = new CalicoPacket[]{entry.getValue().getPacket(new_element_uuid, new_connector_uuid)};
+									batchReceive(packets);
+								}
+							}
+						}
 					}
 				}
 			}
