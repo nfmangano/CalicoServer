@@ -39,10 +39,12 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		}
 
 		// create the default intention types
-		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "New Perspective", 0);
-		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "New Alternative", 1);
-		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "New Idea", 2);
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Perspective", 0);
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Alternative", 1);
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Idea", 2);
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Design Inside", 3);
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Continuation", 4);
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "No Tag", 5);
 
 		CalicoPluginManager.registerCalicoStateExtension(this);
 
