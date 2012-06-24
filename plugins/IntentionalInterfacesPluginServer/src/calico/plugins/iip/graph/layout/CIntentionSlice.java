@@ -1,9 +1,9 @@
 package calico.plugins.iip.graph.layout;
 
 import java.awt.Point;
-import java.lang.management.GarbageCollectorMXBean;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -191,7 +191,7 @@ public class CIntentionSlice
 		}
 	}
 
-	void layoutArc(CIntentionArcTransformer arcTransformer, int ringIndex, int ringSpan, int arcStart, Set<Long> movedCells, Double parentRingRadius)
+	void layoutArc(CIntentionArcTransformer arcTransformer, int ringIndex, int ringSpan, int arcStart, Collection<Long> movedCellIds, Double parentRingRadius)
 	{
 		int sliceWidth = calculateLayoutSpan(ringSpan);
 
@@ -295,7 +295,7 @@ public class CIntentionSlice
 				{
 					if (arcTransformer.centerCanvasAt(canvasId, xArc))
 					{
-						movedCells.add(canvasId);
+						movedCellIds.add(canvasId);
 					}
 					arcPositions.put(canvasId, xArc);
 					xArc += CIntentionLayout.INTENTION_CELL_DIAMETER;
