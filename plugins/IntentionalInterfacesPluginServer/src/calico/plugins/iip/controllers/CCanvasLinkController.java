@@ -33,7 +33,7 @@ public class CCanvasLinkController
 			state.addLinkPacket(link.getState());
 		}
 	}
-	
+
 	public void clearState()
 	{
 		links.clear();
@@ -50,7 +50,7 @@ public class CCanvasLinkController
 	{
 		return links.get(linkId);
 	}
-	
+
 	public Long getIncomingLink(long canvasId)
 	{
 		Set<Long> anchorIds = anchorIdsByCanvasId.get(canvasId);
@@ -58,7 +58,7 @@ public class CCanvasLinkController
 		{
 			return null;
 		}
-		
+
 		for (Long anchorId : anchorIdsByCanvasId.get(canvasId))
 		{
 			if (isDestination(anchorId))
@@ -89,14 +89,14 @@ public class CCanvasLinkController
 		CCanvasLink link = links.get(anchor.getLinkId());
 		return (link.getAnchorB() == anchor);
 	}
-	
+
 	public boolean isConnectedDestination(long anchorId)
 	{
 		if (!isDestination(anchorId))
 		{
 			return false;
 		}
-		
+
 		return getOpposite(anchorId).getCanvasId() >= 0;
 	}
 
@@ -119,11 +119,12 @@ public class CCanvasLinkController
 		return links.get(uuid);
 	}
 
-	public void removeLinkById(long uuid)
+	public CCanvasLink removeLinkById(long uuid)
 	{
 		CCanvasLink link = links.remove(uuid);
 		removeLinkAnchor(link.getAnchorA());
 		removeLinkAnchor(link.getAnchorB());
+		return link;
 	}
 
 	private void removeLinkAnchor(CCanvasLinkAnchor anchor)
@@ -149,14 +150,18 @@ public class CCanvasLinkController
 		boolean changedCanvas = (canvas_uuid != anchor.getCanvasId());
 		if (changedCanvas)
 		{
-			getAnchorIdsForCanvasId(anchor.getCanvasId()).remove(anchor.getId());
+			throw new UnsupportedOperationException("Moving arrows from one canvas to another is not presently supported.");
+			// getAnchorIdsForCanvasId(anchor.getCanvasId()).remove(anchor.getId());
 		}
 		anchor.move(canvas_uuid, type, x, y);
+		/**
+		 * <pre>
 		if (changedCanvas)
 		{
 			getAnchorIdsForCanvasId(anchor.getCanvasId()).add(anchor.getId());
 			IntentionalInterfacesServerPlugin.layoutGraph();
 		}
+		 */
 	}
 
 	public List<Long> getLinkIdsForCanvas(long canvasId)

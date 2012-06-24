@@ -16,14 +16,14 @@ public class CIntentionTopology
 		private final Point center = new Point();
 		private final List<Integer> radii = new ArrayList<Integer>();
 
-		Cluster(long rootCanvasId, Point center, List<Double> radii)
+		Cluster(CIntentionCluster cluster)
 		{
-			this.rootCanvasId = rootCanvasId;
-			this.center.setLocation(center);
+			rootCanvasId = cluster.getRootCanvasId();
+			center.setLocation(cluster.getLocation());
 
-			for (Double radius : radii)
+			for (Double radius : cluster.getRingRadii())
 			{
-				this.radii.add(radius.intValue());
+				radii.add(radius.intValue());
 			}
 		}
 
@@ -80,9 +80,9 @@ public class CIntentionTopology
 		return clusters;
 	}
 
-	public void addCluster(long rootCanvasId, Point center, List<Double> radii)
+	public void addCluster(CIntentionCluster cluster)
 	{
-		clusters.add(new Cluster(rootCanvasId, center, radii));
+		clusters.add(new Cluster(cluster));
 	}
 
 	private String serialize()
