@@ -89,9 +89,13 @@ public class CIntentionClusterGraph
 		void layout(Position position)
 		{
 			if (position.isEmpty())
-				return; // might prefer to assign `unitSpan of 1 to empty positions
-
-			position.unitSpan = (int) Math.ceil(position.cluster.getOccupiedSpan() / CLUSTER_UNIT_SPAN);
+			{
+				position.unitSpan = 1; // 0 to auto-collapse empty cells
+			}
+			else
+			{
+				position.unitSpan = (int) Math.ceil(position.cluster.getOccupiedSpan() / CLUSTER_UNIT_SPAN);
+			}
 
 			position.xUnit = xUnit;
 			position.yUnit = getMaxBoundary(position);
