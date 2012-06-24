@@ -89,6 +89,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 				case CIC_DELETE:
 					CIC_DELETE(p, c);
 					break;
+				case CIC_CLUSTER_GRAPH:
+					CIC_CLUSTER_GRAPH(p, c);
+					break;
 				case CIT_CREATE:
 					CIT_CREATE(p, c);
 					break;
@@ -322,6 +325,14 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		 */
 	}
 
+	private static void CIC_CLUSTER_GRAPH(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIC_CLUSTER_GRAPH.verify(p);
+		
+		CIntentionLayout.getInstance().inflateStoredClusterGraph(p.getString());
+	}
+	
 	private static void CIT_CREATE(CalicoPacket p, Client c)
 	{
 		p.rewind();

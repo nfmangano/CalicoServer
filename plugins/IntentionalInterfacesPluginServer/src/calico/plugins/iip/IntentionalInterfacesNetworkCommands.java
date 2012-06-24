@@ -10,6 +10,7 @@ public class IntentionalInterfacesNetworkCommands
 	public static final int CIC_TAG = Command.CIC_TAG.id;
 	public static final int CIC_UNTAG = Command.CIC_UNTAG.id;
 	public static final int CIC_TOPOLOGY = Command.CIC_TOPOLOGY.id;
+	public static final int CIC_CLUSTER_GRAPH = Command.CIC_CLUSTER_GRAPH.id;
 	public static final int CIC_DELETE = Command.CIC_DELETE.id;
 	public static final int CIT_CREATE = Command.CIT_CREATE.id;
 	public static final int CIT_RENAME = Command.CIT_RENAME.id;
@@ -52,6 +53,10 @@ public class IntentionalInterfacesNetworkCommands
 		 */
 		CIC_TOPOLOGY,
 		/**
+		 * Describe the graph of the CIC clusters. This is not used on the client, only for backup and restore.
+		 */
+		CIC_CLUSTER_GRAPH,
+		/**
 		 * Create a new CIntentionType
 		 */
 		CIT_CREATE,
@@ -93,7 +98,13 @@ public class IntentionalInterfacesNetworkCommands
 
 		public boolean verify(CalicoPacket p)
 		{
-			return forId(p.getInt()) == this;
+			int type = p.getInt();
+			boolean verified = forId(type) == this;
+			if (!verified)
+			{
+				System.out.println("Warning: incorrect processing path for packet of type " + type);
+			}
+			return verified;
 		}
 
 		private static final int OFFSET = 2300;
@@ -102,7 +113,7 @@ public class IntentionalInterfacesNetworkCommands
 		{
 			return Command.values()[id - OFFSET];
 		}
-		
+
 		public static boolean isInDomain(int id)
 		{
 			return (id >= OFFSET) && (id < (OFFSET + 100));

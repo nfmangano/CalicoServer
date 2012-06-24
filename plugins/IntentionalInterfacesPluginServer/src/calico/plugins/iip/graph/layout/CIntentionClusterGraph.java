@@ -6,6 +6,10 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.StringTokenizer;
+
+import calico.networking.netstuff.CalicoPacket;
+import calico.plugins.iip.IntentionalInterfacesNetworkCommands;
 
 public class CIntentionClusterGraph
 {
@@ -29,6 +33,26 @@ public class CIntentionClusterGraph
 			this.columnIndex = columnIndex;
 		}
 
+		Position(String data)
+		{
+			StringTokenizer tokens = new StringTokenizer(data, ",");
+			xUnit = Integer.parseInt(tokens.nextToken());
+			yUnit = Integer.parseInt(tokens.nextToken());
+			unitSpan = Integer.parseInt(tokens.nextToken());
+			rowIndex = Integer.parseInt(tokens.nextToken());
+			columnIndex = Integer.parseInt(tokens.nextToken());
+
+			long clusterRootCanvasId = Long.parseLong(tokens.nextToken());
+			if (clusterRootCanvasId > 0L)
+			{
+				cluster = new CIntentionCluster(clusterRootCanvasId);
+			}
+			else
+			{
+				cluster = null;
+			}
+		}
+
 		boolean isEmpty()
 		{
 			return (cluster == null);
@@ -48,6 +72,32 @@ public class CIntentionClusterGraph
 		{
 			double inset = ((unitSpan * CLUSTER_UNIT_SPAN) / 2);
 			return new Point((int) ((xUnit * CLUSTER_UNIT_SPAN) + inset), (int) ((yUnit * CLUSTER_UNIT_SPAN) + inset));
+		}
+
+		void serialize(StringBuilder buffer)
+		{
+			buffer.append("[");
+			buffer.append(xUnit);
+			buffer.append(",");
+			buffer.append(yUnit);
+			buffer.append(",");
+			buffer.append(unitSpan);
+			buffer.append(",");
+			buffer.append(rowIndex);
+			buffer.append(",");
+			buffer.append(columnIndex);
+			buffer.append(",");
+
+			if (cluster == null)
+			{
+				buffer.append(0L);
+			}
+			else
+			{
+				buffer.append(cluster.getRootCanvasId());
+			}
+			
+			buffer.append("]");
 		}
 	}
 
@@ -309,6 +359,21 @@ public class CIntentionClusterGraph
 		}
 	}
 
+	private String serialize()
+	{
+		StringBuilder buffer = new StringBuilder();
+		for (List<Position> row : graph)
+		{
+			buffer.append("{");
+			for (Position position : row)
+			{
+				position.serialize(buffer);
+			}
+			buffer.append("}");
+		}
+		return buffer.toString();
+	}
+
 	void replaceCluster(long originalRootCanvasId, CIntentionCluster newCluster)
 	{
 		activate();
@@ -385,5 +450,40 @@ public class CIntentionClusterGraph
 		}
 
 		return clusters;
+	}
+
+	CalicoPacket createPacket()
+	{
+		CalicoPacket p = new CalicoPacket();
+		p.putInt(IntentionalInterfacesNetworkCommands.CIC_CLUSTER_GRAPH);
+		p.putString(serialize());
+		return p;
+	}
+
+	void inflateStoredData(String data)
+	{
+		graph.clear();
+		positionsByRootCanvasId.clear();
+
+		StringTokenizer rowParser = new StringTokenizer(data, "{}");
+		while (rowParser.hasMoreTokens())
+		{
+			String rowData = rowParser.nextToken();
+			List<Position> row = new ArrayList<Position>();
+			graph.add(row);
+
+			StringTokenizer positionParser = new StringTokenizer(rowData, "[]");
+			while (positionParser.hasMoreTokens())
+			{
+				String positionData = positionParser.nextToken();
+				Position position = new Position(positionData);
+				row.add(position);
+
+				if (!position.isEmpty())
+				{
+					positionsByRootCanvasId.put(position.cluster.getRootCanvasId(), position);
+				}
+			}
+		}
 	}
 }
