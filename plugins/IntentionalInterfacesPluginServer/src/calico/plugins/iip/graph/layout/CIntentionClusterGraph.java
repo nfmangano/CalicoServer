@@ -2,9 +2,9 @@ package calico.plugins.iip.graph.layout;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
+import java.awt.Dimension;
 import java.awt.Point;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -17,17 +17,21 @@ public class CIntentionClusterGraph
 	{
 		int xUnit;
 		int yUnit;
-		int unitSpan;
+		int yUnitSpan;
+		int xUnitSpan;
 
 		int rowIndex;
 		int columnIndex;
 
 		CIntentionCluster cluster;
+		CIntentionClusterLayout clusterLayout;
 
 		Position(int rowIndex, int columnIndex)
 		{
-			xUnit = yUnit = unitSpan = -1;
+			xUnit = yUnit = -1;
+			xUnitSpan = yUnitSpan = -1;
 			cluster = null;
+			clusterLayout = null;
 
 			this.rowIndex = rowIndex;
 			this.columnIndex = columnIndex;
@@ -38,7 +42,8 @@ public class CIntentionClusterGraph
 			StringTokenizer tokens = new StringTokenizer(data, ",");
 			xUnit = Integer.parseInt(tokens.nextToken());
 			yUnit = Integer.parseInt(tokens.nextToken());
-			unitSpan = Integer.parseInt(tokens.nextToken());
+			xUnitSpan = Integer.parseInt(tokens.nextToken());
+			yUnitSpan = Integer.parseInt(tokens.nextToken());
 			rowIndex = Integer.parseInt(tokens.nextToken());
 			columnIndex = Integer.parseInt(tokens.nextToken());
 
@@ -53,6 +58,14 @@ public class CIntentionClusterGraph
 			}
 		}
 
+		void reset()
+		{
+			cluster.reset();
+
+			if (clusterLayout != null)
+				clusterLayout.reset();
+		}
+
 		boolean isEmpty()
 		{
 			return (cluster == null);
@@ -60,18 +73,32 @@ public class CIntentionClusterGraph
 
 		int getRightExtent()
 		{
-			return xUnit + unitSpan;
+			return xUnit + xUnitSpan;
 		}
 
 		int getDownExtent()
 		{
-			return yUnit + unitSpan;
+			return yUnit + yUnitSpan;
 		}
 
-		Point getPositionCenter()
+		void layoutInEmptySpace()
 		{
-			double inset = ((unitSpan * CLUSTER_UNIT_SPAN) / 2);
-			return new Point((int) ((xUnit * CLUSTER_UNIT_SPAN) + inset), (int) ((yUnit * CLUSTER_UNIT_SPAN) + inset));
+			clusterLayout = cluster.layoutClusterAsCircles(new Point());
+		}
+
+		void centerLayoutInUnitBounds()
+		{
+			Point rootPosition = clusterLayout.getLayoutCenterWithinBounds(new Dimension(xUnitSpan * CIntentionCluster.CLUSTER_UNIT_SIZE.width, yUnitSpan
+					* CIntentionCluster.CLUSTER_UNIT_SIZE.height));
+			Point center = new Point((int) ((xUnit * CIntentionCluster.CLUSTER_UNIT_SIZE.width) + rootPosition.x),
+					(int) ((yUnit * CIntentionCluster.CLUSTER_UNIT_SIZE.height) + rootPosition.y));
+
+			for (CIntentionClusterLayout.CanvasPosition layoutPosition : clusterLayout.getCanvasPositions())
+			{
+				layoutPosition.translateBy(center.x, center.y);
+			}
+
+			cluster.setLocation(center);
 		}
 
 		void serialize(StringBuilder buffer)
@@ -81,7 +108,9 @@ public class CIntentionClusterGraph
 			buffer.append(",");
 			buffer.append(yUnit);
 			buffer.append(",");
-			buffer.append(unitSpan);
+			buffer.append(xUnitSpan);
+			buffer.append(",");
+			buffer.append(yUnitSpan);
 			buffer.append(",");
 			buffer.append(rowIndex);
 			buffer.append(",");
@@ -96,7 +125,7 @@ public class CIntentionClusterGraph
 			{
 				buffer.append(cluster.getRootCanvasId());
 			}
-			
+
 			buffer.append("]");
 		}
 	}
@@ -104,58 +133,62 @@ public class CIntentionClusterGraph
 	private static class UnitGraph
 	{
 		private final List<Integer> boundary = new ArrayList<Integer>();
-		private int xUnit = 0;
+		private int yUnit = 0;
 
-		private int getBoundary(int xUnit)
+		private int getBoundary(int yUnit)
 		{
-			for (int i = boundary.size(); i <= xUnit; i++)
+			for (int i = boundary.size(); i <= yUnit; i++)
 			{
 				boundary.add(0);
 			}
-			return boundary.get(xUnit);
+			return boundary.get(yUnit);
 		}
 
 		private int getMaxBoundary(Position position)
 		{
-			int yMax = getBoundary(position.xUnit);
-			for (int x = 1; x < position.unitSpan; x++)
+			int xMax = getBoundary(position.yUnit);
+			for (int y = 1; y < position.yUnitSpan; y++)
 			{
-				yMax = Math.max(yMax, getBoundary(position.xUnit + x));
+				xMax = Math.max(xMax, getBoundary(position.yUnit + y));
 			}
-			return yMax;
+			return xMax;
 		}
 
 		void clear()
 		{
 			boundary.clear();
-			xUnit = 0;
+			yUnit = 0;
 		}
 
-		void nextRow()
+		void nextColumn()
 		{
-			xUnit = 0;
+			yUnit = 0;
 		}
 
 		void layout(Position position)
 		{
 			if (position.isEmpty())
 			{
-				position.unitSpan = 1; // 0 to auto-collapse empty cells
+				position.xUnitSpan = position.yUnitSpan = 1; // 0 to auto-collapse empty cells
 			}
 			else
 			{
-				position.unitSpan = (int) Math.ceil(position.cluster.getOccupiedSpan() / CLUSTER_UNIT_SPAN);
+				position.layoutInEmptySpace();
+
+				Dimension boundingBox = position.clusterLayout.getBoundingBox();
+				position.xUnitSpan = Math.max(1, (int) Math.ceil(boundingBox.width / CIntentionCluster.CLUSTER_UNIT_SIZE.getWidth()));
+				position.yUnitSpan = Math.max(1, (int) Math.ceil(boundingBox.height / CIntentionCluster.CLUSTER_UNIT_SIZE.getHeight()));
 			}
 
-			position.xUnit = xUnit;
-			position.yUnit = getMaxBoundary(position);
+			position.yUnit = yUnit;
+			position.xUnit = getMaxBoundary(position);
 
-			for (int i = position.xUnit; i < (position.xUnit + position.unitSpan); i++)
+			for (int i = position.yUnit; i < (position.yUnit + position.yUnitSpan); i++)
 			{
-				boundary.set(i, position.yUnit + position.unitSpan);
+				boundary.set(i, position.xUnit + position.xUnitSpan);
 			}
 
-			xUnit += position.unitSpan;
+			yUnit += position.yUnitSpan;
 		}
 	}
 
@@ -165,18 +198,11 @@ public class CIntentionClusterGraph
 		RIGHT;
 	}
 
-	static void initialize()
-	{
-		CLUSTER_UNIT_SPAN = CIntentionCluster.getUnitSpan();
-	}
-
-	private static double CLUSTER_UNIT_SPAN;
-
 	private final List<List<Position>> graph = new ArrayList<List<Position>>();
 	private int columnCount = 0;
 	private final Long2ObjectOpenHashMap<Position> positionsByRootCanvasId = new Long2ObjectOpenHashMap<Position>();
 
-	private boolean isActive = false;
+	private boolean isCalculated = false;
 	private final UnitGraph unitGraph = new UnitGraph();
 
 	public CIntentionClusterGraph()
@@ -188,25 +214,39 @@ public class CIntentionClusterGraph
 	void reset()
 	{
 		unitGraph.clear();
-		isActive = false;
+		isCalculated = false;
 		resetClusters();
 	}
 
-	private void activate()
+	private void resetClusters()
 	{
-		if (isActive)
-			return;
-
 		for (List<Position> row : graph)
 		{
 			for (Position position : row)
 			{
+				if (!position.isEmpty())
+				{
+					position.reset();
+				}
+			}
+		}
+	}
+
+	private void calculate()
+	{
+		if (isCalculated)
+			return;
+
+		for (int column = 0; column < columnCount; column++)
+		{
+			for (List<Position> row : graph)
+			{
+				Position position = row.get(column);
 				unitGraph.layout(position);
 			}
-			unitGraph.nextRow();
+			unitGraph.nextColumn();
 		}
-
-		isActive = true;
+		isCalculated = true;
 	}
 
 	private List<Position> getRow(int rowIndex)
@@ -345,16 +385,44 @@ public class CIntentionClusterGraph
 		}
 	}
 
-	private void resetClusters()
+	private void contractColumnIfEmpty(int columnIndex)
 	{
 		for (List<Position> row : graph)
 		{
+			if (!row.get(columnIndex).isEmpty())
+				return;
+		}
+
+		for (List<Position> row : graph)
+		{
+			for (int i = columnIndex; i < (columnCount - 1); i++)
+			{
+				Position position = row.get(i + 1);
+				position.columnIndex = i;
+				row.set(i, position);
+			}
+			row.remove(row.size() - 1);
+		}
+
+		columnCount--;
+	}
+
+	private void contractRowIfEmpty(int rowIndex)
+	{
+		for (Position position : graph.get(rowIndex))
+		{
+			if (!position.isEmpty())
+				return;
+		}
+
+		graph.remove(rowIndex);
+
+		for (int i = rowIndex; i < graph.size(); i++)
+		{
+			List<Position> row = graph.get(i);
 			for (Position position : row)
 			{
-				if (!position.isEmpty())
-				{
-					position.cluster.reset();
-				}
+				position.rowIndex = i;
 			}
 		}
 	}
@@ -376,7 +444,7 @@ public class CIntentionClusterGraph
 
 	void replaceCluster(long originalRootCanvasId, CIntentionCluster newCluster)
 	{
-		activate();
+		calculate();
 
 		Position position = positionsByRootCanvasId.get(originalRootCanvasId);
 		position.cluster = newCluster;
@@ -386,7 +454,7 @@ public class CIntentionClusterGraph
 
 	void insertCluster(CIntentionCluster cluster)
 	{
-		activate();
+		calculate();
 
 		Position position = findEmptyPosition();
 		position.cluster = cluster;
@@ -397,7 +465,7 @@ public class CIntentionClusterGraph
 
 	void insertCluster(long contextCanvasId, CIntentionCluster cluster)
 	{
-		activate();
+		calculate();
 
 		Position anchor = positionsByRootCanvasId.get(contextCanvasId);
 
@@ -427,15 +495,18 @@ public class CIntentionClusterGraph
 		if (position != null)
 		{
 			position.cluster = null;
+			contractRowIfEmpty(position.rowIndex);
+			contractColumnIfEmpty(position.columnIndex);
+
 			reset();
 		}
 	}
 
-	List<CIntentionCluster> layoutClusters(Collection<Long> movedCellIds)
+	List<CIntentionClusterLayout> layoutClusters()
 	{
-		activate();
+		calculate();
 
-		List<CIntentionCluster> clusters = new ArrayList<CIntentionCluster>();
+		List<CIntentionClusterLayout> clusterLayouts = new ArrayList<CIntentionClusterLayout>();
 
 		for (List<Position> row : graph)
 		{
@@ -443,13 +514,13 @@ public class CIntentionClusterGraph
 			{
 				if (!position.isEmpty())
 				{
-					position.cluster.layoutClusterAsCircles(position.getPositionCenter(), movedCellIds);
-					clusters.add(position.cluster);
+					position.centerLayoutInUnitBounds();
+					clusterLayouts.add(position.clusterLayout);
 				}
 			}
 		}
 
-		return clusters;
+		return clusterLayouts;
 	}
 
 	CalicoPacket createPacket()

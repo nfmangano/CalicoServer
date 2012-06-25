@@ -2,15 +2,12 @@ package calico.plugins.iip.graph.layout;
 
 import java.awt.Dimension;
 import java.awt.Point;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 import calico.controllers.CCanvasController;
 import calico.plugins.iip.CCanvasLink;
-import calico.plugins.iip.CIntentionCell;
 import calico.plugins.iip.IntentionalInterfaceState;
 import calico.plugins.iip.controllers.CCanvasLinkController;
-import calico.plugins.iip.controllers.CIntentionCellController;
 
 public class CIntentionLayout
 {
@@ -21,41 +18,21 @@ public class CIntentionLayout
 		return INSTANCE;
 	}
 	
-	public static void initialize()
-	{
-		CIntentionClusterGraph.initialize();
-	}
-
 	private static int calculateCellDiameter(Dimension cellSize)
 	{
 		return ((int) Math.sqrt((cellSize.height * cellSize.height) + (double) (cellSize.width * cellSize.width)));
 	}
 
-	public static boolean centerCanvasAt(long canvasId, int x, int y)
+	public static Point centerCanvasAt(int x, int y)
 	{
-		CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(canvasId);
-		return cell.setLocation(x - (CIntentionLayout.INTENTION_CELL_SIZE.width / 2), y - (CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
-	}
-
-	public static Point getCanvasCenter(long canvasId)
-	{
-		CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(canvasId);
-		return new Point(cell.getLocation().x - (CIntentionLayout.INTENTION_CELL_SIZE.width / 2), cell.getLocation().y
-				- (CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
+		return new Point(x - (CIntentionLayout.INTENTION_CELL_SIZE.width / 2), y - (CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
 	}
 
 	public static final Dimension INTENTION_CELL_SIZE = new Dimension(200, 130);
 	static final int INTENTION_CELL_DIAMETER = calculateCellDiameter(INTENTION_CELL_SIZE);
 
-	// transitory per layout execution
-	private final Set<Long> movedCellIds = new HashSet<Long>();
 	private final CIntentionClusterGraph graph = new CIntentionClusterGraph();
 	private final CIntentionTopology topology = new CIntentionTopology();
-
-	public Set<Long> getMovedCells()
-	{
-		return movedCellIds;
-	}
 
 	public CIntentionTopology getTopology()
 	{
@@ -114,17 +91,19 @@ public class CIntentionLayout
 		graph.removeClusterIfAny(rootCanvasId);
 	}
 
-	public void layoutGraph()
+	public List<CIntentionClusterLayout> layoutGraph()
 	{
-		movedCellIds.clear();
 		topology.clear();
 
-		for (CIntentionCluster cluster : graph.layoutClusters(movedCellIds))
+		List<CIntentionClusterLayout> clusterLayouts = graph.layoutClusters();
+		for (CIntentionClusterLayout clusterLayout : clusterLayouts)
 		{
-			topology.addCluster(cluster);
+			topology.addCluster(clusterLayout);
 		}
 
 		graph.reset();
+		
+		return clusterLayouts;
 	}
 
 	static int getCanvasIndex(long canvasId)

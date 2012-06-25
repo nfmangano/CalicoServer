@@ -3,13 +3,11 @@ package calico.plugins.iip.graph.layout;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import calico.components.CCanvas;
 import calico.controllers.CCanvasController;
@@ -26,6 +24,7 @@ class CIntentionCluster
 
 	private static final SliceSorter SLICE_SORTER = new SliceSorter();
 	static final int RING_SEPARATION = 80 + CIntentionLayout.INTENTION_CELL_DIAMETER;
+	static final Dimension CLUSTER_UNIT_SIZE = new Dimension(CIntentionLayout.INTENTION_CELL_SIZE.width + 20, CIntentionLayout.INTENTION_CELL_SIZE.height + 20);
 
 	private final List<CIntentionRing> rings = new ArrayList<CIntentionRing>();
 	private final List<Double> ringRadii = new ArrayList<Double>();
@@ -46,7 +45,6 @@ class CIntentionCluster
 	private void initializeRings()
 	{
 		rings.clear();
-		rings.add(new CIntentionRing(0));
 		ringRadii.clear();
 	}
 
@@ -58,9 +56,7 @@ class CIntentionCluster
 	double getOccupiedSpan()
 	{
 		if (!populated)
-		{
 			populateCluster();
-		}
 
 		double clusterRadius;
 		getRingRadii();
@@ -74,7 +70,7 @@ class CIntentionCluster
 		}
 		return 2 * clusterRadius;
 	}
-	
+
 	Point getLocation()
 	{
 		return location;
@@ -178,51 +174,19 @@ class CIntentionCluster
 		return layoutSize;
 	}
 
-	void layoutClusterAsTree(Point clusterCenter, Set<Long> movedCells)
+	void setLocation(Point newLocation)
 	{
-		location.setLocation(clusterCenter);
-
-		int maxProjectedRingSpan = 0;
-		for (CIntentionRing ring : rings)
-		{
-			int maxProjectedSliceSpan = 0;
-			for (CIntentionSlice slice : slicesByRootCanvasId.values())
-			{
-				if (slice.getMaxProjectedSpan(ring.getIndex()) > maxProjectedSliceSpan)
-				{
-					maxProjectedSliceSpan = slice.getMaxProjectedSpan(ring.getIndex());
-				}
-			}
-
-			if (maxProjectedSliceSpan > maxProjectedRingSpan)
-			{
-				maxProjectedRingSpan = maxProjectedSliceSpan;
-			}
-		}
-
-		if (CIntentionLayout.centerCanvasAt(rootCanvasId, location.x, location.y))
-		{
-			movedCells.add(rootCanvasId);
-		}
-
-		layoutSize.setSize(maxProjectedRingSpan, rings.size() * RING_SEPARATION);
-
-		Point sliceRoot = new Point(location.x, location.y + RING_SEPARATION);
-		for (CIntentionSlice slice : slicesByRootCanvasId.values())
-		{
-			slice.layoutSliceAsTree(sliceRoot, maxProjectedRingSpan, movedCells);
-			sliceRoot.x += slice.getLayoutSpan();
-		}
+		location.setLocation(newLocation);
 	}
 
-	void layoutClusterAsCircles(Point clusterCenter, Collection<Long> movedCellIds)
+	CIntentionClusterLayout layoutClusterAsCircles(Point clusterCenter)
 	{
-		location.setLocation(clusterCenter);
+		if (!populated)
+			populateCluster();
+		
+		CIntentionClusterLayout layout = new CIntentionClusterLayout(this);
 
-		if (CIntentionLayout.centerCanvasAt(rootCanvasId, location.x, location.y))
-		{
-			movedCellIds.add(rootCanvasId);
-		}
+		layout.addCanvas(rootCanvasId, CIntentionLayout.centerCanvasAt(clusterCenter.x, clusterCenter.y));
 
 		getRingRadii(); // make sure they match the rings
 		for (int i = 0; i < ringRadii.size(); i++)
@@ -236,9 +200,9 @@ class CIntentionCluster
 			{
 				if (arcTransformer == null)
 				{
-					arcTransformer = new CIntentionArcTransformer(location, ringRadius, ringSpan, slice.calculateLayoutSpan(ringSpan));
+					arcTransformer = new CIntentionArcTransformer(clusterCenter, ringRadius, ringSpan, slice.calculateLayoutSpan(ringSpan));
 				}
-				slice.layoutArc(arcTransformer, i, ringSpan, sliceStart, movedCellIds, (i == 0) ? null : ringRadii.get(i - 1));
+				slice.layoutArc(arcTransformer, i, ringSpan, sliceStart, layout, (i == 0) ? null : ringRadii.get(i - 1));
 				sliceStart += slice.getLayoutSpan();
 			}
 		}
@@ -251,6 +215,8 @@ class CIntentionCluster
 		{
 			layoutSize.setSize((int) (ringRadii.get(ringRadii.size() - 1) * 2), (int) (ringRadii.get(ringRadii.size() - 1) * 2));
 		}
+
+		return layout;
 	}
 
 	private void traverseAndPopulate(long parentCanvasId, long canvasId, int ringIndex, CIntentionSlice slice)
@@ -283,7 +249,7 @@ class CIntentionCluster
 		{
 			return;
 		}
-		
+
 		for (CIntentionSlice slice : slicesByRootCanvasId.values())
 		{
 			slice.setPopulationWeight(totalInOrbit);
