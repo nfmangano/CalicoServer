@@ -12,11 +12,11 @@ public class CIntentionCell
 {
 	public static final String DEFAULT_TITLE = "<default>";
 
-	long uuid;
-	long canvas_uuid;
-	final Point location;
-	String title;
-	Long intentionTypeId = null;
+	private long uuid;
+	private long canvas_uuid;
+	private final Point location;
+	private String title;
+	private Long intentionTypeId = null;
 
 	public CIntentionCell(long uuid, long canvasId)
 	{

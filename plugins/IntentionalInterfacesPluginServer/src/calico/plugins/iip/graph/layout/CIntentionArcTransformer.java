@@ -21,10 +21,10 @@ class CIntentionArcTransformer
 		// " and first arc " + firstArcSpan);
 	}
 
-	boolean centerCanvasAt(long canvasId, int xArc)
+	Point centerCanvasAt(int xArc)
 	{
 		int xShiftedArc = (int) ((xArc + offset) % ringSpan);
-		return centerCanvasAt(canvasId, xShiftedArc, center, radius);
+		return centerCanvasAt(xShiftedArc, center, radius);
 	}
 
 	double calculateIdealPosition(int parentArcPosition, double parentRingRadius)
@@ -32,7 +32,7 @@ class CIntentionArcTransformer
 		return (radius / parentRingRadius) * parentArcPosition;
 	}
 
-	private boolean centerCanvasAt(long canvasId, int xArc, Point center, double radius)
+	private Point centerCanvasAt(int xArc, Point center, double radius)
 	{
 		double theta = xArc / radius;
 		int x = center.x + (int) (radius * Math.cos(theta));
@@ -41,6 +41,6 @@ class CIntentionArcTransformer
 		// System.out.println(String.format("[%d] (%d, %d) for xArc %d and radius %f",
 		// CIntentionLayout.getCanvasIndex(canvasId), x, y, xArc, radius));
 
-		return CIntentionLayout.centerCanvasAt(canvasId, x, y);
+		return CIntentionLayout.centerCanvasAt(x, y);
 	}
 }

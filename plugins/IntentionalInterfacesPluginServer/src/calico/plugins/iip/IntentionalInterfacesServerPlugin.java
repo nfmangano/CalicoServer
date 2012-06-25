@@ -1,6 +1,6 @@
 package calico.plugins.iip;
 
-import java.util.Set;
+import java.util.List;
 
 import calico.clients.Client;
 import calico.clients.ClientManager;
@@ -14,6 +14,7 @@ import calico.plugins.CalicoPluginManager;
 import calico.plugins.CalicoStateElement;
 import calico.plugins.iip.controllers.CCanvasLinkController;
 import calico.plugins.iip.controllers.CIntentionCellController;
+import calico.plugins.iip.graph.layout.CIntentionClusterLayout;
 import calico.plugins.iip.graph.layout.CIntentionLayout;
 import calico.uuid.UUIDAllocator;
 
@@ -51,6 +52,7 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		for (long canvasId : CCanvasController.canvases.keySet())
 		{
 			createIntentionCell(canvasId);
+			CIntentionLayout.getInstance().insertCluster(canvasId);
 		}
 	}
 
@@ -62,7 +64,7 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 			clearState();
 			return;
 		}
-		
+
 		if (IntentionalInterfacesNetworkCommands.Command.isInDomain(event))
 		{
 			switch (IntentionalInterfacesNetworkCommands.Command.forId(event))
@@ -84,6 +86,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 					break;
 				case CIC_DELETE:
 					CIC_DELETE(p, c);
+					break;
+				case CIC_CLUSTER_GRAPH:
+					CIC_CLUSTER_GRAPH(p, c);
 					break;
 				case CIT_CREATE:
 					CIT_CREATE(p, c);
@@ -120,7 +125,17 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 			switch (event)
 			{
 				case NetworkCommand.CANVAS_CREATE:
+					long originatingCanvasId = p.getLong();
 					createIntentionCell(canvasId);
+					if (originatingCanvasId > 0L)
+					{
+						CIntentionLayout.getInstance().insertCluster(originatingCanvasId, canvasId);
+					}
+					else
+					{
+						CIntentionLayout.getInstance().insertCluster(canvasId);
+					}
+					layoutGraph();
 					break;
 				case NetworkCommand.CANVAS_DELETE:
 					CANVAS_DELETE(p, c, canvasId);
@@ -134,12 +149,10 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		CIntentionCell cell = new CIntentionCell(UUIDAllocator.getUUID(), canvasId);
 		CIntentionCellController.getInstance().addCell(cell);
 
-		CIntentionLayout.getInstance().insertNewCluster(cell);
-
 		CalicoPacket p = cell.getCreatePacket();
 		forward(p);
 	}
-	
+
 	private static void clearState()
 	{
 		CIntentionCellController.getInstance().clearState();
@@ -147,51 +160,88 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 	}
 
 	// this is called only during restore
+	/**
+	 * @param p
+	 * @param c
+	 */
 	private static void CIC_CREATE(CalicoPacket p, Client c)
 	{
 		p.rewind();
 		IntentionalInterfacesNetworkCommands.Command.CIC_CREATE.verify(p);
-		
+
 		long uuid = p.getLong();
 		long canvasId = p.getLong();
 		int x = p.getInt();
 		int y = p.getInt();
 		String title = p.getString();
-		
+
 		CIntentionCell cell = new CIntentionCell(uuid, canvasId);
 		cell.setLocation(x, y);
 		cell.setTitle(title);
 
 		CIntentionCellController.getInstance().addCell(cell);
-		CIntentionLayout.getInstance().insertNewCluster(cell);
+		// clusters will be restored with the serialized graph
 	}
-	
+
 	private static void CANVAS_DELETE(CalicoPacket p, Client c, long canvasId)
 	{
 		CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(canvasId);
 		CIntentionCellController.getInstance().removeCellById(cell.getId());
-		deleteAllLinks(canvasId, true);
-		
+		deleteAllLinks(canvasId, true); // also removes the cluster, if `canvasId represented a cluster root
+
 		CalicoPacket cicDelete = CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_DELETE, cell.getId());
 		forward(cicDelete);
-		
+
 		layoutGraph();
 	}
-	
+
 	private static void deleteAllLinks(long canvasId, boolean forward)
 	{
-		for (Long linkId : CCanvasLinkController.getInstance().getLinkIdsForCanvas(canvasId))
+		long rootCanvasId = CIntentionLayout.getInstance().getRootCanvasId(canvasId);
+		List<Long> linkIds = CCanvasLinkController.getInstance().getLinkIdsForCanvas(canvasId);
+		if (linkIds.isEmpty())
 		{
-			CCanvasLinkController.getInstance().removeLinkById(linkId);
-			
-			if (forward)
-			{
-				CalicoPacket packet = new CalicoPacket();
-				packet.putInt(IntentionalInterfacesNetworkCommands.CLINK_DELETE);
-				packet.putLong(linkId);
-				forward(packet);
+			CIntentionLayout.getInstance().removeClusterIfAny(canvasId);
+			return;
+		}
+
+		if (canvasId == rootCanvasId)
+		{ // assign the first linked canvas to take the place of the deleted cluster root
+			CCanvasLink firstDeletedLink = deleteLink(linkIds.get(0), forward);
+			long assignedCanvasContext = firstDeletedLink.getAnchorB().getCanvasId();
+			CIntentionLayout.getInstance().replaceCluster(canvasId, assignedCanvasContext);
+
+			for (int i = 1; i < linkIds.size(); i++)
+			{ // create a new cluster for each other canvas that was linked from `canvasId
+				CCanvasLink deletedLink = deleteLink(linkIds.get(i), forward);
+				CIntentionLayout.getInstance().insertCluster(deletedLink.getAnchorA().getCanvasId(), deletedLink.getAnchorB().getCanvasId());
 			}
 		}
+		else
+		{
+			long incomingLinkId = CCanvasLinkController.getInstance().getIncomingLink(canvasId);
+			deleteLink(incomingLinkId, forward);
+			linkIds.remove(incomingLinkId);
+
+			for (Long linkId : linkIds)
+			{// create a new cluster for each canvas that was linked from `canvasId
+				CCanvasLink deletedLink = deleteLink(linkId, forward);
+				CIntentionLayout.getInstance().insertCluster(rootCanvasId, deletedLink.getAnchorB().getCanvasId());
+			}
+		}
+	}
+
+	private static CCanvasLink deleteLink(long linkId, boolean forward)
+	{
+		if (forward)
+		{
+			CalicoPacket packet = new CalicoPacket();
+			packet.putInt(IntentionalInterfacesNetworkCommands.CLINK_DELETE);
+			packet.putLong(linkId);
+			forward(packet);
+		}
+
+		return CCanvasLinkController.getInstance().removeLinkById(linkId);
 	}
 
 	private static void CIC_MOVE(CalicoPacket p, Client c)
@@ -258,6 +308,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 
 	private static void CIC_DELETE(CalicoPacket p, Client c)
 	{
+		throw new UnsupportedOperationException("It is no longer allowed to delete a CIC separately from its CCanvas.");
+		/**
+		 * <pre>
 		p.rewind();
 		IntentionalInterfacesNetworkCommands.Command.CIC_DELETE.verify(p);
 
@@ -267,6 +320,15 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		layoutGraph();
 
 		forward(p, c);
+		 */
+	}
+
+	private static void CIC_CLUSTER_GRAPH(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIC_CLUSTER_GRAPH.verify(p);
+
+		CIntentionLayout.getInstance().inflateStoredClusterGraph(p.getString());
 	}
 
 	private static void CIT_CREATE(CalicoPacket p, Client c)
@@ -339,21 +401,25 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		long uuid = p.getLong();
 		CCanvasLinkAnchor anchorA = unpackAnchor(uuid, p);
 		CCanvasLinkAnchor anchorB = unpackAnchor(uuid, p);
-		
+
 		if (!(CCanvasController.canvases.containsKey(anchorA.getCanvasId()) && CCanvasController.canvases.containsKey(anchorB.getCanvasId())))
 		{
 			// the canvas has been deleted
 			return;
 		}
-		
+
 		Long incomingLinkId = CCanvasLinkController.getInstance().getIncomingLink(anchorB.getCanvasId());
-		if (incomingLinkId != null)
-		{
+		if (incomingLinkId == null)
+		{ // the canvas is not linked, so it must be a cluster root, and now it won't be
+			CIntentionLayout.getInstance().removeClusterIfAny(anchorB.getCanvasId());
+		}
+		else
+		{ // the canvas is linked already, so steal it
 			CCanvasLinkController.getInstance().removeLinkById(incomingLinkId);
 			CalicoPacket deleteIncoming = CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CLINK_DELETE, incomingLinkId);
 			forward(deleteIncoming);
 		}
-		
+
 		CCanvasLink link = new CCanvasLink(uuid, anchorA, anchorB);
 		CCanvasLinkController.getInstance().addLink(link);
 
@@ -396,7 +462,8 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		IntentionalInterfacesNetworkCommands.Command.CLINK_DELETE.verify(p);
 
 		long uuid = p.getLong();
-		CCanvasLinkController.getInstance().removeLinkById(uuid);
+		CCanvasLink deletedLink = CCanvasLinkController.getInstance().removeLinkById(uuid);
+		CIntentionLayout.getInstance().insertCluster(deletedLink.getAnchorA().getCanvasId(), deletedLink.getAnchorB().getCanvasId());
 
 		layoutGraph();
 
@@ -406,25 +473,27 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		}
 	}
 
-	public static void layoutGraph()
+	private static void layoutGraph()
 	{
-		CIntentionLayout.getInstance().populateLayout();
-		CIntentionLayout.getInstance().layoutGraph();
-		Set<Long> movedCells = CIntentionLayout.getInstance().getMovedCells();
-		
-		for (CIntentionCell cell : CIntentionCellController.getInstance().getAllCells())
+		List<CIntentionClusterLayout> clusterLayouts = CIntentionLayout.getInstance().layoutGraph();
+
+		for (CIntentionClusterLayout clusterLayout : clusterLayouts)
 		{
-			if (movedCells.contains(cell.getCanvasId()))
+			for (CIntentionClusterLayout.CanvasPosition canvas : clusterLayout.getCanvasPositions())
 			{
-				CalicoPacket p = new CalicoPacket();
-				p.putInt(IntentionalInterfacesNetworkCommands.CIC_MOVE);
-				p.putLong(cell.getId());
-				p.putInt(cell.getLocation().x);
-				p.putInt(cell.getLocation().y);
-				forward(p);
+				CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(canvas.canvasId);
+				if (cell.setLocation(canvas.location.x, canvas.location.y))
+				{
+					CalicoPacket p = new CalicoPacket();
+					p.putInt(IntentionalInterfacesNetworkCommands.CIC_MOVE);
+					p.putLong(cell.getId());
+					p.putInt(cell.getLocation().x);
+					p.putInt(cell.getLocation().y);
+					forward(p);
+				}
 			}
 		}
-		
+
 		forward(CIntentionLayout.getInstance().getTopology().createPacket());
 	}
 

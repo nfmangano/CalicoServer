@@ -1,9 +1,9 @@
 package calico.plugins.iip.graph.layout;
 
 import java.awt.Point;
-import java.lang.management.GarbageCollectorMXBean;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -109,89 +109,12 @@ public class CIntentionSlice
 		return getArc(ringIndex).arcSpanProjection;
 	}
 
-	void layoutSliceAsTree(Point root, int ringSpan, Set<Long> movedCells)
-	{
-		int sliceWidth = (int) (ringSpan * assignedWeight);
-		int y = root.y;
-		int maxOccupiedArc = 0;
-
-		System.out.println("Layout slice for canvas " + CIntentionLayout.getCanvasIndex(rootCanvasId) + " at width " + sliceWidth);
-
-		for (Arc arc : arcs)
-		{
-			if (!arc.isEmpty())
-			{
-				maxOccupiedArc = arc.ringIndex;
-				int arcOccupancySpan = arc.canvasCount * CIntentionLayout.INTENTION_CELL_DIAMETER;
-				int x = root.x + ((sliceWidth - arcOccupancySpan) / 2);
-
-				for (CanvasGroup group : arc.canvasGroups.values())
-				{
-					for (Long canvasId : group.groupCanvasIds)
-					{
-						if (CIntentionLayout.centerCanvasAt(canvasId, x, y))
-						{
-							movedCells.add(canvasId);
-						}
-						x += CIntentionLayout.INTENTION_CELL_DIAMETER;
-					}
-				}
-			}
-			y += CIntentionCluster.RING_SEPARATION;
-		}
-
-		layoutSpan = sliceWidth;
-	}
-
 	int calculateLayoutSpan(int ringSpan)
 	{
 		return (int) (ringSpan * assignedWeight);
 	}
 
-	private class GroupCollision
-	{
-		private final CanvasGroup ideallyPlacedGroup;
-		private final List<Displacement> displacements = new ArrayList<Displacement>();
-
-		// transitory during computation
-		private double currentLeftBoundary;
-
-		GroupCollision(CanvasGroup ideallyPlacedGroup)
-		{
-			this.ideallyPlacedGroup = ideallyPlacedGroup;
-		}
-
-		void displace(CanvasGroup group, double span)
-		{
-			displacements.add(new Displacement(group, span));
-		}
-
-		void describe()
-		{
-			double totalSpan = 0.0;
-			for (Displacement displacement : displacements)
-			{
-				totalSpan += displacement.displacementSpan;
-			}
-
-			System.out.println("Collision for group with parent " + CIntentionLayout.getCanvasIndex(ideallyPlacedGroup.parentCanvasId) + ": "
-					+ displacements.size() + " displacements totaling " + ((int) totalSpan) + " arc pixels.");
-		}
-	}
-
-	private class Displacement
-	{
-		private final CanvasGroup displacedGroup;
-		private final double displacementSpan;
-
-		Displacement(CanvasGroup displacedGroup, double displacementSpan)
-		{
-			this.displacedGroup = displacedGroup;
-			this.displacementSpan = displacementSpan;
-		}
-	}
-
-	void layoutArc(CIntentionArcTransformer arcTransformer, int ringIndex, int ringSpan, int arcStart, Set<Long> movedCells, Double parentRingRadius)
+	void layoutArc(CIntentionArcTransformer arcTransformer, int ringIndex, int ringSpan, int arcStart, CIntentionClusterLayout layout, Double parentRingRadius)
 	{
 		int sliceWidth = calculateLayoutSpan(ringSpan);
 
@@ -293,10 +216,7 @@ public class CIntentionSlice
 
 				for (Long canvasId : group.groupCanvasIds)
 				{
-					if (arcTransformer.centerCanvasAt(canvasId, xArc))
-					{
-						movedCells.add(canvasId);
-					}
+					layout.addCanvas(canvasId, arcTransformer.centerCanvasAt(xArc));
 					arcPositions.put(canvasId, xArc);
 					xArc += CIntentionLayout.INTENTION_CELL_DIAMETER;
 				}
@@ -358,6 +278,49 @@ public class CIntentionSlice
 				canvasGroups.put(parentCanvasId, group);
 			}
 			return group;
+		}
+	}
+
+	private class GroupCollision
+	{
+		private final CanvasGroup ideallyPlacedGroup;
+		private final List<Displacement> displacements = new ArrayList<Displacement>();
+
+		// transitory during computation
+		private double currentLeftBoundary;
+
+		GroupCollision(CanvasGroup ideallyPlacedGroup)
+		{
+			this.ideallyPlacedGroup = ideallyPlacedGroup;
+		}
+
+		void displace(CanvasGroup group, double span)
+		{
+			displacements.add(new Displacement(group, span));
+		}
+
+		void describe()
+		{
+			double totalSpan = 0.0;
+			for (Displacement displacement : displacements)
+			{
+				totalSpan += displacement.displacementSpan;
+			}
+
+			System.out.println("Collision for group with parent " + CIntentionLayout.getCanvasIndex(ideallyPlacedGroup.parentCanvasId) + ": "
+					+ displacements.size() + " displacements totaling " + ((int) totalSpan) + " arc pixels.");
+		}
+	}
+
+	private class Displacement
+	{
+		private final CanvasGroup displacedGroup;
+		private final double displacementSpan;
+
+		Displacement(CanvasGroup displacedGroup, double displacementSpan)
+		{
+			this.displacedGroup = displacedGroup;
+			this.displacementSpan = displacementSpan;
 		}
 	}
 
