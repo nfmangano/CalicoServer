@@ -65,6 +65,12 @@ public class CIntentionLayout
 	public void populateState(IntentionalInterfaceState state)
 	{
 		state.setTopologyPacket(topology.createPacket());
+		state.setClusterGraphPacket(graph.createPacket());
+	}
+	
+	public void inflateStoredClusterGraph(String graphData)
+	{
+		graph.inflateStoredData(graphData);
 	}
 
 	public long getRootCanvasId(long canvasId)

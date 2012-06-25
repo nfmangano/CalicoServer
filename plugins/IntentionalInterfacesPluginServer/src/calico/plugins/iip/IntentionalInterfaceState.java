@@ -35,6 +35,11 @@ public class IntentionalInterfaceState
 		packets.add(packet);
 	}
 	
+	public void setClusterGraphPacket(CalicoPacket packet)
+	{
+		packets.add(packet);
+	}
+	
 	public CalicoPacket[] getAllPackets()
 	{
 		packets.addAll(cellPackets);
