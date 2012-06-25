@@ -1,7 +1,6 @@
 package calico.plugins.iip;
 
 import java.util.List;
-import java.util.Set;
 
 import calico.clients.Client;
 import calico.clients.ClientManager;
@@ -15,6 +14,7 @@ import calico.plugins.CalicoPluginManager;
 import calico.plugins.CalicoStateElement;
 import calico.plugins.iip.controllers.CCanvasLinkController;
 import calico.plugins.iip.controllers.CIntentionCellController;
+import calico.plugins.iip.graph.layout.CIntentionClusterLayout;
 import calico.plugins.iip.graph.layout.CIntentionLayout;
 import calico.uuid.UUIDAllocator;
 
@@ -29,8 +29,6 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 
 	public void onPluginStart()
 	{
-		CIntentionLayout.initialize();
-
 		CalicoEventHandler.getInstance().addListener(NetworkCommand.CANVAS_CREATE, this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListener(NetworkCommand.CANVAS_DELETE, this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListener(NetworkCommand.RESTORE_START, this, CalicoEventHandler.PASSIVE_LISTENER);
@@ -329,10 +327,10 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 	{
 		p.rewind();
 		IntentionalInterfacesNetworkCommands.Command.CIC_CLUSTER_GRAPH.verify(p);
-		
+
 		CIntentionLayout.getInstance().inflateStoredClusterGraph(p.getString());
 	}
-	
+
 	private static void CIT_CREATE(CalicoPacket p, Client c)
 	{
 		p.rewind();
@@ -477,19 +475,22 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 
 	private static void layoutGraph()
 	{
-		CIntentionLayout.getInstance().layoutGraph();
-		Set<Long> movedCells = CIntentionLayout.getInstance().getMovedCells();
+		List<CIntentionClusterLayout> clusterLayouts = CIntentionLayout.getInstance().layoutGraph();
 
-		for (CIntentionCell cell : CIntentionCellController.getInstance().getAllCells())
+		for (CIntentionClusterLayout clusterLayout : clusterLayouts)
 		{
-			if (movedCells.contains(cell.getCanvasId()))
+			for (CIntentionClusterLayout.CanvasPosition canvas : clusterLayout.getCanvasPositions())
 			{
-				CalicoPacket p = new CalicoPacket();
-				p.putInt(IntentionalInterfacesNetworkCommands.CIC_MOVE);
-				p.putLong(cell.getId());
-				p.putInt(cell.getLocation().x);
-				p.putInt(cell.getLocation().y);
-				forward(p);
+				CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(canvas.canvasId);
+				if (cell.setLocation(canvas.location.x, canvas.location.y))
+				{
+					CalicoPacket p = new CalicoPacket();
+					p.putInt(IntentionalInterfacesNetworkCommands.CIC_MOVE);
+					p.putLong(cell.getId());
+					p.putInt(cell.getLocation().x);
+					p.putInt(cell.getLocation().y);
+					forward(p);
+				}
 			}
 		}
 
