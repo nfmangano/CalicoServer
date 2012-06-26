@@ -365,6 +365,11 @@ public class CCanvas
 				{
 					packetlist.addElements(packetlist.size(), packets);
 				}
+				packets = CConnectorController.connectors.get(ctrlist[i]).getComposableElements();
+				if(packets!=null && packets.length>0)
+				{
+					packetlist.addElements(packetlist.size(), packets);
+				}
 			}
 		}
 		

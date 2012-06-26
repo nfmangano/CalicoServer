@@ -1,34 +1,28 @@
 package calico.components;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-
-import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Composite;
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.geom.GeneralPath;
+import java.util.Map;
 import org.apache.log4j.Logger;
 
+import calico.components.composable.Composable;
+import calico.components.composable.ComposableElement;
+import calico.components.composable.ComposableElementController;
 import calico.controllers.CCanvasController;
 import calico.controllers.CConnectorController;
 import calico.controllers.CGroupController;
-import calico.controllers.CStrokeController;
 import calico.networking.netstuff.ByteUtils;
 import calico.networking.netstuff.CalicoPacket;
 import calico.networking.netstuff.NetworkCommand;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PAffineTransform;
-import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolox.nodes.PComposite;
 
-public class CConnector extends PComposite{
+public class CConnector extends PComposite implements Composable{
 	
 	private static Logger logger = Logger.getLogger(CConnector.class.getName());
 	
@@ -48,9 +42,13 @@ public class CConnector extends PComposite{
 	private long anchorHeadUUID = 0l;
 	private long anchorTailUUID = 0l;
 	
+	//The components that are drawn by Piccolo
+	private PPath connectorLine = null;
+	
 	//The data model for the connector
 	private Point pointHead = null;
 	private Point pointTail = null;
+	private Polygon rawPolygon = null;
 	
 	//Save the current anchor location and parent before moving
 	private Point savedHeadPoint = null;
@@ -61,7 +59,7 @@ public class CConnector extends PComposite{
 	private double[] orthogonalDistance;
 	//Percent along the direct head to tail line (Percentage in decimal format; Can be negative)
 	private double[] travelDistance;
-	
+
 	
 	public CConnector(long uuid, long cuid, Color color, float thickness, Point head, Point tail, double[] orthogonalDistance, double[] travelDistance,
 			 long anchorHead, long anchorTail)
@@ -81,6 +79,8 @@ public class CConnector extends PComposite{
 		
 		stroke = new BasicStroke( thickness );
 		strokePaint = this.color;
+
+		resetBounds();
 	}
 	
 	public long getCanvasUUID()
@@ -88,6 +88,15 @@ public class CConnector extends PComposite{
 		return this.canvasUID;
 	}
 	
+	public Polygon getPolygon()
+	{
+		return calico.utils.Geometry.getPolyFromPath(connectorLine.getPathReference().getPathIterator(null));
+	}
+	
+	public GeneralPath getPathReference()
+	{
+		return connectorLine.getPathReference();
+	}
 	
 	public double[] getOrthogonalDistance()
 	{
@@ -111,6 +120,9 @@ public class CConnector extends PComposite{
 	
 	public void delete()
 	{		
+		//Remove all elements
+		ComposableElementController.no_notify_removeAllElements(this.uuid);
+		
 		// remove from canvas
 		CCanvasController.no_notify_remove_child_connector(this.canvasUID, this.uuid);
 		
@@ -209,7 +221,6 @@ public class CConnector extends PComposite{
 			break;
 
 		}
-		
 	}
 	
 	public Point getAnchorPoint(int anchorType)
@@ -229,16 +240,32 @@ public class CConnector extends PComposite{
 		return this.uuid;
 	}
 	
+	public void setColor(Color color)
+	{
+		this.color = color;
+	}
+	
 	public Color getColor()
 	{
 		return color;
+	}
+	
+	public void setStroke(Stroke stroke)
+	{
+		this.stroke = stroke;
+	}
+	
+	public Stroke getStroke()
+	{
+		return stroke;
 	}
 	
 	public float getThickness()
 	{
 		return thickness;
 	}
-	
+
+
 	
 	public void moveAnchor(long guuid, int deltaX, int deltaY)
 	{
@@ -263,7 +290,54 @@ public class CConnector extends PComposite{
 			pointTail.setLocation(pointTail.x + deltaX, pointTail.y + deltaY);
 		}
 	}
+
 	
+	
+	protected void applyAffineTransform(Polygon points)
+	{
+		PAffineTransform piccoloTextTransform = getPTransform(points);
+		GeneralPath p = (GeneralPath) getBezieredPoly(points).createTransformedShape(piccoloTextTransform);
+		connectorLine.setPathTo(p);
+
+	}
+	
+	public PAffineTransform getPTransform(Polygon points) {
+		PAffineTransform piccoloTextTransform = new PAffineTransform();
+		return piccoloTextTransform;
+	}
+	
+	public GeneralPath getBezieredPoly(Polygon pts)
+	{
+		GeneralPath p = new GeneralPath();
+		if (pts.npoints > 0)
+		{
+			p.moveTo(pts.xpoints[0], pts.ypoints[0]);
+			if (pts.npoints >= 4)
+			{
+				int counter = 1;
+				for (int i = 1; i+2 < pts.npoints; i += 3)
+				{
+					p.curveTo(pts.xpoints[i], pts.ypoints[i], 
+							pts.xpoints[i+1], pts.ypoints[i+1], 
+							pts.xpoints[i+2], pts.ypoints[i+2]);
+					counter += 3;
+				}
+				while (counter < pts.npoints)
+				{
+					p.lineTo(pts.xpoints[counter], pts.ypoints[counter]);
+					counter++;
+				}
+			}
+			else
+			{
+				for (int i = 1; i < pts.npoints; i++)
+				{
+					p.lineTo(pts.xpoints[i], pts.ypoints[i]);
+				}
+			}
+		}
+		return p;
+	}
 	
 	public CalicoPacket[] getUpdatePackets(long uuid, long cuid)
 	{			
@@ -300,7 +374,7 @@ public class CConnector extends PComposite{
 	public CalicoPacket[] getUpdatePackets()
 	{
 		return getUpdatePackets(this.uuid, this.canvasUID);
-	}
+	}	
 	
 	public int get_signature() {
 
@@ -308,5 +382,42 @@ public class CConnector extends PComposite{
 
 //		System.out.println("Debug sig for group " + uuid + ": " + sig + ", 1) " + this.points.npoints + ", 2) " + isPermanent() + ", 3) " + this.points.xpoints[0] + ", 4) " + this.points.xpoints[0] + ", 5) " + this.points.ypoints[0] + ", 6) " + (int)(this.rotation*10) + ", 7) " + (int)(this.scaleX*10) + ", 8) " + (int)(this.scaleY*10));
 		return sig;
+	}
+
+
+	@Override
+	public CalicoPacket[] getComposableElements() {
+		if (!ComposableElementController.elementList.containsKey(uuid))
+		{
+			return new CalicoPacket[0];
+		}
+		
+		CalicoPacket[] packets = new CalicoPacket[ComposableElementController.elementList.get(uuid).size()];
+		int count = 0;
+		for (Map.Entry<Long, ComposableElement> entry : ComposableElementController.elementList.get(uuid).entrySet())
+		{
+			packets[count] = entry.getValue().getPacket();
+			count++;
+		}
+		
+		return packets;
+	}
+	
+	@Override
+	public int getComposableType()
+	{
+		return Composable.TYPE_CONNECTOR;
+	}
+
+	@Override
+	public void resetToDefaultElements() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeAllElements() {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -21,9 +21,11 @@ class CIntentionCluster
 	{
 		return new CIntentionCluster(-1L).getOccupiedSpan();
 	}
+	
+	//git commit test
 
 	private static final SliceSorter SLICE_SORTER = new SliceSorter();
-	static final int RING_SEPARATION = 80 + CIntentionLayout.INTENTION_CELL_DIAMETER;
+	static final int RING_SEPARATION = 20 + CIntentionLayout.INTENTION_CELL_DIAMETER;
 	static final Dimension CLUSTER_UNIT_SIZE = new Dimension(CIntentionLayout.INTENTION_CELL_SIZE.width + 20, CIntentionLayout.INTENTION_CELL_SIZE.height + 20);
 
 	private final List<CIntentionRing> rings = new ArrayList<CIntentionRing>();

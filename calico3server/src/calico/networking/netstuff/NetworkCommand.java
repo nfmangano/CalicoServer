@@ -216,6 +216,9 @@ public class NetworkCommand
 	// Click Tracking
 	public static final int CLICK_TRACK = 900; // CLICK ID
 
+	// Compositional Notations
+	public static final int ELEMENT_ADD = 950;
+	public static final int ELEMENT_REMOVE = 951;
 
 	// Calico Tree
 	public static final int TREE_ADD	= 1000;//UUID PARENT
