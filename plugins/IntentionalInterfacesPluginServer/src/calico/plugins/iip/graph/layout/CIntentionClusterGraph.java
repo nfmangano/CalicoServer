@@ -236,7 +236,7 @@ public class CIntentionClusterGraph
 	{
 		if (isCalculated)
 			return;
-
+		updateMaxClusterDimension();
 		for (int column = 0; column < columnCount; column++)
 		{
 			for (List<Position> row : graph)
@@ -555,6 +555,24 @@ public class CIntentionClusterGraph
 					positionsByRootCanvasId.put(position.cluster.getRootCanvasId(), position);
 				}
 			}
+		}
+	}
+	
+	private static Dimension maxClusterDimension = new Dimension(0,0);
+	
+	public static Dimension getMaxClusterDimension() { return maxClusterDimension; }
+	
+	private void updateMaxClusterDimension()
+	{
+		Dimension di 
+		for (int column = 0; column < columnCount; column++)
+		{
+			for (List<Position> row : graph)
+			{
+				Position position = row.get(column);
+				unitGraph.layout(position);
+			}
+			unitGraph.nextColumn();
 		}
 	}
 }
