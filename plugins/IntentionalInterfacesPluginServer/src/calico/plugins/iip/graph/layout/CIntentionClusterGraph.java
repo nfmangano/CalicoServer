@@ -12,7 +12,7 @@ import calico.networking.netstuff.CalicoPacket;
 import calico.plugins.iip.IntentionalInterfacesNetworkCommands;
 
 public class CIntentionClusterGraph
-{
+{	static	boolean computedClusterDimensions = false; static Dimension clusterDimensions;
 	private static class Position
 	{
 		int xUnit;
@@ -25,7 +25,7 @@ public class CIntentionClusterGraph
 
 		CIntentionCluster cluster;
 		CIntentionClusterLayout clusterLayout;
-
+		
 		Position(int rowIndex, int columnIndex)
 		{
 			xUnit = yUnit = -1;
@@ -170,12 +170,17 @@ public class CIntentionClusterGraph
 			if (position.isEmpty())
 			{
 				position.xUnitSpan = position.yUnitSpan = 1; // 0 to auto-collapse empty cells
+				
+				Dimension boundingBox = CIntentionClusterGraph.getClusterDimensions();
+				position.xUnitSpan = Math.max(1, (int) Math.ceil(boundingBox.width / CIntentionCluster.CLUSTER_UNIT_SIZE.getWidth()));
+				position.yUnitSpan = Math.max(1, (int) Math.ceil(boundingBox.height / CIntentionCluster.CLUSTER_UNIT_SIZE.getHeight()));
 			}
 			else
 			{
 				position.layoutInEmptySpace();
 
-				Dimension boundingBox = position.clusterLayout.getBoundingBox();
+//				Dimension boundingBox = position.clusterLayout.getBoundingBox();
+				Dimension boundingBox = CIntentionClusterGraph.getClusterDimensions();
 				position.xUnitSpan = Math.max(1, (int) Math.ceil(boundingBox.width / CIntentionCluster.CLUSTER_UNIT_SIZE.getWidth()));
 				position.yUnitSpan = Math.max(1, (int) Math.ceil(boundingBox.height / CIntentionCluster.CLUSTER_UNIT_SIZE.getHeight()));
 			}
@@ -237,6 +242,33 @@ public class CIntentionClusterGraph
 		if (isCalculated)
 			return;
 
+		//calculate default dimension
+		int minWidth = Integer.MIN_VALUE;
+		int minHeight = Integer.MIN_VALUE;
+		for (int column = 0; column < columnCount; column++)
+		{
+			for (List<Position> row : graph)
+			{
+				Position position = row.get(column);
+				if (position.isEmpty())
+				{
+					
+				}
+				else
+				{
+					position.layoutInEmptySpace();
+					Dimension boundingBox = position.clusterLayout.getBoundingBox();
+					if (boundingBox.width > minWidth)
+						minWidth = boundingBox.width;
+					if (boundingBox.height > minHeight)
+						minHeight = boundingBox.height;
+				}
+			}
+			unitGraph.nextColumn();
+		}
+		clusterDimensions = new Dimension(minWidth, minHeight);
+		computedClusterDimensions = true;
+		
 		for (int column = 0; column < columnCount; column++)
 		{
 			for (List<Position> row : graph)
@@ -246,6 +278,8 @@ public class CIntentionClusterGraph
 			}
 			unitGraph.nextColumn();
 		}
+		
+		computedClusterDimensions = false;
 		isCalculated = true;
 	}
 
@@ -556,5 +590,14 @@ public class CIntentionClusterGraph
 				}
 			}
 		}
+	}
+	
+	public static Dimension getClusterDimensions()
+	{
+		if (computedClusterDimensions)
+		{
+			return clusterDimensions;
+		}
+		return null;
 	}
 }
