@@ -99,6 +99,7 @@ public class CIntentionClusterGraph
 			}
 
 			cluster.setLocation(center);
+			clusterLayout.setOuterBox(CIntentionClusterGraph.getClusterDimensions());
 		}
 
 		void serialize(StringBuilder buffer)
@@ -220,6 +221,7 @@ public class CIntentionClusterGraph
 	{
 		unitGraph.clear();
 		isCalculated = false;
+		computedClusterDimensions = false;
 		resetClusters();
 	}
 
@@ -279,7 +281,7 @@ public class CIntentionClusterGraph
 			unitGraph.nextColumn();
 		}
 		
-		computedClusterDimensions = false;
+//		computedClusterDimensions = false;
 		isCalculated = true;
 	}
 

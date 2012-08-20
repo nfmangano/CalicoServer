@@ -32,6 +32,7 @@ public class CIntentionClusterLayout
 	private boolean isCalculated = false;
 	private final Point rootCanvasPosition = new Point();
 	private final Dimension boundingBox = new Dimension();
+	private final Dimension outerBox = new Dimension();
 
 	CIntentionClusterLayout(CIntentionCluster cluster)
 	{
@@ -78,6 +79,17 @@ public class CIntentionClusterLayout
 
 		return boundingBox;
 	}
+	
+	public Dimension getOuterBox()
+	{
+		return outerBox;
+	}
+	
+	public void setOuterBox(Dimension outerBox)
+	{
+		if (outerBox != null)
+			this.outerBox.setSize(outerBox);  
+	}
 
 	private void calculate()
 	{
@@ -101,11 +113,11 @@ public class CIntentionClusterLayout
 			}
 		}
 
-		rootCanvasPosition.x = (rootCanvas.location.x - (xMin - 10)); // clumsy handling of the buffer spacing
-		rootCanvasPosition.y = (rootCanvas.location.y - (yMin - 10));
+		rootCanvasPosition.x = (rootCanvas.location.x - (xMin /* - 10*/)); // clumsy handling of the buffer spacing
+		rootCanvasPosition.y = (rootCanvas.location.y - (yMin /*- 10*/));
 
-		boundingBox.width = (xMax - xMin) + 20;
-		boundingBox.height = (yMax - yMin) + 20;
+		boundingBox.width = (xMax - xMin) /*+ 20*/;
+		boundingBox.height = (yMax - yMin) /*+ 20*/;
 
 		isCalculated = true;
 	}
