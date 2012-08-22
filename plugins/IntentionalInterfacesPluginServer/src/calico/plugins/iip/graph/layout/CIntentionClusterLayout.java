@@ -116,6 +116,7 @@ public class CIntentionClusterLayout
 		rootCanvasPosition.x = (rootCanvas.location.x - (xMin /* - 10*/)); // clumsy handling of the buffer spacing
 		rootCanvasPosition.y = (rootCanvas.location.y - (yMin /*- 10*/));
 
+//		boundingBox.setSize(CIntentionClusterGraph.getClusterDimensions());
 		boundingBox.width = (xMax - xMin) /*+ 20*/;
 		boundingBox.height = (yMax - yMin) /*+ 20*/;
 
