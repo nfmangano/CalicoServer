@@ -364,17 +364,17 @@ public class ProcessQueue
 	{
 		long uuid = p.getLong();
 		
-		synchronized(CalicoServer.canvasThreads)
-		{
-			CanvasThread thread = CalicoServer.canvasThreads.remove(uuid);
-			if (thread != null)
-			{
-				// seems like it should be stopped or something
-			}
-		}
+//		synchronized(CalicoServer.canvasThreads)
+//		{
+//			CanvasThread thread = CalicoServer.canvasThreads.remove(uuid);
+//			if (thread != null)
+//			{
+//				// seems like it should be stopped or something
+//			}
+//		}
 		
 		CCanvasController.no_notify_clear(uuid);
-		CCanvasController.canvases.remove(uuid);
+//		CCanvasController.canvases.remove(uuid);
 		ClientManager.send_except(c, p);
 	}
 	

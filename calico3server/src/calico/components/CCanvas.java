@@ -4,15 +4,23 @@ import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import java.awt.*;
-import java.lang.reflect.Field;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics2D;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import calico.COptions;
 import calico.clients.Client;
-import calico.controllers.*;
+import calico.controllers.CArrowController;
+import calico.controllers.CConnectorController;
+import calico.controllers.CGroupController;
+import calico.controllers.CStrokeController;
 import calico.events.CalicoEventHandler;
 import calico.events.CalicoEventListener;
 import calico.networking.netstuff.CalicoPacket;
@@ -29,6 +37,10 @@ public class CCanvas
 		INDEX_COUNTER.set(1);
 	}
 
+	private String gridCoordTxt = "";
+	private int gridx = 0;
+	private int gridy = 0;
+	
 	private long uuid = 0L;
 	private int index = 0;
 	private boolean lock_value = false;
@@ -86,6 +98,16 @@ public class CCanvas
 	{
 		this.uuid = u;
 
+	}
+	
+	public int getGridx()
+	{
+		return gridx;
+	}
+	
+	public int getGridY()
+	{
+		return gridy;
 	}
 	
 	public int getIndex()
@@ -174,6 +196,22 @@ public class CCanvas
 		}
 	}
 	
+	public String getCoordText()
+	{
+	  return this.gridCoordTxt;
+	}
+	
+	public void setGridPos(int x, int y)
+	{
+	  // Get the Txt coord from this.
+	  this.gridx = x;
+	  this.gridy = y;
+	  
+	  // Generate the offset and coords
+	  // TODO: WE NEED TO ACCOUNT FOR MORE THAN 26 COLUMNS
+	  this.gridCoordTxt = (Character.valueOf( (char) (x+65)) ).toString()+""+y;
+	}
+	
 	public long getUUID()
 	{
 		return this.uuid;
@@ -254,7 +292,9 @@ public class CCanvas
 		return CalicoPacket.getPacket(
 			NetworkCommand.CANVAS_INFO,
 			this.uuid,
-			this.index
+			this.gridCoordTxt,
+			this.gridx,
+			this.gridy
 		);
 	}
 	
@@ -267,7 +307,7 @@ public class CCanvas
 		Font renderFont = new Font("Verdana",Font.BOLD, 12);
 		g.setFont(renderFont);
 		g.setColor(Color.BLACK);
-		g.drawString("Calico Canvas ("+index+") - Rendered on "+formattedDate, 10, 14);
+		g.drawString("Calico Canvas ("+getCoordText()+") - Rendered on "+formattedDate, 10, 14);
 		g.translate(0, 14);
 
 		long[] groupa = groups.toLongArray();
@@ -397,7 +437,10 @@ public class CCanvas
 		Properties props = new Properties();
 
 		props.setProperty("uuid", ""+this.uuid);
-		props.setProperty("grid.index", ""+this.index);
+		
+		props.setProperty("grid.x", ""+this.gridx);
+		props.setProperty("grid.y", ""+this.gridy);
+		props.setProperty("grid.txt", this.gridCoordTxt);
 		
 
 		props.setProperty("child.groups", Arrays.toString(getChildGroups()) );

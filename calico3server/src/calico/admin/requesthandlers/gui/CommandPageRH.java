@@ -157,7 +157,7 @@ public class CommandPageRH extends AdminBasicRequestHandler
 		builder.append("UUID\tCoordinate\n");
 		for(int i=0;i<uuids.length;i++)
 		{
-			builder.append(uuids[i]+"\t"+CCanvasController.canvases.get(uuids[i]).getIndex()+"\n");
+			builder.append(uuids[i]+"\t"+CCanvasController.canvases.get(uuids[i]).getCoordText()+"\n");
 		}
 	}
 	
@@ -169,7 +169,7 @@ public class CommandPageRH extends AdminBasicRequestHandler
 		packet.getInt();
 		ProcessQueue.receive(NetworkCommand.CANVAS_CLEAR, null, packet);
 		
-		builder.append("Canvas "+uuid+" ("+CCanvasController.canvases.get(uuid).getIndex()+") cleared.\n");	
+		builder.append("Canvas "+uuid+" ("+CCanvasController.canvases.get(uuid).getCoordText()+") cleared.\n");  	
 		
 	}
 	

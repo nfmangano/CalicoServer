@@ -72,7 +72,7 @@ public class Session
 			{
 				// Make the canvas
 				CCanvas can = new CCanvas(UUIDAllocator.getUUID(), sid);
-//				can.setGridPos(i, y);
+				can.setGridPos(i, y);
 				
 				// add it to the canvas list
 				canvasList.add(can.getUUID());

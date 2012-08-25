@@ -136,7 +136,7 @@ public class ChatRequestHandler extends AdminBasicRequestHandler
 			if(matcher.usePattern(PAT_SET_CANVAS).find())
 			{
 				String canvmatch = matcher.group(1).toUpperCase();
-				long cuuid = canvasIndexToUUID(canvmatch);
+				long cuuid = canvasCoordToUUID(canvmatch);
 				if(cuuid==0L)
 				{
 					
@@ -204,13 +204,14 @@ public class ChatRequestHandler extends AdminBasicRequestHandler
 	}
 	
 	
-	private long canvasIndexToUUID(String indexString)
+	private long canvasCoordToUUID(String coord)
 	{
-		int index = Integer.parseInt(indexString);
+		coord = coord.toUpperCase();
+//		int index = Integer.parseInt(indexString);
 		long[] cuuids = CCanvasController.canvases.keySet().toLongArray();
 		for(int i=0;i<cuuids.length;i++)
 		{
-			if(index == CCanvasController.canvases.get(cuuids[i]).getIndex())
+			if(coord.equalsIgnoreCase(CCanvasController.canvases.get(cuuids[i]).getCoordText()))
 			{
 				return cuuids[i];
 			}
