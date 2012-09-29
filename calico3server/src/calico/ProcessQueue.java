@@ -239,12 +239,16 @@ public class ProcessQueue
 	public static void CANVAS_INFO(CalicoPacket p, Client c)
 	{
 		long canvasId = p.getLong();
-		int index = p.getInt();
+		String gridCoordTxt = p.getString();
+		int gridx = p.getInt();
+		int gridy = p.getInt();
 		
+		//int index = p.getInt();
 		CCanvas canvas = new CCanvas(canvasId);
+		canvas.setGridPos(gridx, gridy);
 		CCanvasController.canvases.put(canvasId, canvas);
 
-		System.out.println("Warning: canvas with uuid " + canvas.getUUID() + " received the wrong index " + canvas.getIndex() + ". It should be " + index + ".");
+		//System.out.println("Warning: canvas with uuid " + canvas.getUUID() + " received the wrong index " + canvas.getIndex() + ". It should be " + index + ".");
 	}
 	
 	public static void CANVAS_CLEAR(CalicoPacket p, Client c)
