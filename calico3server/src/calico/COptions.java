@@ -92,6 +92,7 @@ public class COptions
 	
 	public static class group
 	{
+		public static Color background_color = new Color(0x62,0xA5,0xCC);//Color.BLUE;
 		public static int padding = 10;
 		public static int text_padding = 0;
 		public static Font font = new Font("Helvetica", Font.PLAIN, 14);

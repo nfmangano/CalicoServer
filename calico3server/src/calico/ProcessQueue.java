@@ -115,7 +115,7 @@ public class ProcessQueue
 				case NetworkCommand.GROUP_CREATE_TEXT_GROUP:GROUP_CREATE_TEXT_GROUP(pdata,client);break;
 				case NetworkCommand.GROUP_MAKE_RECTANGLE:GROUP_MAKE_RECTANGLE(pdata,client);break;
 				case NetworkCommand.GROUP_COPY_WITH_MAPPINGS:GROUP_COPY_WITH_MAPPINGS(pdata,client);break;
-				
+				case NetworkCommand.GROUP_SET_COLOR:GROUP_SET_COLOR(pdata,client);break;
 
 				case NetworkCommand.ARROW_CREATE:ARROW_CREATE(pdata,client);break;
 				case NetworkCommand.ARROW_DELETE:ARROW_DELETE(pdata,client);break;
@@ -569,6 +569,16 @@ public class ProcessQueue
 		ClientManager.send_except(client,p);
 	}
 	
+	private static void GROUP_SET_COLOR(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		int red = p.getInt();
+		int green = p.getInt();
+		int blue = p.getInt();
+		
+		CGroupController.no_notify_set_color(uuid, new Color(red,green,blue));
+	}		
+	
 	public static void GROUP_SET_TEXT(CalicoPacket p, Client client)
 	{
 		long uuid = p.getLong();
@@ -715,11 +725,15 @@ public class ProcessQueue
 		scaleX = p.getDouble();
 		scaleY = p.getDouble();
 		text = p.getString();
+		int r = p.getInt();
+		int g = p.getInt();
+		int b = p.getInt();		
 
 //		CGroupController.groups.get(uuid).finish();
 		CGroupController.groups.get(uuid).primative_rotate(rotation);
 		CGroupController.groups.get(uuid).primative_scale(scaleX, scaleY);
 		CGroupController.groups.get(uuid).setText(text);
+		CGroupController.groups.get(uuid).setColor(new Color(r,g,b));
 		
 		CGroupController.no_notify_finish(uuid, captureChildren, false);
 

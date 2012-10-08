@@ -56,6 +56,7 @@ public class CGroup {
 	private GeneralPath pathReferenceShadow;	//this shadows the path reference attribute on the client side
 	protected double scaleX = 1.0d, scaleY = 1.0d;
 	protected double rotation = 0.0d;
+	protected Color color = null;
 
 	// See method applyAffineTransform() for explanation
 	// ArrayList<AffineTransform> groupTransforms;
@@ -91,6 +92,7 @@ public class CGroup {
 		this.cuid = cuid;
 		this.puid = puid;
 		this.isPermanent = isPerm;
+		this.color = COptions.group.background_color;
 	}
 
 	public CGroup(long uuid, long cuid, long puid) {
@@ -126,6 +128,10 @@ public class CGroup {
 	public void setText(String t) {
 		this.text = t;
 		this.textSet = true;
+	}
+	
+	public void setColor(Color color) {
+		this.color = color;
 	}
 
 	public void addPoint(int x, int y) {
@@ -789,6 +795,9 @@ public class CGroup {
 			packet.putDouble(this.scaleX);
 			packet.putDouble(this.scaleY);
 			packet.putString(this.text);
+			packet.putInt(color.getRed());
+			packet.putInt(color.getGreen());
+			packet.putInt(color.getBlue());		
 
 			return new CalicoPacket[] {packet};
 			

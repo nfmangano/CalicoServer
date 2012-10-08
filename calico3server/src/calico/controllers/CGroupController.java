@@ -872,12 +872,28 @@ public class CGroupController
 		
 	}
 	
+	public static void no_notify_set_color(long uuid, Color color) 
+	{
+		// TODO Auto-generated method stub
+		if (!exists(uuid)){return;}
+		
+		groups.get(uuid).setColor(color);
+		
+	}	
+	
 	public static void set_text(long uuid, String str) 
 	{
 		if(!exists(uuid)){return;}
 		no_notify_set_text(uuid,str);
 		ClientManager.send( CalicoPacket.getPacket(NetworkCommand.GROUP_SET_TEXT, uuid, str));
 	}
+	
+	public static void set_color(long uuid, Color color) 
+	{
+		if(!exists(uuid)){return;}
+		no_notify_set_color(uuid,color);
+		ClientManager.send( CalicoPacket.getPacket(NetworkCommand.GROUP_SET_COLOR, uuid, color.getRed(), color.getGreen(), color.getBlue()));
+	}		
 	
 	public static void no_notify_remove_child_stroke(final long uuid, final long csuuid)
 	{
