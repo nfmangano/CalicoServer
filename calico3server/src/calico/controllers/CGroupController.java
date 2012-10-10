@@ -83,6 +83,18 @@ public class CGroupController
 		groups.get(uuid).addPoint(x, y);
 	}
 	
+	public static void no_notify_append(long uuid, int[] x, int[] y)
+	{
+		// If we don't know wtf this UUID is for, then just eject
+		if(!exists(uuid))
+		{
+			logger.warn("APPEND for non-existant group "+uuid);
+			return;
+		}
+		
+		groups.get(uuid).append(x, y);
+	}
+	
 	
 	public static void no_notify_delete(final long uuid)
 	{
@@ -1357,6 +1369,65 @@ public class CGroupController
 		if(!exists(uuid)){return;}
 		
 		groups.get(uuid).clearChildArrows();
+	}
+	
+	public static void no_notify_create_clist(long originalUUID, long listUUID){
+		
+		//drop ORIGINAL scrap
+		CGroup originalGroup = CGroupController.groups.get(originalUUID);
+		if (originalGroup.isPermanent() == false)
+			CGroupController.no_notify_set_permanent(originalUUID, true);		
+		long parentUUID = originalGroup.getParentUUID();
+		long[] children = originalGroup.getChildGroups();
+		long canvasUUID = originalGroup.getCanvasUUID();
+		CGroupController.no_notify_drop(originalUUID);
+		//create list scrap
+		CList list = new CList(listUUID, canvasUUID, 0l);
+		Polygon shape = Geometry.getPolyFromPath((new  GeneralPath(originalGroup.getBoundsOfContents())).getPathIterator(null));		
+		no_notify_create_custom_scrap_bootstrap(listUUID, canvasUUID, list, shape, "");
+		//assign list scrap the same parent as the original scrap
+		list.setParentUUID(parentUUID);
+		list.setChildGroups(children);
+		list.resetListElementPositions(true);
+		list.recomputeBoundsAroundElements();
+		//assign child of original scrap to list scrap
+		
+	}
+	
+	public static void no_notify_create_custom_scrap_bootstrap(long uuid, long cuuid, CGroup group, Polygon p, String optText){
+		no_notify_start(uuid, cuuid, 0l, true, group);
+		create_custom_shape(uuid, p);
+		//Set the optional text to identify the scrap
+		CGroupController.no_notify_set_text(uuid, optText);
+		CGroupController.no_notify_finish(uuid, false, false);
+		CGroupController.no_notify_set_permanent(uuid, true);
+		//CGroupController.recheck_parent(uuid);
+	}	
+	
+	//Starts the creation of any of the activity diagram scrap
+	public static void no_notify_start(long uuid, long cuid, long puid, boolean isperm, CGroup customScrap)
+	{
+		if (!CCanvasController.exists(cuid))
+			return;
+		
+		// Add to the GroupDB
+		try {
+			CGroupController.groups.put(uuid, customScrap);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		CCanvasController.canvases.get(cuid).addChildGroup(uuid);
+	}
+	
+	//Add the points defined in p to the scrap with id uuid
+	public static void create_custom_shape(long uuid, Polygon p){
+		for (int i = 0; i < p.npoints; i++)
+		{
+			CGroupController.no_notify_append(uuid, p.xpoints[i], p.ypoints[i]);
+			CGroupController.no_notify_append(uuid, p.xpoints[i], p.ypoints[i]);
+			CGroupController.no_notify_append(uuid, p.xpoints[i], p.ypoints[i]);
+		}
 	}
 	
 }

@@ -56,6 +56,11 @@ public class ProcessQueue
 				logger.debug("RX \""+ClientManager.client2string(client)+"\" "+pdata.toString());
 			}
 			
+			if(logger.isDebugEnabled() && client!=null && command != NetworkCommand.HEARTBEAT)
+			{
+				logger.debug("RX \""+ClientManager.client2string(client)+"\" "+command);
+			}
+			
 			switch(command)
 			{
 				case NetworkCommand.JOIN:JOIN(pdata,client);break;
@@ -158,6 +163,9 @@ public class ProcessQueue
 				case NetworkCommand.LIST_CREATE:LIST_CREATE(pdata,client);break;
 				case NetworkCommand.LIST_LOAD:LIST_LOAD(pdata,client);break;
 				case NetworkCommand.LIST_CHECK_SET:LIST_CHECK_SET(pdata,client);break;
+				case NetworkCommand.CLIST_CREATE:CLIST_CREATE(pdata,client);break;
+				case NetworkCommand.CLIST_LOAD:CLIST_LOAD(pdata,client);break;
+				case NetworkCommand.CLIST_CHECK_SET:CLIST_CHECK_SET(pdata,client);break;				
 				
 				case NetworkCommand.IMAGE_TRANSFER:IMAGE_TRANSFER(pdata, client);break;
 
@@ -1517,6 +1525,94 @@ public class ProcessQueue
 		boolean value = p.getBoolean();
 		
 		CGroupDecoratorController.no_notify_list_set_check(luuid, cuid, puid, guuid, value);
+		
+		if (client != null)
+		{
+			ClientManager.send_except(client, p);
+			CCanvasController.snapshot(CGroupController.groups.get(luuid).getCanvasUUID());
+		}
+	}
+	
+	public static void CLIST_CREATE(CalicoPacket p, Client client)
+	{
+		long guuid = p.getLong();
+		long luuid = p.getLong();
+		
+		CGroupController.no_notify_create_clist(guuid, luuid);
+		
+		if (client != null)
+		{
+			ClientManager.send_except(client, p);
+			CCanvasController.snapshot_group(luuid);
+		}
+	}
+	
+	public static void CLIST_LOAD(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		long cuid = p.getLong();
+		long puid = p.getLong();
+		boolean isperm = p.getBoolean();
+		int count = p.getCharInt();
+		
+		if(count<=0)
+		{
+			return;
+		}
+		
+
+		int[] xArr = new int[count], yArr = new int[count];
+		for(int i=0;i<count;i++)
+		{
+			xArr[i] = p.getInt();
+			yArr[i] = p.getInt();
+		}
+
+		boolean captureChildren = p.getBoolean();
+		double rotation = p.getDouble();
+		double scaleX = p.getDouble();
+		double scaleY = p.getDouble();
+		String text = p.getString();
+		int r = p.getInt();
+		int g = p.getInt();
+		int b = p.getInt();
+		
+		CList list = new CList(uuid, cuid, puid);
+		
+		int numCheckValues = p.getInt();
+		for (int i = 0; i < numCheckValues; i++)
+		{
+			list.setCheck(p.getLong(), p.getBoolean());
+		}
+		
+		CGroupController.no_notify_start(uuid, cuid, puid, isperm, list);
+		CGroupController.no_notify_set_permanent(uuid, true);
+		CGroupController.no_notify_append(uuid, xArr, yArr);
+		CGroupController.groups.get(uuid).primative_rotate(rotation);
+		CGroupController.groups.get(uuid).primative_scale(scaleX, scaleY);
+		CGroupController.groups.get(uuid).setText(text);
+		CGroupController.groups.get(uuid).setColor(new Color(r,g,b));
+		
+		CGroupController.no_notify_finish(uuid, captureChildren, false);
+		
+		if (client != null)
+		{
+			ClientManager.send_except(client, p);
+			CCanvasController.snapshot(CGroupController.groups.get(uuid).getCanvasUUID());
+		}		
+	}
+	
+	public static void CLIST_CHECK_SET(CalicoPacket p, Client client)
+	{
+		long luuid = p.getLong();
+		long guuid = p.getLong();
+		boolean value = p.getBoolean();
+		
+		if (!CGroupController.exists(luuid)) { return; }
+		
+		CList list = (CList)CGroupController.groups.get(luuid);
+		list.setCheck(guuid, value);
+		list.recomputeValues();
 		
 		if (client != null)
 		{

@@ -137,6 +137,12 @@ public class CGroup {
 	public void addPoint(int x, int y) {
 		this.points.addPoint(x, y);
 	}
+	
+	public void append(int[] x, int[] y)
+	{
+		for (int i = 0; i < x.length; i++)
+			this.points.addPoint(x[i], y[i]);
+	}	
 
 	/**
 	 * Moves this group, as well as any children
