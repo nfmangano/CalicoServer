@@ -56,10 +56,10 @@ public class ProcessQueue
 				logger.debug("RX \""+ClientManager.client2string(client)+"\" "+pdata.toString());
 			}
 			
-			if(logger.isDebugEnabled() && client!=null && command != NetworkCommand.HEARTBEAT)
-			{
-				logger.debug("RX \""+ClientManager.client2string(client)+"\" "+command);
-			}
+//			if(logger.isDebugEnabled() && client!=null && command != NetworkCommand.HEARTBEAT)
+//			{
+//				logger.debug("RX \""+ClientManager.client2string(client)+"\" "+command);
+//			}
 			
 			switch(command)
 			{

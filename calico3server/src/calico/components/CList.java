@@ -95,6 +95,11 @@ public class CList extends CGroup {
 	}
 
 	public void recomputeBoundsAroundElements() {
+		long[] children = getChildGroups();
+		for (int i = 0; i < children.length; i++)
+			if (!CGroupController.exists(children[i]) || CGroupController.groups.get(children[i]).getPathReference() == null)
+				return;
+		
 		Rectangle bounds = getBoundsOfContents();
 		
 		Rectangle newBounds = new Rectangle(bounds.x - widthBuffer - iconXSpace, bounds.y,
@@ -138,6 +143,9 @@ public class CList extends CGroup {
 	
 	public void setCheck(long guuid, boolean value)
 	{
+		if (!hasChildGroup(guuid))
+			return;
+		
 		groupCheckValues.put(guuid, new Boolean(value));
 	}
 	

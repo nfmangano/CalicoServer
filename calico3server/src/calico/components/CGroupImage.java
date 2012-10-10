@@ -53,7 +53,10 @@ public class CGroupImage extends CGroup {
 						captureChildren,
 						this.rotation,
 						this.scaleX,
-						this.scaleY);
+						this.scaleY,
+						this.color.getRed(),
+						this.color.getGreen(),
+						this.color.getBlue());
 //		packet.putImage(this.image);
 		
 		return new CalicoPacket[]{packet};
