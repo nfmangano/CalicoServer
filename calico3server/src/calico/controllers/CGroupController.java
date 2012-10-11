@@ -754,7 +754,7 @@ public class CGroupController
 	{
 		if(!exists(uuid)){return;}
 		
-		groups.get(uuid).recheckParentAfterMove(x, y);
+//		groups.get(uuid).recheckParentAfterMove(x, y);
 	}
 	
 	public static void move_end(final long uuid, final int x, final int y)

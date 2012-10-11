@@ -665,15 +665,15 @@ public class ProcessQueue
 		
 		int numpackets = p.getCharInt();
 		
-		if(numpackets>0)
-		{
+//		if(numpackets>0)
+//		{
 			long[] child_uuids = new long[numpackets];
 			for(int i=0;i<numpackets;i++)
 			{
 				child_uuids[i] = p.getLong();
 			}
 			CGroupController.no_notify_set_child_strokes(uuid, child_uuids);
-		}
+//		}
 	}
 	private static void GROUP_SET_CHILD_ARROWS(CalicoPacket p, Client client)
 	{
@@ -681,15 +681,15 @@ public class ProcessQueue
 		
 		int numpackets = p.getCharInt();
 		
-		if(numpackets>0)
-		{
+//		if(numpackets>0)
+//		{
 			long[] child_uuids = new long[numpackets];
 			for(int i=0;i<numpackets;i++)
 			{
 				child_uuids[i] = p.getLong();
 			}
 			CGroupController.no_notify_set_child_arrows(uuid, child_uuids);
-		}
+//		}
 	}
 	
 	private static void GROUP_SET_CHILD_GROUPS(CalicoPacket p, Client client)
@@ -698,15 +698,15 @@ public class ProcessQueue
 		
 		int numpackets = p.getCharInt();
 		
-		if(numpackets>0)
-		{
+//		if(numpackets>0)
+//		{
 			long[] child_uuids = new long[numpackets];
 			for(int i=0;i<numpackets;i++)
 			{
 				child_uuids[i] = p.getLong();
 			}
 			CGroupController.no_notify_set_child_groups(uuid, child_uuids);
-		}
+//		}
 	}
 	
 	public static void GROUP_LOAD(CalicoPacket p, Client client)
