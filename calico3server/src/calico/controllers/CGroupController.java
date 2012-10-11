@@ -1380,11 +1380,12 @@ public class CGroupController
 		long parentUUID = originalGroup.getParentUUID();
 		long[] children = originalGroup.getChildGroups();
 		long canvasUUID = originalGroup.getCanvasUUID();
+		String text = originalGroup.getText();
+		Polygon shape = Geometry.getPolyFromPath((new  GeneralPath(originalGroup.getPathReference().getBounds())).getPathIterator(null));	
 		CGroupController.no_notify_drop(originalUUID);
 		//create list scrap
 		CList list = new CList(listUUID, canvasUUID, 0l);
-		Polygon shape = Geometry.getPolyFromPath((new  GeneralPath(originalGroup.getBoundsOfContents())).getPathIterator(null));		
-		no_notify_create_custom_scrap_bootstrap(listUUID, canvasUUID, list, shape, "");
+		no_notify_create_custom_scrap_bootstrap(listUUID, canvasUUID, list, shape, text);
 		//assign list scrap the same parent as the original scrap
 		list.setParentUUID(parentUUID);
 		list.setChildGroups(children);
