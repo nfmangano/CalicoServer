@@ -881,7 +881,9 @@ public class CGroupController
 		if (!exists(uuid)){return;}
 		
 		groups.get(uuid).setText(str);
-		
+		Rectangle rect = CGroupController.groups.get(uuid).getBoundsOfContents();
+		CGroupController.no_notify_make_rectangle(uuid, rect.x, rect.y, rect.width, rect.height);
+		groups.get(uuid).recomputeBounds();
 	}
 	
 	public static void no_notify_set_color(long uuid, Color color) 
@@ -1254,11 +1256,11 @@ public class CGroupController
 //		long parent = get_smallest_containing_group_for_point(cuuid, new Point(x,y));
 		CGroupController.no_notify_start(uuid, cuuid, 0l, true);
 		CGroupController.no_notify_append(uuid, x, y);
-		CGroupController.no_notify_set_text(uuid, text);
 		CGroupController.no_notify_finish(uuid, false, false);
+		CGroupController.no_notify_set_text(uuid, text);		
 		//CGroupController.no_notify_set_permanent(uuid, true);
-		Rectangle rect = groups.get(uuid).getBoundsOfContents();
-		CGroupController.no_notify_make_rectangle(uuid, rect.x, rect.y, rect.width, rect.height);
+//		Rectangle rect = groups.get(uuid).getBoundsOfContents();
+//		CGroupController.no_notify_make_rectangle(uuid, rect.x, rect.y, rect.width, rect.height);
 		CGroupController.recheck_parent(uuid);
 	}
 	
@@ -1398,8 +1400,8 @@ public class CGroupController
 		no_notify_start(uuid, cuuid, 0l, true, group);
 		create_custom_shape(uuid, p);
 		//Set the optional text to identify the scrap
-		CGroupController.no_notify_set_text(uuid, optText);
 		CGroupController.no_notify_finish(uuid, false, false);
+		CGroupController.groups.get(uuid).setText(optText);		
 		CGroupController.no_notify_set_permanent(uuid, true);
 		//CGroupController.recheck_parent(uuid);
 	}	

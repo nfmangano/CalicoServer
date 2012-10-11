@@ -1155,8 +1155,12 @@ public class CGroup {
 		long[] childIndices = ArrayUtils.addAll(strokearr, grouparr);
 
 		Rectangle childrenBounds = getBoundsOfObjects(childIndices);
-		if (childrenBounds.width < 1 || childrenBounds.height < 1)
-			childrenBounds = this.getPathReference().getBounds();
+		if ((childrenBounds.width < 1 || childrenBounds.height < 1))
+			if (text.length() > 1)
+				childrenBounds = new Rectangle(this.getPathReference().getBounds().x + COptions.group.padding, 
+					this.getPathReference().getBounds().y + COptions.group.padding, 0,0);
+			else
+				childrenBounds = this.getPathReference().getBounds();
 		boundsOfContainedElements.add(childrenBounds);
 
 		Rectangle textDimensions = getTextBounds(this.text);
