@@ -1,30 +1,36 @@
 package calico;
 
-import calico.networking.*;
-import calico.networking.netstuff.*;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
+
+import java.awt.Color;
+import java.awt.Point;
+import java.io.IOException;
+
+import org.apache.log4j.Logger;
+
+import calico.clients.Client;
+import calico.clients.ClientConsistencyListener;
+import calico.clients.ClientManager;
+import calico.components.AnchorPoint;
+import calico.components.CCanvas;
+import calico.components.CList;
+import calico.components.composable.ComposableElement;
+import calico.components.composable.ComposableElementController;
+import calico.controllers.CArrowController;
+import calico.controllers.CCanvasController;
+import calico.controllers.CConnectorController;
+import calico.controllers.CGroupController;
+import calico.controllers.CGroupDecoratorController;
+import calico.controllers.CImageController;
+import calico.controllers.CSessionController;
+import calico.controllers.CStrokeController;
+import calico.events.CalicoEventHandler;
+import calico.networking.netstuff.CalicoPacket;
+import calico.networking.netstuff.NetworkCommand;
 import calico.plugins.CalicoPluginManager;
 import calico.plugins.events.CalicoEvent;
 import calico.plugins.events.clients.ClientConnect;
-import calico.components.*;
-import calico.components.composable.ComposableElement;
-import calico.components.composable.ComposableElementController;
-import calico.controllers.*;
-import calico.admin.*;
-import calico.clients.*;
-import calico.events.CalicoEventHandler;
-import calico.uuid.*;
-import calico.sessions.*;
-
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.sql.*;
-
-import java.awt.*;
-
-import it.unimi.dsi.fastutil.longs.*;
-
-import org.apache.log4j.*;
+import calico.uuid.UUIDAllocator;
 
 public class ProcessQueue
 {

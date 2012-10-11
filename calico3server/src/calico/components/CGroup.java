@@ -1156,18 +1156,27 @@ public class CGroup {
 
 		Rectangle childrenBounds = getBoundsOfObjects(childIndices);
 		if ((childrenBounds.width < 1 || childrenBounds.height < 1))
-			if (text.length() > 1)
-				childrenBounds = new Rectangle(this.getPathReference().getBounds().x + COptions.group.padding, 
-					this.getPathReference().getBounds().y + COptions.group.padding, 0,0);
-			else
-				childrenBounds = this.getPathReference().getBounds();
-		boundsOfContainedElements.add(childrenBounds);
+		{
+			childrenBounds = new Rectangle(
+					this.getPathReference().getBounds().x + COptions.group.padding,
+					this.getPathReference().getBounds().y + COptions.group.padding,
+					this.getPathReference().getBounds().width - COptions.group.padding*2,
+					this.getPathReference().getBounds().height - COptions.group.padding*2);
+			if (text.length() > 0)
+				boundsOfContainedElements.add(childrenBounds);			
+		}
+		else
+			boundsOfContainedElements.add(childrenBounds);
 
 		Rectangle textDimensions = getTextBounds(this.text);
 		Rectangle textBounds;
-		textBounds = new Rectangle(childrenBounds.x, childrenBounds.y,
-				textDimensions.width + COptions.group.text_padding*2, textDimensions.height
-						+ COptions.group.text_padding*2);
+		textBounds = new Rectangle(this.getPathReference().getBounds().x  + COptions.group.padding, 
+				this.getPathReference().getBounds().y  + COptions.group.padding, 
+				textDimensions.width + COptions.group.text_padding*2, 
+				textDimensions.height + COptions.group.text_padding*2);
+//		textBounds = new Rectangle(childrenBounds.x, childrenBounds.y,
+//				textDimensions.width + COptions.group.text_padding*2, textDimensions.height
+//						+ COptions.group.text_padding*2);
 		if (textBounds.width > 0 && textBounds.height > 0)
 			boundsOfContainedElements.add(textBounds);
 

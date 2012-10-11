@@ -881,8 +881,6 @@ public class CGroupController
 		if (!exists(uuid)){return;}
 		
 		groups.get(uuid).setText(str);
-		Rectangle rect = CGroupController.groups.get(uuid).getBoundsOfContents();
-		CGroupController.no_notify_make_rectangle(uuid, rect.x, rect.y, rect.width, rect.height);
 		groups.get(uuid).recomputeBounds();
 	}
 	
@@ -1259,8 +1257,8 @@ public class CGroupController
 		CGroupController.no_notify_finish(uuid, false, false);
 		CGroupController.no_notify_set_text(uuid, text);		
 		//CGroupController.no_notify_set_permanent(uuid, true);
-//		Rectangle rect = groups.get(uuid).getBoundsOfContents();
-//		CGroupController.no_notify_make_rectangle(uuid, rect.x, rect.y, rect.width, rect.height);
+		Rectangle rect = groups.get(uuid).getBoundsOfContents();
+		CGroupController.no_notify_make_rectangle(uuid, rect.x, rect.y, rect.width, rect.height);
 		CGroupController.recheck_parent(uuid);
 	}
 	
