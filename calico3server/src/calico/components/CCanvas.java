@@ -145,7 +145,32 @@ public class CCanvas
 		snapshots.add(getBackupState());
 	}
 	
-	
+	public boolean removeMostRecentCanvasState()
+	{
+		try
+		{
+			if (snapshots.size() < 1)
+				return false;
+			
+			snapshots.remove(snapshots.size()-1);
+			snapshotIndex--;
+			
+			if(snapshotIndex<0)
+			{
+				throw new NoSuchElementException();
+			}
+			
+//			getBackupState().updateToNewState(snapshots.get(snapshotIndex));
+			
+			
+			return true;
+		}
+		catch(NoSuchElementException e)
+		{
+			snapshotIndex++;
+			return false;
+		}		
+	}
 	
 	/**
 	 * Runs the undo sequence

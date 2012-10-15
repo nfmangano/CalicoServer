@@ -1360,6 +1360,8 @@ public class ProcessQueue
 		{
 			CStrokeController.no_notify_delete(uuid);
 			ClientManager.send_except(client, p);
+			long canvas = CCanvasController.get_stroke_canvas(uuid);
+			CCanvasController.snapshot_remove_most_recent_undo(canvas);
 		}
 		
 	}

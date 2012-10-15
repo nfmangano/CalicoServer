@@ -221,6 +221,20 @@ public class CCanvasController
 	}
 	
 	/**
+	 * Removes a snapshot of the canvas 
+	 * @param uuid The UUID of the Stroke that changed
+	 */
+	public static void snapshot_remove_most_recent_undo(long uuid)
+	{
+		if (!CCanvasController.exists(uuid))
+			return;
+		
+		canvases.get( uuid ).removeMostRecentCanvasState();
+	}
+	
+	
+	
+	/**
 	 * Takes a snapshot of the canvas that contains the group
 	 * @param uuid uuid of the group
 	 */
