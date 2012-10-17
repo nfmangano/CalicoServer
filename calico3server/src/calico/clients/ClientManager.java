@@ -333,6 +333,8 @@ public class ClientManager
 		 * - 
 		 */
 		
+		ClientManager.send(CalicoPacket.getPacket(NetworkCommand.CANVAS_SET_DIMENSIONS, COptions.canvas.width, COptions.canvas.height));
+		
 		long[] canvasids = CCanvasController.canvases.keySet().toLongArray();
 		
 		
