@@ -88,6 +88,30 @@ public class CalicoBackupHandler
 		
 		writePacketToStream(fos, CalicoPacket.getPacket(NetworkCommand.RESTORE_START));
 		
+		long[] groups = CGroupController.groups.keySet().toLongArray();
+		for (int i = 0; i < groups.length; i++)
+			if (CGroupController.groups.get(groups[i]) instanceof CGroupImage)
+			{	
+				CGroup group = CGroupController.groups.get(groups[i]);
+				String imagePath = CImageController.getImagePath(groups[i]);
+				String imageName = group.getUUID() + "." + CImageController.getFileExtension(imagePath);
+				byte[] imageBytes = CImageController.getBytesFromDisk(imagePath);
+				
+				CalicoPacket packet = new CalicoPacket(ByteUtils.SIZE_OF_INT + ByteUtils.SIZE_OF_LONG * 3 
+						+ CalicoPacket.getSizeOfPacket(new Object[] {imageName})
+						+ ByteUtils.SIZE_OF_INT + imageBytes.length * ByteUtils.SIZE_OF_BYTE);
+				packet.putInt(NetworkCommand.IMAGE_TRANSFER_FILE);
+				packet.putLong(group.getUUID());
+				packet.putLong(group.getCanvasUUID());
+				packet.putLong(group.getParentUUID());
+				packet.putString(imageName);
+				packet.putInt(imageBytes.length);
+				packet.putBytes(imageBytes);
+				
+				
+				writePacketToStream(fos, packet);
+			}
+				
 		long[] canvasids = CCanvasController.canvases.keySet().toLongArray();
 		
 		
