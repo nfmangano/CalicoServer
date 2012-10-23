@@ -17,7 +17,7 @@ public class COptions
 	public static class debug
 	{
 		public static boolean enabled = false;
-		public static boolean consistency_debug_enabled = false;
+		public static boolean consistency_debug_enabled = true;
 		
 		public static class unittests
 		{
@@ -64,6 +64,8 @@ public class COptions
 		public static int max_snapshots = 50;
 		public static long sleeptime = 10L; // Must be less than 5000
 		public static int max_sleep_count = (int) (5000 / sleeptime);
+		public static int width = 1600;
+		public static int height = 1200;
 	}
 	
 	public static class uuid

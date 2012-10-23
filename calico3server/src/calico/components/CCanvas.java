@@ -594,7 +594,7 @@ public class CCanvas
 
 		long[] strokear = getChildStrokes();
 		long[] groupar = getChildGroups();
-//		long[] arrar = getChildArrows();
+		long[] connectorar = getChildConnectors();
 		
 		int stroke_sig = 0;
 		for(int i=0;i<strokear.length;i++)
@@ -617,11 +617,14 @@ public class CCanvas
 			p.putString(CGroupController.get_signature_debug_output(groupar[i]));
 		}
 		
-//		int arrow_sig = 0;
-//		for (int i=0;i<arrar.length;i++)
-//		{
-//			arrow_sig = arrow_sig + CArrowController.get_signature(arrar[i]);
-//		}
+		int connector_sig = 0;
+		for (int i=0;i<connectorar.length;i++)
+		{
+			connector_sig = CConnectorController.get_signature(connectorar[i]);
+			p.putLong(connectorar[i]);
+			p.putInt(connector_sig);
+			p.putString(CConnectorController.get_signature_debug_output(connectorar[i]));
+		}
 		
 		return p;
 	}
