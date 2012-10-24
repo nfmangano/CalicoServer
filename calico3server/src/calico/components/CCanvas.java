@@ -347,6 +347,12 @@ public class CCanvas
 		{
 			CStrokeController.strokes.get(strokea[i]).render(g);
 		}
+		
+		long[] connectora = connectors.toLongArray();
+		for(int i=0;i<connectora.length;i++)
+		{
+			CConnectorController.connectors.get(connectora[i]).render(g);
+		}
 	}
 	
 	

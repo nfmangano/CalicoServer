@@ -962,16 +962,10 @@ public class CGroup {
 	}
 
 	public void render(Graphics2D g, boolean showChildren) {
-		g.setStroke(new BasicStroke(1.5f));
-		g.setPaint(Color.BLACK);
-		g.drawPolygon(points.xpoints, points.ypoints, points.npoints);
-
-		Color drawColor = new Color(0x62, 0xA5, 0xCC, 70);
-
-		g.setPaint(drawColor);// new Color( Color.BLUE.getRed(),
-								// Color.BLUE.getGreen(), Color.BLUE.getBlue(),
-								// 100));
-		g.fillPolygon(points.xpoints, points.ypoints, points.npoints);
+		if (this instanceof CGroupImage)
+			((CGroupImage)this).render_internal(g);
+		else
+			render_internal(g);
 
 		if (showChildren) {
 			if (this.childGroups.size() > 0) {
@@ -990,6 +984,33 @@ public class CGroup {
 			}
 		}
 
+	}
+
+	protected void render_internal(Graphics2D g) {
+		g.setStroke(new BasicStroke(1.5f));
+		g.setPaint(new Color(0,0,0, 50));
+		g.drawPolygon(points.xpoints, points.ypoints, points.npoints);
+
+		Color drawColor = new Color(0x62, 0xA5, 0xCC, 50);
+
+		g.setPaint(drawColor);// new Color( Color.BLUE.getRed(),
+								// Color.BLUE.getGreen(), Color.BLUE.getBlue(),
+								// 100));
+		g.fillPolygon(points.xpoints, points.ypoints, points.npoints);
+		
+		if (textSet) {
+			PAffineTransform piccoloTextTransform = getPTransform();
+			AffineTransform old = g.getTransform();
+			g.setTransform(piccoloTextTransform);
+			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+			g.setColor(Color.BLACK);
+			int yTextOffset = getTextBounds(text).height;
+			g.setFont(COptions.group.font);
+			g.drawString(this.text,
+					(float) (points.getBounds().getX() + COptions.group.text_padding + COptions.group.padding), (float) (points.getBounds().getY() + COptions.group.padding + (points.getBounds().getHeight()+5)/2 - yTextOffset/4));
+			g.setTransform(old);
+			
+		}
 	}
 
 	public void render(Graphics2D g) {

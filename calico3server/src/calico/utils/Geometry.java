@@ -190,4 +190,50 @@ public class Geometry {
 		return coords;
 	}
 	
+	/**
+	 * Find the point on the line defined by x0,y0,x1,y1 a given fraction
+	 * from x0,y0. 2D version of method above..
+	 * 
+	 * @param  x0, y0         First point defining the line
+	 * @param  x1, y1         Second point defining the line
+	 * @param  fractionFrom0  Distance from (x0,y0)
+	 * @return x, y           Coordinate of point we are looking for
+	 */
+	public static double[] computePointOnLine (double x0, double y0,
+			double x1, double y1,
+			double fractionFrom0)
+	{
+		double[] p0 = {x0, y0, 0.0};
+		double[] p1 = {x1, y1, 0.0};
+
+		double[] p = Geometry.computePointOnLine (p0, p1, fractionFrom0);
+
+		double[] r = {p[0], p[1]};
+		return r;
+	}
+	
+	/**
+	 * Find the point on the line p0,p1 [x,y,z] a given fraction from p0.
+	 * Fraction of 0.0 whould give back p0, 1.0 give back p1, 0.5 returns
+	 * midpoint of line p0,p1 and so on. F
+	 * raction can be >1 and it can be negative to return any point on the
+	 * line specified by p0,p1.
+	 * 
+	 * @param p0              First coordinale of line [x,y,z].
+	 * @param p0              Second coordinale of line [x,y,z].   
+	 * @param fractionFromP0  Point we are looking for coordinates of
+	 * @param p               Coordinate of point we are looking for
+	 */
+	public static double[] computePointOnLine (double[] p0, double[] p1, 
+			double fractionFromP0)
+	{
+		double[] p = new double[3];
+
+		p[0] = p0[0] + fractionFromP0 * (p1[0] - p0[0]);
+		p[1] = p0[1] + fractionFromP0 * (p1[1] - p0[1]);
+		p[2] = p0[2] + fractionFromP0 * (p1[2] - p0[2]);  
+
+		return p;
+	}
+	
 }
