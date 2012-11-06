@@ -1,7 +1,11 @@
 package calico.plugins.iip;
 
+import java.io.IOException;
 import java.util.List;
 
+import calico.CalicoServer;
+import calico.CanvasThread;
+import calico.ProcessQueue;
 import calico.clients.Client;
 import calico.clients.ClientManager;
 import calico.controllers.CCanvasController;
@@ -54,6 +58,8 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 			createIntentionCell(canvasId);
 			CIntentionLayout.getInstance().insertCluster(canvasId);
 		}
+		
+		layoutGraph();
 	}
 
 	@Override
@@ -135,7 +141,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 					{
 						CIntentionLayout.getInstance().insertCluster(canvasId);
 					}
+					
 					layoutGraph();
+	
 					break;
 				case NetworkCommand.CANVAS_DELETE:
 					CANVAS_DELETE(p, c, canvasId);
@@ -495,6 +503,33 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		}
 
 		forward(CIntentionLayout.getInstance().getTopology().createPacket());
+		
+		double sqrt = Math.sqrt((double)CIntentionLayout.getInstance().getClusterCount());
+		if (sqrt > Math.floor(sqrt))
+		{
+			CalicoPacket canvasCreatePacket = CalicoPacket.getPacket(NetworkCommand.CANVAS_CREATE, calico.uuid.UUIDAllocator.getUUID(), 0l);
+			canvasCreatePacket.rewind();
+			canvasCreatePacket.getInt();
+			
+			long canvasThreadIndex = 1l;
+			synchronized(CalicoServer.canvasThreads)
+			{
+				if (!CalicoServer.canvasThreads.containsKey(canvasThreadIndex))
+				{
+					try {
+						CalicoServer.canvasThreads.put(canvasThreadIndex, new CanvasThread(canvasThreadIndex));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				CalicoServer.canvasThreads.get(canvasThreadIndex).addPacketToQueue(NetworkCommand.CANVAS_CREATE, null, canvasCreatePacket);
+			}
+			
+			
+//			ProcessQueue.receive(NetworkCommand.CANVAS_CREATE, c, canvasCreatePacket);
+//			layoutGraph();
+		}
 	}
 
 	private static void forward(CalicoPacket p)

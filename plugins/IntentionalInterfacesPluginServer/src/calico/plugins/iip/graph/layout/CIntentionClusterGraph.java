@@ -608,4 +608,20 @@ public class CIntentionClusterGraph
 		}
 		return null;
 	}
+	
+	public int getClusterCount()
+	{
+//		private final List<List<Position>> graph = new ArrayList<List<Position>>();
+		int counter = 0;
+		for (List<Position> r : graph)
+		{
+			for(Position c : r)
+			{
+				if (c.cluster != null)
+					counter++;
+			}
+		}
+		
+		return counter;
+	}
 }

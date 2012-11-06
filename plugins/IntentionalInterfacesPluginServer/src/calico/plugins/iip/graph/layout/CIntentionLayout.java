@@ -114,4 +114,9 @@ public class CIntentionLayout
 		}
 		return CCanvasController.canvases.get(canvasId).getIndex();
 	}
+	
+	public int getClusterCount()
+	{
+		return graph.getClusterCount();
+	}
 }

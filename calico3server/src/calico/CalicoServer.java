@@ -162,8 +162,14 @@ public class CalicoServer
 		Thread udprecv = new Thread(new UDPReceiveQueue());
 		udprecv.start();
 
-		CCanvas initialCanvas = new CCanvas(UUIDAllocator.getUUID());
-		CCanvasController.canvases.put(initialCanvas.getUUID(), initialCanvas);
+		CCanvas initialCanvas1 = new CCanvas(UUIDAllocator.getUUID());
+		CCanvas initialCanvas2 = new CCanvas(UUIDAllocator.getUUID());
+		CCanvas initialCanvas3 = new CCanvas(UUIDAllocator.getUUID());
+		CCanvas initialCanvas4 = new CCanvas(UUIDAllocator.getUUID());
+		CCanvasController.canvases.put(initialCanvas1.getUUID(), initialCanvas1);
+		CCanvasController.canvases.put(initialCanvas2.getUUID(), initialCanvas2);
+		CCanvasController.canvases.put(initialCanvas3.getUUID(), initialCanvas3);
+		CCanvasController.canvases.put(initialCanvas4.getUUID(), initialCanvas4);
 
 		CalicoPluginManager.setup();
 		
