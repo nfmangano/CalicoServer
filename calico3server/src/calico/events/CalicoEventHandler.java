@@ -30,6 +30,8 @@ public class CalicoEventHandler {
 	
 	private static Int2ReferenceOpenHashMap<ArrayList<CalicoEventListener>> eventListeners;
 	
+	private static ArrayList<CalicoEventListener> globalListeners;
+	
 	public static CalicoEventHandler getInstance()
 	{
 		return instance;
@@ -38,6 +40,7 @@ public class CalicoEventHandler {
 	public CalicoEventHandler()
 	{
 		eventListeners = new Int2ReferenceOpenHashMap<ArrayList<CalicoEventListener>>();
+		globalListeners = new ArrayList<CalicoEventListener>();
 		registerEvents();
 //		System.out.println("Instanciated the Calico Event Handler Class!");
 	}
@@ -94,12 +97,14 @@ public class CalicoEventHandler {
 	
 	public void addGlobalListener(CalicoEventListener listener)
 	{
-		int[] keySet = eventListeners.keySet().toIntArray();
-		
-		for (int i = 0; i < keySet.length; i++)
-		{
-			eventListeners.get(keySet[i]).add(listener);
-		}
+		if (listener != null)
+			globalListeners.add(listener);
+//		int[] keySet = eventListeners.keySet().toIntArray();
+//		
+//		for (int i = 0; i < keySet.length; i++)
+//		{
+//			eventListeners.get(keySet[i]).add(listener);
+//		}
 	}
 	
 	public void addListenerForType(String type, CalicoEventListener listener, int listenerType)
@@ -134,6 +139,9 @@ public class CalicoEventHandler {
 	
 	public void fireEvent(int event, CalicoPacket p, Client client)
 	{
+		for (CalicoEventListener globalListener : globalListeners)
+			globalListener.handleCalicoEvent(event, p, client);
+		
 		if (!eventListeners.containsKey(event))
 			return;
 		
