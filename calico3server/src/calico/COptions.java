@@ -83,6 +83,7 @@ public class COptions
 			public static boolean enable_autobackup = true;
 			public static int write_on_tick = 50; // tickrate * <thisnum>
 			public static String backup_file = "backup_auto.csb";
+			public static String backup_file_alt = "backup_auto";
 		}
 		public static class images
 		{

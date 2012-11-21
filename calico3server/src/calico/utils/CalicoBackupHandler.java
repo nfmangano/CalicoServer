@@ -43,7 +43,32 @@ public class CalicoBackupHandler
 		writeBackupStream(fos);
 		backupFileTemp.close();
 		
-		backupFileTemp.moveTo(backupFile);
+		boolean canRead = true;
+		try{
+			backupFileTemp.moveTo(backupFile);
+		}
+		catch (Exception e)
+		{
+			canRead = false;
+		}
+		if (!canRead)
+		{
+			boolean writtenFile = false;
+			int altCounter = 1;
+			while (!writtenFile || altCounter > 50)
+			{
+				try {
+					FileObject backupFileAlt = COptions.fs.resolveFile(COptions.server.backup.backup_file_alt + "_" + altCounter++ + ".csb");
+					backupFileTemp.moveTo(backupFileAlt);
+					writtenFile = true;
+				}
+				catch (Exception e)
+				{
+					
+				}
+				
+			}
+		}
 		backupFileTemp.delete();
 
 		backupFile.close();
