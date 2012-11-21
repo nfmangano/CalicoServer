@@ -2,6 +2,7 @@ package calico.components;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Stroke;
@@ -425,4 +426,38 @@ public class CConnector extends PComposite implements Composable{
 		// TODO Auto-generated method stub
 		
 	}
+	
+	//Now that getRawPolygon gets called multiple times per redraw due to compositional notations
+	//We want to calculate this only once and then return the cached polygon when someone calls getRawPolygon
+	public Polygon getRawPolygon()
+	{
+		Polygon rawPolygon = new Polygon();
+		double[] tail = {pointTail.getX(), pointTail.getY()};
+		double[] head = {pointHead.getX(), pointHead.getY()};
+		double dx = pointHead.getX() - pointTail.getX();
+		double dy = pointHead.getY() - pointTail.getY();
+		double idx = -dy;
+		double idy = dx;
+		double magnitude = Math.sqrt((Math.pow(idx, 2) + Math.pow(idy, 2)));
+		for (int i = 0; i < travelDistance.length; i++)
+		{
+			double[] pointOnTailHead = calico.utils.Geometry.computePointOnLine(tail[0],tail[1], head[0], head[1], travelDistance[i]);
+			double x = pointOnTailHead[0] + (orthogonalDistance[i] * (idx / magnitude));
+			double y = pointOnTailHead[1] + (orthogonalDistance[i] * (idy / magnitude));
+			rawPolygon.addPoint((int)x, (int)y);
+		}
+		return rawPolygon;
+	}
+	
+	public void render(Graphics2D g)
+	{
+		g.setStroke(new BasicStroke(thickness));
+		g.setPaint(strokePaint);
+		Polygon points = getRawPolygon();
+		PAffineTransform piccoloTextTransform = getPTransform(points);
+		GeneralPath p = (GeneralPath) getBezieredPoly(points).createTransformedShape(piccoloTextTransform);
+		g.draw(p);
+//		g.drawPolyline(this.points.xpoints, this.points.ypoints, this.points.npoints);
+	}
+	
 }

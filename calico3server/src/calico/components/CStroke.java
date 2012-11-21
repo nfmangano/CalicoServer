@@ -401,9 +401,11 @@ public class CStroke
 	
 	public void render(Graphics2D g)
 	{
-		g.setStroke(new BasicStroke(2.0f));
+		
+		g.setStroke(new BasicStroke(thickness));
 		g.setPaint(getColor());
-		g.drawPolyline(this.points.xpoints, this.points.ypoints, this.points.npoints);
+		g.draw(pathReferenceShadow);
+//		g.drawPolyline(this.points.xpoints, this.points.ypoints, this.points.npoints);
 	}
 
 	
