@@ -49,7 +49,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Idea", 2);
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Design Inside", 3);
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Continuation", 4);
-		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "No Tag", 5);
+		CIntentionType.noTagIntentionType = 
+				CIntentionCellController.getInstance().createIntentionType(
+						UUIDAllocator.getUUID(), "No Tag", 5).getId();
 
 		CalicoPluginManager.registerCalicoStateExtension(this);
 
@@ -505,31 +507,31 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		forward(CIntentionLayout.getInstance().getTopology().createPacket());
 		
 		double sqrt = Math.sqrt((double)CIntentionLayout.getInstance().getClusterCount());
-		if (sqrt > Math.floor(sqrt))
-		{
-			CalicoPacket canvasCreatePacket = CalicoPacket.getPacket(NetworkCommand.CANVAS_CREATE, calico.uuid.UUIDAllocator.getUUID(), 0l);
-			canvasCreatePacket.rewind();
-			canvasCreatePacket.getInt();
-			
-			long canvasThreadIndex = 1l;
-			synchronized(CalicoServer.canvasThreads)
-			{
-				if (!CalicoServer.canvasThreads.containsKey(canvasThreadIndex))
-				{
-					try {
-						CalicoServer.canvasThreads.put(canvasThreadIndex, new CanvasThread(canvasThreadIndex));
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-				CalicoServer.canvasThreads.get(canvasThreadIndex).addPacketToQueue(NetworkCommand.CANVAS_CREATE, null, canvasCreatePacket);
-			}
-			
-			
-//			ProcessQueue.receive(NetworkCommand.CANVAS_CREATE, c, canvasCreatePacket);
-//			layoutGraph();
-		}
+//		if (sqrt > Math.floor(sqrt))
+//		{
+//			CalicoPacket canvasCreatePacket = CalicoPacket.getPacket(NetworkCommand.CANVAS_CREATE, calico.uuid.UUIDAllocator.getUUID(), 0l);
+//			canvasCreatePacket.rewind();
+//			canvasCreatePacket.getInt();
+//			
+//			long canvasThreadIndex = 1l;
+//			synchronized(CalicoServer.canvasThreads)
+//			{
+//				if (!CalicoServer.canvasThreads.containsKey(canvasThreadIndex))
+//				{
+//					try {
+//						CalicoServer.canvasThreads.put(canvasThreadIndex, new CanvasThread(canvasThreadIndex));
+//					} catch (IOException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//				}
+//				CalicoServer.canvasThreads.get(canvasThreadIndex).addPacketToQueue(NetworkCommand.CANVAS_CREATE, null, canvasCreatePacket);
+//			}
+//			
+//			
+////			ProcessQueue.receive(NetworkCommand.CANVAS_CREATE, c, canvasCreatePacket);
+////			layoutGraph();
+//		}
 	}
 
 	private static void forward(CalicoPacket p)
