@@ -17,7 +17,9 @@ public class COptions
 	public static class debug
 	{
 		public static boolean enabled = false;
-		public static boolean consistency_debug_enabled = false;
+		public static boolean consistency_debug_enabled = true;
+		public static boolean reloading_history = false;
+		public static long current_history_canvas = 0l;
 		
 		public static class unittests
 		{
@@ -64,6 +66,8 @@ public class COptions
 		public static int max_snapshots = 50;
 		public static long sleeptime = 10L; // Must be less than 5000
 		public static int max_sleep_count = (int) (5000 / sleeptime);
+		public static int width = 1600;
+		public static int height = 1200;
 	}
 	
 	public static class uuid
@@ -92,7 +96,6 @@ public class COptions
 	
 	public static class group
 	{
-		public static Color background_color = new Color(0x62,0xA5,0xCC);//Color.BLUE;
 		public static int padding = 10;
 		public static int text_padding = 0;
 		public static Font font = new Font("Helvetica", Font.PLAIN, 14);

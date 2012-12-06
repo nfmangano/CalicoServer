@@ -221,6 +221,20 @@ public class CCanvasController
 	}
 	
 	/**
+	 * Removes a snapshot of the canvas 
+	 * @param uuid The UUID of the Stroke that changed
+	 */
+	public static void snapshot_remove_most_recent_undo(long uuid)
+	{
+		if (!CCanvasController.exists(uuid))
+			return;
+		
+		canvases.get( uuid ).removeMostRecentCanvasState();
+	}
+	
+	
+	
+	/**
 	 * Takes a snapshot of the canvas that contains the group
 	 * @param uuid uuid of the group
 	 */
@@ -327,7 +341,8 @@ public class CCanvasController
 	}
 	
 	public static void copy_canvas(long cuidFrom, long cuidTo){
-		logger.debug("CCanvasController.copy_canvas");
+		logger.debug("CCanvasController.copy_canvas from " + CCanvasController.canvases.get(cuidFrom).getCoordText() + "(" + cuidFrom + ") to "
+				+ CCanvasController.canvases.get(cuidTo).getCoordText() + "(" + cuidTo);
 		long[] groups = canvases.get(cuidFrom).getChildGroups();
 		long[] strokes = canvases.get(cuidFrom).getChildStrokes();
 		long[] arrows  = canvases.get(cuidFrom).getChildArrows();
@@ -335,7 +350,7 @@ public class CCanvasController
 		Long2ReferenceArrayMap<Long> groupMappings = new Long2ReferenceArrayMap<Long>();
 		
 		if(groups.length>0)
-		{			
+		{
 			for(int i=0;i<groups.length;i++)
 			{
 				CGroup temp = CGroupController.groups.get(groups[i]);
@@ -352,7 +367,11 @@ public class CCanvasController
 			for(int i=0;i<strokes.length;i++)
 			{				
 				CStroke temp = CStrokeController.strokes.get(strokes[i]);
-				if(temp.getParentUUID()==0l){
+				if (temp == null)
+				{
+					System.out.println("Warning!! Attempted to copy non-existant stroke " + strokes[i] +  " in calico.controllers.CCanvasController.copy_canvas");
+				}
+				if(temp != null && temp.getParentUUID()==0l){
 					
 					long new_uuid = UUIDAllocator.getUUID();
 					CStrokeController.copy(temp.getUUID(), new_uuid, 0l, cuidTo, 0, 0, true);			

@@ -30,13 +30,12 @@ public class ProcessQueue
 {
 
 	public static Logger logger = Logger.getLogger(ProcessQueue.class.getName());
+	public static int mostRecentAction = 0;
 	
 	public static void setup()//ProcessQueue()
 	{
 	
 	}
-
-
 
 	public static void receive(int command,Client client, CalicoPacket pdata)
 	{
@@ -115,7 +114,7 @@ public class ProcessQueue
 				case NetworkCommand.GROUP_CREATE_TEXT_GROUP:GROUP_CREATE_TEXT_GROUP(pdata,client);break;
 				case NetworkCommand.GROUP_MAKE_RECTANGLE:GROUP_MAKE_RECTANGLE(pdata,client);break;
 				case NetworkCommand.GROUP_COPY_WITH_MAPPINGS:GROUP_COPY_WITH_MAPPINGS(pdata,client);break;
-				case NetworkCommand.GROUP_SET_COLOR:GROUP_SET_COLOR(pdata,client);break;
+				
 
 				case NetworkCommand.ARROW_CREATE:ARROW_CREATE(pdata,client);break;
 				case NetworkCommand.ARROW_DELETE:ARROW_DELETE(pdata,client);break;
@@ -160,6 +159,7 @@ public class ProcessQueue
 				case NetworkCommand.LIST_CHECK_SET:LIST_CHECK_SET(pdata,client);break;
 				
 				case NetworkCommand.IMAGE_TRANSFER:IMAGE_TRANSFER(pdata, client);break;
+				case NetworkCommand.IMAGE_TRANSFER_FILE:IMAGE_TRANSFER_FILE(pdata, client);break;
 
 				case NetworkCommand.PRESENCE_VIEW_CANVAS:PRESENCE_VIEW_CANVAS(pdata,client);break;
 				case NetworkCommand.PRESENCE_LEAVE_CANVAS:PRESENCE_LEAVE_CANVAS(pdata,client);break;
@@ -171,6 +171,8 @@ public class ProcessQueue
 			}//switch
 			
 			CalicoEventHandler.getInstance().fireEvent(command, pdata, client);
+			
+			mostRecentAction = command;
 			
 		}
 		/*catch(NoSessionsException nse)
@@ -384,6 +386,8 @@ public class ProcessQueue
 	
 	public static void CONSISTENCY_RESYNC_CANVAS(CalicoPacket p, Client c)
 	{
+		if (c == null)
+			return;
 		long uuid = p.getLong();
 		if (CCanvasController.exists(uuid))
 		{
@@ -569,16 +573,6 @@ public class ProcessQueue
 		ClientManager.send_except(client,p);
 	}
 	
-	private static void GROUP_SET_COLOR(CalicoPacket p, Client client)
-	{
-		long uuid = p.getLong();
-		int red = p.getInt();
-		int green = p.getInt();
-		int blue = p.getInt();
-		
-		CGroupController.no_notify_set_color(uuid, new Color(red,green,blue));
-	}		
-	
 	public static void GROUP_SET_TEXT(CalicoPacket p, Client client)
 	{
 		long uuid = p.getLong();
@@ -714,6 +708,9 @@ public class ProcessQueue
 			CGroupController.no_notify_append(uuid, x, y);
 		}
 		
+		if (uuid == 12489)
+			System.out.println("Found group 12489!");
+		
 
 		boolean captureChildren = false;
 		double rotation;
@@ -725,28 +722,30 @@ public class ProcessQueue
 		scaleX = p.getDouble();
 		scaleY = p.getDouble();
 		text = p.getString();
-		int r = p.getInt();
-		int g = p.getInt();
-		int b = p.getInt();		
 
 //		CGroupController.groups.get(uuid).finish();
 		CGroupController.groups.get(uuid).primative_rotate(rotation);
 		CGroupController.groups.get(uuid).primative_scale(scaleX, scaleY);
 		CGroupController.groups.get(uuid).setText(text);
-		CGroupController.groups.get(uuid).setColor(new Color(r,g,b));
 		
 		CGroupController.no_notify_finish(uuid, captureChildren, false);
 
+		if (isperm)
+			CCanvasController.snapshot_group(uuid);
+		
 		if(client!=null)
 		{
 			ClientManager.send_except(client, p);
-			if (isperm)
-				CCanvasController.snapshot_group(uuid);
-			else
+//			if (isperm)
+//				CCanvasController.snapshot_group(uuid);
+			if (!isperm)
 			{
 				ClientManager.getClientThread(client.getClientID()).setTempScrapUUID(uuid);
 			}
 		}
+		
+		if (CGroupController.groups.get(uuid).getPathReference() == null)
+			logger.warn("getPathReference is null for group " + uuid);
 		
 		//if (captureChildren)
 			//ClientManager.send( CGroupController.groups.get(uuid).getParentingUpdatePackets() );
@@ -846,10 +845,11 @@ public class ProcessQueue
 		CGroupController.no_notify_scale(guuid, scaleX, scaleY);
 //		CGroupController.recheck_parent(guuid);
 		
+		CCanvasController.snapshot_group(guuid);
 		if (client != null)
 		{
 			ClientManager.send_except(client, p);
-			CCanvasController.snapshot_group(guuid);
+			
 		}
 	}
 	
@@ -862,10 +862,11 @@ public class ProcessQueue
 		int y = p.getInt();
 		
 		CGroupController.no_notify_create_text_scrap(guuid, cuuid, text, x, y);
+		CCanvasController.snapshot_group(guuid);
 		if (client != null)
 		{
 			ClientManager.send_except(client, p);
-			CCanvasController.snapshot_group(guuid);
+			
 		}
 	}
 	
@@ -900,7 +901,7 @@ public class ProcessQueue
 		String password = p.getString();
 
 		// check auth
-		if( ClientManager.checkAuth(username, password) )
+		if( client != null && ClientManager.checkAuth(username, password) )
 		{
 			// Set their username
 			ClientManager.setUsername(client.getClientID(), username);
@@ -1337,7 +1338,7 @@ public class ProcessQueue
 		CStrokeController.no_notify_finish(uuid);
 
 		ClientManager.send_except(client, p);
-		if (client != null)
+//		if (client != null)
 			CCanvasController.snapshot_stroke(uuid);
 	}
 	
@@ -1374,6 +1375,8 @@ public class ProcessQueue
 		{
 			CStrokeController.no_notify_delete(uuid);
 			ClientManager.send_except(client, p);
+			long canvas = CCanvasController.get_stroke_canvas(uuid);
+			CCanvasController.snapshot_remove_most_recent_undo(canvas);
 		}
 		
 	}
@@ -1465,6 +1468,9 @@ public class ProcessQueue
 	
 	public static void UDP_CHALLENGE(CalicoPacket p, Client client)
 	{
+		if (client == null)
+			return;
+		
 		long challenge = p.getLong();
 		
 		ClientManager.setClientChallenge(client.getClientID(), challenge);
@@ -1484,10 +1490,11 @@ public class ProcessQueue
 		
 		CGroupDecoratorController.no_notify_list_create(guuid, luuid);
 		
+		CCanvasController.snapshot_group(luuid);
 		if (client != null)
 		{
 			ClientManager.send_except(client, p);
-			CCanvasController.snapshot_group(luuid);
+			
 		}
 	}
 	
@@ -1501,10 +1508,11 @@ public class ProcessQueue
 		
 		CGroupDecoratorController.no_notify_list_load(guuid, luuid, cuuid, puuid);
 		
+		CCanvasController.snapshot_group(luuid);
 		if (client != null)
 		{
 			ClientManager.send_except(client, p);
-			CCanvasController.snapshot_group(luuid);
+			
 		}
 	}
 	
@@ -1517,11 +1525,11 @@ public class ProcessQueue
 		boolean value = p.getBoolean();
 		
 		CGroupDecoratorController.no_notify_list_set_check(luuid, cuid, puid, guuid, value);
-		
+		CCanvasController.snapshot(CGroupController.groups.get(luuid).getCanvasUUID());
 		if (client != null)
 		{
 			ClientManager.send_except(client, p);
-			CCanvasController.snapshot(CGroupController.groups.get(luuid).getCanvasUUID());
+			
 		}
 	}
 	
@@ -1583,6 +1591,8 @@ public class ProcessQueue
 	{
 		// when the user loads the canvas
 		long cuid = p.getLong();
+		if (client == null)
+			return;
 		int clientid = client.getClientID();
 		
 		long oldCUID = ClientManager.getClientThread(clientid).getCurrentCanvasUUID();
@@ -1613,6 +1623,10 @@ public class ProcessQueue
 	public static void PRESENCE_LEAVE_CANVAS(CalicoPacket p, Client client) 
 	{
 		long cuid = p.getLong();
+		
+		if (client == null)
+			return;
+		
 		int clientid = client.getClientID();
 		
 		if(!CCanvasController.canvases.containsKey(cuid)) {

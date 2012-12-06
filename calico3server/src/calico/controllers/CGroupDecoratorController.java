@@ -60,6 +60,7 @@ public class CGroupDecoratorController {
 			}
 		}
 		
+		
 		Rectangle bounds = CGroupController.groups.get(guuid).getBoundsOfContents();
 		CGroupController.no_notify_make_rectangle(guuid, bounds.x, bounds.y, bounds.width, bounds.height);
 		

@@ -91,6 +91,9 @@ public class CConnectorController {
 	
 	public static void no_notify_move_group_anchor_start(long uuid, int type)
 	{
+		if (!exists(uuid))
+			return;
+		
 		CConnector tempConnector = CConnectorController.connectors.get(uuid);
 		tempConnector.savePosition(type);
 		if (tempConnector.getAnchorUUID(CConnector.TYPE_HEAD) != tempConnector.getAnchorUUID(CConnector.TYPE_TAIL))
@@ -127,6 +130,9 @@ public class CConnectorController {
 	
 	public static void no_notify_move_group_anchor_end(long uuid, int type)
 	{
+		if (!exists(uuid))
+			return;
+		
 		CConnector tempConnector = CConnectorController.connectors.get(uuid);
 		
 		Point p;
@@ -163,5 +169,13 @@ public class CConnectorController {
 		
 		return connectors.get(l).get_signature();
 	}
+	
+	public static String get_signature_debug_output(long uuid)
+	{
+		if (!exists(uuid))
+			return "";
+		
+		return connectors.get(uuid).get_signature_debug_output();
+	}	
 
 }

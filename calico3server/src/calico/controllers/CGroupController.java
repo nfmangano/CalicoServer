@@ -18,7 +18,9 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.NetworkInterface;
 import java.net.URL;
 import java.util.*;
@@ -30,6 +32,8 @@ import javax.imageio.stream.ImageInputStream;
 import org.apache.log4j.*;
 import org.shodor.util11.PolygonUtils;
 
+import edu.umd.cs.piccolo.util.PBounds;
+
 import it.unimi.dsi.fastutil.longs.*;
 
 public class CGroupController
@@ -38,6 +42,19 @@ public class CGroupController
 
 	static Logger logger = Logger.getLogger(CGroupController.class.getName());
 
+	private static PrintStream historyOut;
+	
+	static {
+		
+		try
+		{
+			historyOut = new PrintStream(new FileOutputStream("s4.csv"));
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
 	
 	public static void setup()
 	{
@@ -46,7 +63,14 @@ public class CGroupController
 	
 	public static boolean exists(long uuid)
 	{
-		return groups.containsKey(uuid);
+		boolean ret = groups.containsKey(uuid);
+		
+//		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+//		logger.warn("call for non-existant group " + uuid + " from method " 
+//				+ stackTraceElements[2].getClassName() + ":" + stackTraceElements[2].getMethodName()
+//				+ "(" + stackTraceElements[2] + ")");
+		
+		return ret;
 	}
 	
 	
@@ -78,7 +102,9 @@ public class CGroupController
 	
 	public static void no_notify_append(final long uuid, final int x, final int y)
 	{
-		if(!exists(uuid)){return;}
+		if(!exists(uuid)){
+			logger.warn("no_notify_append for non-existant group "+uuid);
+			return;}
 		
 		groups.get(uuid).addPoint(x, y);
 	}
@@ -86,7 +112,9 @@ public class CGroupController
 	
 	public static void no_notify_delete(final long uuid)
 	{
-		if(!exists(uuid)){return;}
+		if(!exists(uuid)){
+			logger.warn("no_notify_delete for non-existant group "+uuid);
+			return;}
 		
 		
 //		groups.get(uuid).delete();
@@ -158,7 +186,9 @@ public class CGroupController
 	 */
 	public static void no_notify_finish(final long uuid, boolean captureChildren, boolean checkParenting)
 	{
-		if(!exists(uuid)){return;}
+		if(!exists(uuid)){
+			logger.warn("no_notify_finish for non-existant group "+uuid);
+			return;}
 		
 		groups.get(uuid).finish();
 		if (checkParenting)
@@ -176,14 +206,18 @@ public class CGroupController
 	
 	public static void no_notify_calculate_parenting(final long uuid, int x, int y, final boolean includeStrokes)
 	{
-		if(!exists(uuid)){return;}
+		if(!exists(uuid)){
+			logger.warn("no_notify_calculate_parenting for non-existant group "+uuid);
+			return;}
 		
 		groups.get(uuid).calculateParenting(includeStrokes, x, y);
 	}
 	
 	public static void finish(final long uuid, boolean captureChildren)
 	{
-		if(!exists(uuid)){return;}
+		if(!exists(uuid)){
+			logger.warn("finish for non-existant group "+uuid);
+			return;}
 		
 //		recheck_parent(uuid);
 		no_notify_finish(uuid, captureChildren);
@@ -740,7 +774,86 @@ public class CGroupController
 	
 	public static void no_notify_move_end(final long uuid, final int x, final int y)
 	{
-		if(!exists(uuid)){return;}
+		if(!exists(uuid)){
+//			return;
+//		}
+//		else
+//		{
+			if (COptions.debug.reloading_history)
+			{
+				
+				//get upper left corner from button
+				int rect_width = 50;
+				int rect_height = 50;
+				
+				int startX = 13;
+				int startY = 13;
+				int centerOffset = 24 / 2;
+				int small = 10;
+				int large = 40;
+				int iconSize = 24;
+				int gap = 20;
+				int farSideDistance = (iconSize + small + large + gap);
+				
+				int rect_x = x - farSideDistance - rect_width;
+				int rect_y = y + farSideDistance;
+			
+				//create scrap
+				long cuuid = COptions.debug.current_history_canvas;
+//				CGroupController.no_notify_start(uuid, cuuid, 0l, true);
+//				CGroupController.no_notify_append(uuid, x, y);
+////				CGroupController.no_notify_set_text(uuid, text);
+//				CGroupController.no_notify_finish(uuid, false, false);
+//				//CGroupController.no_notify_set_permanent(uuid, true);
+////				Rectangle rect = groups.get(uuid).getBoundsOfContents();
+//				CGroupController.no_notify_make_rectangle(uuid, rect_x, rect_y, rect_width, rect_height);
+//				CGroupController.recheck_parent(uuid);
+				
+//				try {
+//					CImageController.save_to_disk(uuid,"group.png", new byte[] {});
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+				CGroupController.no_notify_create_image_group(uuid, cuuid, 0, "http://localhost:27041/uploads/images/1265.png", rect_x, rect_y, rect_width, rect_height);
+				CGroupController.groups.get(uuid).primative_rotate(0.0d);
+				CGroupController.groups.get(uuid).primative_scale(1.0d, 1.0d);
+			}
+		}
+		if (COptions.debug.reloading_history && ProcessQueue.mostRecentAction != NetworkCommand.GROUP_SCALE
+				&& ProcessQueue.mostRecentAction != NetworkCommand.GROUP_ROTATE)
+		{
+			//ignore {resize, rotate}
+			//get the current location of where the move button could have been...
+			//this computes the location of the move button
+			PBounds componentBounds = new PBounds(CGroupController.groups.get(uuid).getPathReference().getBounds());
+			int startX = 13;
+			int startY = 13;
+			int centerOffset = 24 / 2;
+			int small = 10;
+			int large = 40;
+			int iconSize = 24;
+			int gap = 20;
+			int farSideDistance = (iconSize + small + large + gap);
+			
+			if (componentBounds.getWidth() < farSideDistance)
+			{
+				startX += (farSideDistance - componentBounds.getWidth()) / 2;
+			}
+			if (componentBounds.getHeight() < farSideDistance)
+			{
+				startY += (farSideDistance - componentBounds.getHeight()) / 2;
+			}
+			
+			
+			int initial_x = (int)componentBounds.getMaxX() + startX;
+			int initial_y = (int)componentBounds.getMinY() - startY;
+			
+			//
+			int deltaX = x - initial_x;
+			int deltaY = y - initial_y;
+			no_notify_move(uuid, deltaX, deltaY);
+		}
 		
 		groups.get(uuid).recheckParentAfterMove(x, y);
 	}
@@ -872,28 +985,12 @@ public class CGroupController
 		
 	}
 	
-	public static void no_notify_set_color(long uuid, Color color) 
-	{
-		// TODO Auto-generated method stub
-		if (!exists(uuid)){return;}
-		
-		groups.get(uuid).setColor(color);
-		
-	}	
-	
 	public static void set_text(long uuid, String str) 
 	{
 		if(!exists(uuid)){return;}
 		no_notify_set_text(uuid,str);
 		ClientManager.send( CalicoPacket.getPacket(NetworkCommand.GROUP_SET_TEXT, uuid, str));
 	}
-	
-	public static void set_color(long uuid, Color color) 
-	{
-		if(!exists(uuid)){return;}
-		no_notify_set_color(uuid,color);
-		ClientManager.send( CalicoPacket.getPacket(NetworkCommand.GROUP_SET_COLOR, uuid, color.getRed(), color.getGreen(), color.getBlue()));
-	}		
 	
 	public static void no_notify_remove_child_stroke(final long uuid, final long csuuid)
 	{
@@ -1194,7 +1291,7 @@ public class CGroupController
 		// If we don't know wtf this UUID is for, then just eject
 		if(!exists(uuid))
 		{
-			logger.warn("ROTATE for non-existant group "+uuid);
+//			logger.warn("ROTATE for non-existant group "+uuid);
 			return;
 		}
 		
@@ -1208,7 +1305,7 @@ public class CGroupController
 		// If we don't know wtf this UUID is for, then just eject
 		if(!exists(uuid))
 		{
-			logger.warn("SCALE for non-existant group "+uuid);
+//			logger.warn("SCALE for non-existant group "+uuid);
 			return;
 		}
 		

@@ -177,6 +177,7 @@ public class NetworkCommand
     public static final int CANVAS_LOCK				= 419;
     public static final int CANVAS_LOAD				= 420;
     public static final int CANVAS_DELETE 			= 421; // UUID
+    public static final int CANVAS_SET_DIMENSIONS 	= 422;
 	
 	// Consistency
 	public static final int CONSISTENCY_CHECK		= 510; // Requests that the server send you a consistency check.
@@ -282,7 +283,6 @@ public class NetworkCommand
 	public static final int GROUP_CREATE_TEXT_GROUP = 1540;
 	public static final int GROUP_MAKE_RECTANGLE = 1541;
 	public static final int GROUP_COPY_WITH_MAPPINGS = 1542;
-	public static final int GROUP_SET_COLOR = 1543;	
 
 
 	public static final int BACKUP_FILE_INFO	= 1600; // 
@@ -403,7 +403,6 @@ public class NetworkCommand
 			formats.put(GROUP_SCALE, new NetCommandFormat("GROUP_SCALE", "Ldd"));
 			formats.put(GROUP_CREATE_TEXT_GROUP, new NetCommandFormat("GROUP_CREATE_TEXT_GROUP", "LLSII"));
 			formats.put(GROUP_MAKE_RECTANGLE, new NetCommandFormat("GROUP_MAKE_RECTANGLE", "LIIII"));
-			formats.put(GROUP_SET_COLOR, new NetCommandFormat("GROUP_SET_COLOR", "LIII"));
 
 			formats.put(GRID_SIZE,new NetCommandFormat("GRID_SIZE","II"));
 			
@@ -423,6 +422,7 @@ public class NetworkCommand
 			formats.put(CANVAS_CLEAR_FOR_SC, new NetCommandFormat("CANVAS_CLEAR_FOR_SC","L"));
 			formats.put(CANVAS_SC_FINISH, new NetCommandFormat("CANVAS_SC_FINISH", "L"));
 			formats.put(CANVAS_LOCK, new NetCommandFormat("CANVAS_LOCK", "LBSL"));
+			formats.put(CANVAS_SET_DIMENSIONS, new NetCommandFormat("CANVAS_SET_DIMENSIONS", "II"));
 			
 
 			formats.put(STATUS_MESSAGE,new NetCommandFormat("STATUS_MESSAGE","S"));

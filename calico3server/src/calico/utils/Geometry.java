@@ -64,7 +64,7 @@ public class Geometry {
 		
 		if (ret.getX() == 0 || ret.getY() == 0)
 		{
-			System.err.println("A midpoint returned zero!");
+//			System.err.println("A midpoint returned zero!");
 //			(new Exception()).printStackTrace();
 		}
 		return ret;
@@ -188,6 +188,46 @@ public class Geometry {
 																			// top
 
 		return coords;
+	}
+	
+	
+	/**
+	 	 194	
+	+   * Find the point on the line defined by x0,y0,x1,y1 a given fraction
+	 	 195	
+	+   * from x0,y0. 2D version of method above..
+	 	 196	
+	+   * 
+	 	 197	
+	+   * @param  x0, y0         First point defining the line
+	 	 198	
+	+   * @param  x1, y1         Second point defining the line
+	 	 199	
+	+   * @param  fractionFrom0  Distance from (x0,y0)
+	 	 200	
+	+   * @return x, y           Coordinate of point we are looking for
+	 	 201	
+	+   */
+	public static double[] computePointOnLine (double x0, double y0,
+			double x1, double y1,
+			double fractionFrom0)
+	{
+		double[] p0 = {x0, y0, 0.0};
+		double[] p1 = {x1, y1, 0.0};
+		double[] p = Geometry.computePointOnLine (p0, p1, fractionFrom0);
+		double[] r = {p[0], p[1]};
+		return r;
+	}
+
+	public static double[] computePointOnLine (double[] p0, double[] p1, 
+			double fractionFromP0)
+	{
+		double[] p = new double[3];
+
+		p[0] = p0[0] + fractionFromP0 * (p1[0] - p0[0]);
+		p[1] = p0[1] + fractionFromP0 * (p1[1] - p0[1]);
+		p[2] = p0[2] + fractionFromP0 * (p1[2] - p0[2]);  
+		return p;
 	}
 	
 }

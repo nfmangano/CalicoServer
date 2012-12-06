@@ -26,6 +26,8 @@ public class CStrokeController
 	public static Long2ReferenceAVLTreeMap<CStroke> strokes = new Long2ReferenceAVLTreeMap<CStroke>();
 	private static Logger logger = Logger.getLogger(CStrokeController.class.getName());
 	
+	public static Rectangle mostRecentStrokeBounds = null;
+	
 	public static boolean exists(long uuid)
 	{
 		return strokes.containsKey(uuid);
@@ -193,6 +195,8 @@ public class CStrokeController
 	public static void no_notify_delete(long uuid)
 	{
 		if(!exists(uuid)){return;}
+		
+		mostRecentStrokeBounds = CStrokeController.strokes.get(uuid).getPathReference().getBounds();
 		
 		long cuid = CCanvasController.get_stroke_canvas(uuid);
 		

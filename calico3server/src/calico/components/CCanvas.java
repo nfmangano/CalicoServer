@@ -145,7 +145,32 @@ public class CCanvas
 		snapshots.add(getBackupState());
 	}
 	
-	
+	public boolean removeMostRecentCanvasState()
+	{
+		try
+		{
+			if (snapshots.size() < 1)
+				return false;
+			
+			snapshots.remove(snapshots.size()-1);
+			snapshotIndex--;
+			
+			if(snapshotIndex<0)
+			{
+				throw new NoSuchElementException();
+			}
+			
+//			getBackupState().updateToNewState(snapshots.get(snapshotIndex));
+			
+			
+			return true;
+		}
+		catch(NoSuchElementException e)
+		{
+			snapshotIndex++;
+			return false;
+		}		
+	}
 	
 	/**
 	 * Runs the undo sequence
@@ -322,6 +347,11 @@ public class CCanvas
 		{
 			CStrokeController.strokes.get(strokea[i]).render(g);
 		}
+		long[] connectora = connectors.toLongArray();
+	 	for(int i=0;i<connectora.length;i++)
+	 	{
+	 		CConnectorController.connectors.get(connectora[i]).render(g);
+	 	}
 	}
 	
 	
@@ -418,7 +448,11 @@ public class CCanvas
 		{
 			for(int i=0;i<bgearr.length;i++)
 			{
-				CalicoPacket[] packets = CStrokeController.strokes.get(bgearr[i]).getUpdatePackets();
+				CalicoPacket[] packets = null;
+				if (CStrokeController.exists(bgearr[i]))
+					packets = CStrokeController.strokes.get(bgearr[i]).getUpdatePackets();
+				else
+					System.out.println("Warning!! Canvas " + uuid + " tried to get update packet from non-existant stroke " + bgearr[i]);
 				if(packets!=null && packets.length>0)
 				{
 					packetlist.addElements(packetlist.size(), packets);
@@ -569,7 +603,7 @@ public class CCanvas
 
 		long[] strokear = getChildStrokes();
 		long[] groupar = getChildGroups();
-//		long[] arrar = getChildArrows();
+		long[] connectorar = getChildConnectors();
 		
 		int stroke_sig = 0;
 		for(int i=0;i<strokear.length;i++)
@@ -592,11 +626,14 @@ public class CCanvas
 			p.putString(CGroupController.get_signature_debug_output(groupar[i]));
 		}
 		
-//		int arrow_sig = 0;
-//		for (int i=0;i<arrar.length;i++)
-//		{
-//			arrow_sig = arrow_sig + CArrowController.get_signature(arrar[i]);
-//		}
+		int connector_sig = 0;
+		for (int i=0;i<connectorar.length;i++)
+		{
+			connector_sig = CConnectorController.get_signature(connectorar[i]);
+			p.putLong(connectorar[i]);
+			p.putInt(connector_sig);
+			p.putString(CConnectorController.get_signature_debug_output(connectorar[i]));
+		}
 		
 		return p;
 	}

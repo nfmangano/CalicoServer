@@ -57,8 +57,8 @@ public class CanvasGetImageRequestHandler extends AdminBasicRequestHandler
 		
 		final String imageType = params.getProperty("type","PNG").toUpperCase();
 
-		final int imageWidth = Integer.parseInt(params.getProperty("w","1024"));
-		final int imageHeight = Integer.parseInt(params.getProperty("h","768"));
+		 final int imageWidth = Integer.parseInt(params.getProperty("w",COptions.canvas.width + "" /*"1024"*/));
+	 	 final int imageHeight = Integer.parseInt(params.getProperty("h",COptions.canvas.height + "" /*"768"*/));
 		
 		if(!CCanvasController.canvases.containsKey(uuid))
 		{

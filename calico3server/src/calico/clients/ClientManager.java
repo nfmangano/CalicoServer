@@ -217,11 +217,13 @@ public class ClientManager
 	 */
 	public static void send(final Client c, CalicoPacket p)
 	{
-		send(c.getClientID(), p);
+		if (c != null)
+			send(c.getClientID(), p);
 	}
 	public static void send(final Client c, final CalicoPacket[] p)
 	{
-		send(c.getClientID(), p);
+		if (c != null)
+			send(c.getClientID(), p);
 	}
 	
 	public static void send(final int clientid, final CalicoPacket p)
@@ -332,6 +334,8 @@ public class ClientManager
 		 * - the BGelement parents
 		 * - 
 		 */
+		
+		ClientManager.send(CalicoPacket.getPacket(NetworkCommand.CANVAS_SET_DIMENSIONS, COptions.canvas.width, COptions.canvas.height));
 		
 		long[] canvasids = CCanvasController.canvases.keySet().toLongArray();
 		
