@@ -178,8 +178,8 @@ public class CIntentionClusterGraph
 				position.xUnitSpan = position.yUnitSpan = 1; // 0 to auto-collapse empty cells
 				
 				Dimension boundingBox = CIntentionClusterGraph.getClusterDimensions();
-				position.xUnitSpan = Math.max(1, (int) Math.ceil(boundingBox.width / CIntentionCluster.CLUSTER_UNIT_SIZE.getWidth()));
-				position.yUnitSpan = Math.max(1, (int) Math.ceil(boundingBox.height / CIntentionCluster.CLUSTER_UNIT_SIZE.getHeight()));
+				position.xUnitSpan = 1;// Math.max(1, (int) Math.ceil(boundingBox.width / CIntentionCluster.CLUSTER_UNIT_SIZE.getWidth()));
+				position.yUnitSpan = 1; //Math.max(1, (int) Math.ceil(boundingBox.height / CIntentionCluster.CLUSTER_UNIT_SIZE.getHeight()));
 			}
 			else
 			{
