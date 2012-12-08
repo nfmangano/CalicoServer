@@ -93,6 +93,9 @@ public class CIntentionClusterLayout
 
 	private void calculate()
 	{
+		boundingBox.width = (int) Math.ceil(cluster.getOccupiedSpan());// (xMax - xMin) /*+ 20*/;
+		boundingBox.height = (int) Math.ceil(cluster.getOccupiedSpan()); //(yMax - yMin) /*+ 20*/;
+		
 		int xMin = Integer.MAX_VALUE;
 		int xMax = -Integer.MAX_VALUE;
 		int yMin = Integer.MAX_VALUE;
@@ -113,12 +116,14 @@ public class CIntentionClusterLayout
 			}
 		}
 
-		rootCanvasPosition.x = (rootCanvas.location.x - (xMin /* - 10*/)); // clumsy handling of the buffer spacing
-		rootCanvasPosition.y = (rootCanvas.location.y - (yMin /*- 10*/));
+//		rootCanvasPosition.x = (rootCanvas.location.x - (xMin /* - 10*/)); // clumsy handling of the buffer spacing
+//		rootCanvasPosition.y = (rootCanvas.location.y - (yMin /*- 10*/));
+		rootCanvasPosition.x = (boundingBox.width/2 - CIntentionLayout.INTENTION_CELL_SIZE.width/2);
+		rootCanvasPosition.y = (boundingBox.height/2 - CIntentionLayout.INTENTION_CELL_SIZE.height/2);
 
 //		boundingBox.setSize(CIntentionClusterGraph.getClusterDimensions());
-		boundingBox.width = (xMax - xMin) /*+ 20*/;
-		boundingBox.height = (yMax - yMin) /*+ 20*/;
+//		boundingBox.width = (int) Math.ceil(cluster.getOccupiedSpan());// (xMax - xMin) /*+ 20*/;
+//		boundingBox.height = (int) Math.ceil(cluster.getOccupiedSpan()); //(yMax - yMin) /*+ 20*/;
 
 		isCalculated = true;
 	}
