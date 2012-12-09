@@ -3,6 +3,7 @@ package calico.plugins.iip.controllers;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +25,7 @@ public class CCanvasLinkController
 
 	private static Long2ReferenceArrayMap<CCanvasLink> links = new Long2ReferenceArrayMap<CCanvasLink>();
 	private static Long2ReferenceArrayMap<CCanvasLinkAnchor> linkAnchors = new Long2ReferenceArrayMap<CCanvasLinkAnchor>();
-	private static Long2ReferenceArrayMap<Set<Long>> anchorIdsByCanvasId = new Long2ReferenceArrayMap<Set<Long>>();
+	private static Long2ReferenceArrayMap<Collection<Long>> anchorIdsByCanvasId = new Long2ReferenceArrayMap<Collection<Long>>();
 
 	public void populateState(IntentionalInterfaceState state)
 	{
@@ -53,7 +54,7 @@ public class CCanvasLinkController
 
 	public Long getIncomingLink(long canvasId)
 	{
-		Set<Long> anchorIds = anchorIdsByCanvasId.get(canvasId);
+		Collection<Long> anchorIds = anchorIdsByCanvasId.get(canvasId);
 		if (anchorIds == null)
 		{
 			return null;
@@ -133,12 +134,12 @@ public class CCanvasLinkController
 		getAnchorIdsForCanvasId(anchor.getCanvasId()).remove(anchor.getId());
 	}
 
-	public Set<Long> getAnchorIdsForCanvasId(long canvasId)
+	public Collection<Long> getAnchorIdsForCanvasId(long canvasId)
 	{
-		Set<Long> anchorIds = anchorIdsByCanvasId.get(canvasId);
+		Collection<Long> anchorIds = anchorIdsByCanvasId.get(canvasId);
 		if (anchorIds == null)
 		{
-			anchorIds = new HashSet<Long>();
+			anchorIds = new ArrayList<Long>();
 			anchorIdsByCanvasId.put(canvasId, anchorIds);
 		}
 		return anchorIds;
@@ -146,6 +147,13 @@ public class CCanvasLinkController
 
 	public void moveLinkAnchor(long anchor_uuid, long canvas_uuid, CCanvasLinkAnchor.Type type, int x, int y)
 	{
+		if (!linkAnchors.containsKey(anchor_uuid))
+		{
+			System.out.println("Warning, attempting to access non-existing anchor in calico.plugins.iip.controllers.CCanvasLinkController.moveLinkAnchor(long, long, Type, int, int)"
+					+ "\n\t" + anchor_uuid + ", " + canvas_uuid + ", " + type + ", " + x + ", " + y);
+			return;
+		}
+		
 		CCanvasLinkAnchor anchor = linkAnchors.get(anchor_uuid);
 		boolean changedCanvas = (canvas_uuid != anchor.getCanvasId());
 		if (changedCanvas)

@@ -287,7 +287,7 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 
 	private static void CIC_TAG(CalicoPacket p, Client c)
 	{
-		p.rewind();
+
 		IntentionalInterfacesNetworkCommands.Command.CIC_TAG.verify(p);
 
 		long uuid = p.getLong();

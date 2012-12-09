@@ -129,7 +129,7 @@ class CIntentionCluster
 		}
 
 		slicesByRootCanvasId.clear();
-		Collections.sort(slices, SLICE_SORTER);
+//		Collections.sort(slices, SLICE_SORTER);
 		for (CIntentionSlice slice : slices)
 		{
 			slicesByRootCanvasId.put(slice.getRootCanvasId(), slice);
