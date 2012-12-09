@@ -44,6 +44,8 @@ public class IntentionalInterfaceState
 	{
 		packets.addAll(cellPackets);
 		packets.addAll(linkPackets);
+		packets.add(CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_UPDATE_FINISHED));
+		
 		return packets.toArray(new CalicoPacket[0]);
 	}
 }
