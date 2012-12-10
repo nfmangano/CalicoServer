@@ -158,6 +158,7 @@ public class ProcessQueue
 				case NetworkCommand.LIST_CREATE:LIST_CREATE(pdata,client);break;
 				case NetworkCommand.LIST_LOAD:LIST_LOAD(pdata,client);break;
 				case NetworkCommand.LIST_CHECK_SET:LIST_CHECK_SET(pdata,client);break;
+				case NetworkCommand.CANVASVIEW_SCRAP_LOAD:CANVASVIEW_SCRAP_LOAD(pdata,client);break;
 				
 				case NetworkCommand.IMAGE_TRANSFER:IMAGE_TRANSFER(pdata, client);break;
 
@@ -233,6 +234,45 @@ public class ProcessQueue
 		CCanvasController.canvases.put(canvasId, canvas);
 		
 		ClientManager.send(canvas.getInfoPacket());
+	}
+	
+	public static void CANVASVIEW_SCRAP_LOAD(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		long cuid = p.getLong();
+		long puid = p.getLong();
+		boolean isperm = p.getBoolean();
+		int count = p.getCharInt();
+		int x = 0;
+		int y = 0;
+		
+		if(count<=0)
+		{
+			return;
+		}
+		
+		
+		int[] xArr = new int[count], yArr = new int[count];
+		for(int i=0;i<count;i++)
+		{
+			xArr[i] = p.getInt();
+			yArr[i] = p.getInt();
+//			CGroupController.no_notify_append(uuid, x, y);
+		}
+		
+		boolean captureChildren = p.getBoolean();
+		double rotation = p.getDouble();
+		double scaleX = p.getDouble();
+		double scaleY = p.getDouble();
+		String text = p.getString();
+		
+		long targetCanvas = p.getLong();
+		
+		
+//		CGroupController.groupdb.get(uuid).finish();
+
+		CGroupController.no_notify_load_canvasview_scrap(uuid, cuid, puid, isperm, xArr, yArr,
+				captureChildren, rotation, scaleX, scaleY, text, targetCanvas);
 	}
 	
 	// this event occurs on server restore
