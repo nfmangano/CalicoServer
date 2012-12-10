@@ -82,6 +82,12 @@ public class CalicoServer
 			if(backupFile.exists())
 			{
 				FileObject backupFileBkup = COptions.fs.resolveFile(COptions.server.backup.backup_file+".bkup");
+				int counter = 1;
+				while (backupFileBkup.exists())
+				{
+					backupFileBkup = COptions.fs.resolveFile(COptions.server.backup.backup_file+"_" + counter++ +".bkup");
+				}
+					
 				backupFileBkup.copyFrom(backupFile, Selectors.SELECT_ALL);
 				logger.warn("Backup file: "+COptions.server.backup.backup_file+" already exists, renaming to "+COptions.server.backup.backup_file+".bkup");
 				backupFileBkup.close();

@@ -150,6 +150,43 @@ public class CImageController
 	{
 		return getImagePath(imageUUID) != null;
 	}
+	
+	public static byte[] getBytesFromDisk(String fileLocation) {
+		byte[] bytes = null;
+		try
+		{
+			File imageOnDisk = new File(fileLocation);
+			InputStream is = new FileInputStream(imageOnDisk);
+			long length = imageOnDisk.length();
+			if (length > Integer.MAX_VALUE)
+			{
+				throw new IOException("Image file is too large: is " + length + ", max is " + Integer.MAX_VALUE);
+			}
+			
+			bytes = new byte[(int)length];
+			
+			int offset = 0;
+			int numRead = 0;
+			while (offset < bytes.length
+					&& (numRead = is.read(bytes, offset, bytes.length-offset)) >= 0)
+			{
+				offset += numRead;
+			}
+			
+			if (offset < bytes.length)
+			{
+				throw new IOException("Could not completely read file " + imageOnDisk.getName());
+			}
+			
+			is.close();
+			
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return bytes;
+	}
 
 	public static String getFileExtension(String url) {
 		int mid= url.lastIndexOf(".");

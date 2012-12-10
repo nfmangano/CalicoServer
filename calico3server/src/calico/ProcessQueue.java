@@ -160,6 +160,7 @@ public class ProcessQueue
 				case NetworkCommand.LIST_CHECK_SET:LIST_CHECK_SET(pdata,client);break;
 				
 				case NetworkCommand.IMAGE_TRANSFER:IMAGE_TRANSFER(pdata, client);break;
+				case NetworkCommand.IMAGE_TRANSFER_FILE:IMAGE_TRANSFER_FILE(pdata, client);break;
 
 				case NetworkCommand.PRESENCE_VIEW_CANVAS:PRESENCE_VIEW_CANVAS(pdata,client);break;
 				case NetworkCommand.PRESENCE_LEAVE_CANVAS:PRESENCE_LEAVE_CANVAS(pdata,client);break;
