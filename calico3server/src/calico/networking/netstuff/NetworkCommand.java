@@ -296,6 +296,7 @@ public class NetworkCommand
 	public static final int DEBUG_UNITTEST_END = 1701;
 	public static final int DEBUG_PACKETSIZE = 1702; // used for testing largest packet (SIZE LONG1 ... LONGN) [this is meant to test the limits of the client/server memory]
 	public static final int DEBUG_SEND_PACKETSIZE = 1703;// initiates the packetsize 
+	public static final int DEBUG_MESSAGE = 1704;
 	
 	public static final int UDP_CHALLENGE = 1800; // LONG - crc32
 	
@@ -328,6 +329,7 @@ public class NetworkCommand
 	public static final int PRESENCE_LEAVE_CANVAS = 3002; // CUID
 	public static final int PRESENCE_CANVAS_RESET = 3003; // cuid
 	public static final int PRESENCE_CANVAS_USERS = 3004;// CUID, NUMUSERS, USERID... USERIDn
+	
 	
 	public static final int HISTORY_ACTION = 4000;
 	
@@ -428,6 +430,7 @@ public class NetworkCommand
 			formats.put(STATUS_MESSAGE,new NetCommandFormat("STATUS_MESSAGE","S"));
 			formats.put(ERROR_MESSAGE,new NetCommandFormat("ERROR_MESSAGE","S"));
 			formats.put(ERROR_POPUP,new NetCommandFormat("ERROR_POPUP","S"));
+			formats.put(DEBUG_MESSAGE, new NetCommandFormat("DEBUG_MESSAGE", "S"));
 
 			formats.put(CLICK_TRACK,new NetCommandFormat("CLICK_TRACK","I"));
 			
@@ -503,6 +506,8 @@ public class NetworkCommand
 			formats.put(LIST_CREATE,new NetCommandFormat("LIST_CREATE","LLLLI"));
 			formats.put(LIST_LOAD,new NetCommandFormat("LIST_LOAD","LLLBiII"));
 			formats.put(LIST_CHECK_SET, new NetCommandFormat("LIST_CHECK_SET", "LLLLB"));
+			
+			
 		}
 		
 		if(type>0 && formats.containsKey(type))

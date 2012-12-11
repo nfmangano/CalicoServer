@@ -166,6 +166,7 @@ public class ProcessQueue
 				case NetworkCommand.PRESENCE_LEAVE_CANVAS:PRESENCE_LEAVE_CANVAS(pdata,client);break;
 				case NetworkCommand.PRESENCE_CANVAS_RESET:PRESENCE_CANVAS_RESET(pdata,client);break;
 				case NetworkCommand.PRESENCE_CANVAS_USERS:PRESENCE_CANVAS_USERS(pdata,client);break;
+				case NetworkCommand.DEBUG_MESSAGE:DEBUG_MESSAGE(pdata,client);break;
 				
 				default:
 					break;
@@ -1640,6 +1641,19 @@ public class ProcessQueue
 				ClientManager.send(client, outPacket);
 			}
 		}
+	}
+	
+	public static void DEBUG_MESSAGE(CalicoPacket p, Client client) 
+	{
+		// this is a request, but resent with the same packet
+		
+		String s = p.getString();
+		
+//		if(logger.isDebugEnabled() && client!=null)
+//		{
+//			logger.debug(s);
+//		}
+		
 	}
 
 
