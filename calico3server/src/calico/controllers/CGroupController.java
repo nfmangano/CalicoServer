@@ -83,6 +83,18 @@ public class CGroupController
 		groups.get(uuid).addPoint(x, y);
 	}
 	
+	public static void no_notify_append(long uuid, int[] x, int[] y)
+	{
+		// If we don't know wtf this UUID is for, then just eject
+		if(!exists(uuid))
+		{
+			logger.warn("APPEND for non-existant group "+uuid);
+			return;
+		}
+		
+		groups.get(uuid).append(x, y);
+	}
+	
 	
 	public static void no_notify_delete(final long uuid)
 	{
@@ -1341,6 +1353,72 @@ public class CGroupController
 		if(!exists(uuid)){return;}
 		
 		groups.get(uuid).clearChildArrows();
+	}
+	
+	public static void no_notify_load_canvasview_scrap(long uuid, long cuid,
+			long puid, boolean isperm, int[] xArr, int[] yArr,
+			boolean captureChildren, double rotation, double scaleX,
+			double scaleY, String text, long targetCanvas) {
+		
+		CGroup group = new CanvasViewScrap(uuid, cuid, targetCanvas);
+		no_notify_start(uuid, cuid, puid, isperm, group);
+		no_notify_append(uuid, xArr, yArr);
+		groups.get(uuid).primative_rotate(rotation);
+		groups.get(uuid).primative_scale(scaleX, scaleY);
+		groups.get(uuid).setText(text);
+		
+		no_notify_finish(uuid, captureChildren, false);
+	}
+	
+	/*************************************************
+	 * UTILITY METHODS
+	 *************************************************/		
+	public static void no_notify_create_custom_scrap_bootstrap(long uuid, long cuuid, CGroup group, String optText){
+		no_notify_start(uuid, cuuid, 0l, true, group);
+//		CGroupController.setCurrentUUID(uuid);
+//		create_custom_shape(uuid, p);
+		//Set the optional text to identify the scrap
+		CGroupController.no_notify_set_text(uuid, optText);
+		CGroupController.no_notify_finish(uuid, false, false);
+		CGroupController.no_notify_set_permanent(uuid, true);
+		CGroupController.recheck_parent(uuid);
+	}	
+
+	//Starts the creation of any of the activity diagram scrap
+	public static void no_notify_start(long uuid, long cuid, long puid, boolean isperm, CGroup customScrap)
+	{
+		if (!CCanvasController.exists(cuid))
+			return;
+		if(CGroupController.exists(uuid))
+		{
+			CGroupController.logger.debug("Need to delete group "+uuid);
+			//CCanvasController.canvasdb.get(cuid).getLayer().removeChild(groupdb.get(uuid));
+//			CalicoDraw.removeChildFromNode(CCanvasController.canvasdb.get(cuid).getLayer(), CGroupController.groupdb.get(uuid));
+			//CCanvasController.canvasdb.get(cuid).getCamera().repaint();
+		}
+
+		// Add to the GroupDB
+		try {
+			CGroupController.groups.put(uuid, customScrap);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		CCanvasController.canvases.get(cuid).addChildGroup(uuid);
+		//CCanvasController.canvasdb.get(cuid).getLayer().addChild(groupdb.get(uuid));
+//		CalicoDraw.addChildToNode(CCanvasController.canvases.get(cuid).getLayer(), CGroupController.groupdb.get(uuid));
+		CGroupController.groups.get(uuid).setPermanent(isperm);
+		//CCanvasController.canvasdb.get(cuid).repaint();
+	}	
+
+	//Add the points defined in p to the scrap with id uuid
+	public static void create_custom_shape(long uuid, Polygon p){
+		for (int i = 0; i < p.npoints; i++)
+		{
+			CGroupController.no_notify_append(uuid, p.xpoints[i], p.ypoints[i]);
+			CGroupController.no_notify_append(uuid, p.xpoints[i], p.ypoints[i]);
+			CGroupController.no_notify_append(uuid, p.xpoints[i], p.ypoints[i]);
+		}
 	}
 	
 }

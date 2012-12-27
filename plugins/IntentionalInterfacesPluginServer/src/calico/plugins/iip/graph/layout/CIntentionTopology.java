@@ -16,6 +16,7 @@ public class CIntentionTopology
 		private final Point center = new Point();
 		private final List<Integer> radii = new ArrayList<Integer>();
 		private final Rectangle boundingBox = new Rectangle();
+		private final Rectangle outerBox = new Rectangle();
 
 		Cluster(CIntentionClusterLayout clusterLayout)
 		{
@@ -30,6 +31,8 @@ public class CIntentionTopology
 			boundingBox.setSize(clusterLayout.getBoundingBox());
 			Point layoutCenter = clusterLayout.getLayoutCenterWithinBounds(boundingBox.getSize());
 			boundingBox.setLocation(center.x - layoutCenter.x, center.y - layoutCenter.y);
+			outerBox.setSize(clusterLayout.getOuterBox());
+			outerBox.setLocation((int)Math.round(boundingBox.getCenterX()) - outerBox.width/2, (int)Math.round(boundingBox.getCenterY()) - outerBox.height/2);
 		}
 
 		void serialize(StringBuilder buffer)
@@ -47,6 +50,14 @@ public class CIntentionTopology
 			buffer.append(boundingBox.width);
 			buffer.append(",");
 			buffer.append(boundingBox.height);
+			buffer.append(",");			
+			buffer.append(outerBox.x);
+			buffer.append(",");
+			buffer.append(outerBox.y);
+			buffer.append(",");
+			buffer.append(outerBox.width);
+			buffer.append(",");
+			buffer.append(outerBox.height);			
 			buffer.append(":");
 
 			for (Integer radius : radii)

@@ -152,12 +152,13 @@ public class ProcessQueue
 				
 				case NetworkCommand.RESTORE_START:RESTORE_START(pdata);break;
 
-				case NetworkCommand.GRID_SIZE:GRID_SIZE(pdata,client);break;
+//				case NetworkCommand.GRID_SIZE:GRID_SIZE(pdata,client);break;
 				case NetworkCommand.PLUGIN_EVENT:PLUGIN_EVENT(pdata,client);break;
 
 				case NetworkCommand.LIST_CREATE:LIST_CREATE(pdata,client);break;
 				case NetworkCommand.LIST_LOAD:LIST_LOAD(pdata,client);break;
 				case NetworkCommand.LIST_CHECK_SET:LIST_CHECK_SET(pdata,client);break;
+				case NetworkCommand.CANVASVIEW_SCRAP_LOAD:CANVASVIEW_SCRAP_LOAD(pdata,client);break;
 				
 				case NetworkCommand.IMAGE_TRANSFER:IMAGE_TRANSFER(pdata, client);break;
 				case NetworkCommand.IMAGE_TRANSFER_FILE:IMAGE_TRANSFER_FILE(pdata, client);break;
@@ -236,20 +237,55 @@ public class ProcessQueue
 		ClientManager.send(canvas.getInfoPacket());
 	}
 	
+	public static void CANVASVIEW_SCRAP_LOAD(CalicoPacket p, Client client)
+	{
+		long uuid = p.getLong();
+		long cuid = p.getLong();
+		long puid = p.getLong();
+		boolean isperm = p.getBoolean();
+		int count = p.getCharInt();
+		int x = 0;
+		int y = 0;
+		
+		if(count<=0)
+		{
+			return;
+		}
+		
+		
+		int[] xArr = new int[count], yArr = new int[count];
+		for(int i=0;i<count;i++)
+		{
+			xArr[i] = p.getInt();
+			yArr[i] = p.getInt();
+//			CGroupController.no_notify_append(uuid, x, y);
+		}
+		
+		boolean captureChildren = p.getBoolean();
+		double rotation = p.getDouble();
+		double scaleX = p.getDouble();
+		double scaleY = p.getDouble();
+		String text = p.getString();
+		
+		long targetCanvas = p.getLong();
+		
+		
+//		CGroupController.groupdb.get(uuid).finish();
+
+		CGroupController.no_notify_load_canvasview_scrap(uuid, cuid, puid, isperm, xArr, yArr,
+				captureChildren, rotation, scaleX, scaleY, text, targetCanvas);
+	}
+	
 	// this event occurs on server restore
 	public static void CANVAS_INFO(CalicoPacket p, Client c)
 	{
 		long canvasId = p.getLong();
-		String gridCoordTxt = p.getString();
-		int gridx = p.getInt();
-		int gridy = p.getInt();
-		
-		//int index = p.getInt();
+		int index = p.getInt();
+
 		CCanvas canvas = new CCanvas(canvasId);
-		canvas.setGridPos(gridx, gridy);
 		CCanvasController.canvases.put(canvasId, canvas);
 
-		//System.out.println("Warning: canvas with uuid " + canvas.getUUID() + " received the wrong index " + canvas.getIndex() + ". It should be " + index + ".");
+		System.out.println("Warning: canvas with uuid " + canvas.getUUID() + " received the wrong index " + canvas.getIndex() + ". It should be " + index + ".");
 	}
 	
 	public static void CANVAS_CLEAR(CalicoPacket p, Client c)
@@ -369,17 +405,17 @@ public class ProcessQueue
 	{
 		long uuid = p.getLong();
 		
-//		synchronized(CalicoServer.canvasThreads)
-//		{
-//			CanvasThread thread = CalicoServer.canvasThreads.remove(uuid);
-//			if (thread != null)
-//			{
-//				// seems like it should be stopped or something
-//			}
-//		}
+		synchronized(CalicoServer.canvasThreads)
+		{
+			CanvasThread thread = CalicoServer.canvasThreads.remove(uuid);
+			if (thread != null)
+			{
+				// seems like it should be stopped or something
+			}
+		}
 		
 		CCanvasController.no_notify_clear(uuid);
-//		CCanvasController.canvases.remove(uuid);
+		CCanvasController.canvases.remove(uuid);
 		ClientManager.send_except(c, p);
 	}
 	
@@ -935,19 +971,6 @@ public class ProcessQueue
 				ClientManager.out_of_sync_clients.remove(client.getClientID());
 			}
 		}
-	}
-
-	public static void GRID_SIZE(CalicoPacket notused,Client client)
-	{
-		CalicoPacket p = new CalicoPacket();
-		p.putInt(NetworkCommand.GRID_SIZE);
-		p.putInt(COptions.GridRows);
-		p.putInt(COptions.GridCols);
-		ClientManager.send(client,p);
-		
-		// Load up the sessions?
-		CSessionController.sendSessionList();
-		
 	}
 
 	public static void CONSISTENCY_CHECK(CalicoPacket pNOTUSED,Client client)

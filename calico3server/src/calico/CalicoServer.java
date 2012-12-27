@@ -168,23 +168,21 @@ public class CalicoServer
 		Thread udprecv = new Thread(new UDPReceiveQueue());
 		udprecv.start();
 
-		for(int i=0;i<COptions.GridRows;i++)
-		{	  	
-			for(int y=0;y<COptions.GridCols;y++)
-			{
-				// Make the canvas
-				CCanvas can = new CCanvas(UUIDAllocator.getUUID());
-				can.setGridPos(i, y);
-				// Add to the main list
-				CCanvasController.canvases.put(can.getUUID(), can);
-			
-			}
-		}
+
+
 //		CCanvas initialCanvas = new CCanvas(UUIDAllocator.getUUID());
 //		CCanvasController.canvases.put(initialCanvas.getUUID(), initialCanvas);
 
 		CalicoPluginManager.setup();
 		
+		try {
+			if (!CalicoPluginManager.hasPlugin(
+					Class.forName("calico.plugins.iip.IntentionalInterfacesClientPlugin")))
+				calico.controllers.CGridController.initialize();
+		} catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 		try
 		{
@@ -206,9 +204,5 @@ public class CalicoServer
 		}
 
 	}//main
-
-	
-	
-	
 	
 }

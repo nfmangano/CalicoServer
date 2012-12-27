@@ -12,7 +12,7 @@ import calico.networking.netstuff.CalicoPacket;
 import calico.plugins.iip.IntentionalInterfacesNetworkCommands;
 
 public class CIntentionClusterGraph
-{
+{	static	boolean computedClusterDimensions = false; static Dimension clusterDimensions;
 	private static class Position
 	{
 		int xUnit;
@@ -25,7 +25,7 @@ public class CIntentionClusterGraph
 
 		CIntentionCluster cluster;
 		CIntentionClusterLayout clusterLayout;
-
+		
 		Position(int rowIndex, int columnIndex)
 		{
 			xUnit = yUnit = -1;
@@ -88,10 +88,15 @@ public class CIntentionClusterGraph
 
 		void centerLayoutInUnitBounds()
 		{
-			Point rootPosition = clusterLayout.getLayoutCenterWithinBounds(new Dimension(xUnitSpan * CIntentionCluster.CLUSTER_UNIT_SIZE.width, yUnitSpan
-					* CIntentionCluster.CLUSTER_UNIT_SIZE.height));
-			Point center = new Point((int) ((xUnit * CIntentionCluster.CLUSTER_UNIT_SIZE.width) + rootPosition.x),
-					(int) ((yUnit * CIntentionCluster.CLUSTER_UNIT_SIZE.height) + rootPosition.y));
+			Dimension clusterDimensions = CIntentionClusterGraph.getClusterDimensions();
+			Point rootPosition = clusterLayout.getLayoutCenterWithinBounds(clusterDimensions);
+//					new Dimension(xUnitSpan * CIntentionCluster.CLUSTER_UNIT_SIZE.width, yUnitSpan
+//					* CIntentionCluster.CLUSTER_UNIT_SIZE.height));
+			int CELL_BUFFER = 20;
+			Point center = new Point((int) ((xUnit * (clusterDimensions.width + CELL_BUFFER)) + rootPosition.x),
+					(int) ((yUnit * (clusterDimensions.height + CELL_BUFFER)) + rootPosition.y));
+//			Point center = new Point((int) ((xUnit * CIntentionCluster.CLUSTER_UNIT_SIZE.width) + rootPosition.x),
+//					(int) ((yUnit * CIntentionCluster.CLUSTER_UNIT_SIZE.height) + rootPosition.y));
 
 			for (CIntentionClusterLayout.CanvasPosition layoutPosition : clusterLayout.getCanvasPositions())
 			{
@@ -99,6 +104,7 @@ public class CIntentionClusterGraph
 			}
 
 			cluster.setLocation(center);
+			clusterLayout.setOuterBox(clusterDimensions);
 		}
 
 		void serialize(StringBuilder buffer)
@@ -149,7 +155,7 @@ public class CIntentionClusterGraph
 			int xMax = getBoundary(position.yUnit);
 			for (int y = 1; y < position.yUnitSpan; y++)
 			{
-				xMax = Math.max(xMax, getBoundary(position.yUnit + y));
+				xMax = Math.min(xMax, getBoundary(position.yUnit + y));
 			}
 			return xMax;
 		}
@@ -170,14 +176,19 @@ public class CIntentionClusterGraph
 			if (position.isEmpty())
 			{
 				position.xUnitSpan = position.yUnitSpan = 1; // 0 to auto-collapse empty cells
+				
+//				Dimension boundingBox = CIntentionClusterGraph.getClusterDimensions();
+				position.xUnitSpan = 1;// Math.max(1, (int) Math.ceil(boundingBox.width / CIntentionCluster.CLUSTER_UNIT_SIZE.getWidth()));
+				position.yUnitSpan = 1; //Math.max(1, (int) Math.ceil(boundingBox.height / CIntentionCluster.CLUSTER_UNIT_SIZE.getHeight()));
 			}
 			else
 			{
 				position.layoutInEmptySpace();
 
-				Dimension boundingBox = position.clusterLayout.getBoundingBox();
-				position.xUnitSpan = Math.max(1, (int) Math.ceil(boundingBox.width / CIntentionCluster.CLUSTER_UNIT_SIZE.getWidth()));
-				position.yUnitSpan = Math.max(1, (int) Math.ceil(boundingBox.height / CIntentionCluster.CLUSTER_UNIT_SIZE.getHeight()));
+//				Dimension boundingBox = position.clusterLayout.getBoundingBox();
+//				Dimension boundingBox = CIntentionClusterGraph.getClusterDimensions();
+				position.xUnitSpan = 1; //Math.max(1, (int) Math.ceil(boundingBox.width / CIntentionCluster.CLUSTER_UNIT_SIZE.getWidth()));
+				position.yUnitSpan = 1; //Math.max(1, (int) Math.ceil(boundingBox.height / CIntentionCluster.CLUSTER_UNIT_SIZE.getHeight()));
 			}
 
 			position.yUnit = yUnit;
@@ -215,6 +226,7 @@ public class CIntentionClusterGraph
 	{
 		unitGraph.clear();
 		isCalculated = false;
+		computedClusterDimensions = false;
 		resetClusters();
 	}
 
@@ -236,7 +248,35 @@ public class CIntentionClusterGraph
 	{
 		if (isCalculated)
 			return;
-		updateMaxClusterDimension();
+
+		//calculate default dimension
+		int CLUSTER_PADDING = 60;
+		int minWidth = Integer.MIN_VALUE;
+		int minHeight = Integer.MIN_VALUE;
+		for (int column = 0; column < columnCount; column++)
+		{
+			for (List<Position> row : graph)
+			{
+				Position position = row.get(column);
+				if (position.isEmpty())
+				{
+					
+				}
+				else
+				{
+					position.layoutInEmptySpace();
+					Dimension boundingBox = position.clusterLayout.getBoundingBox();
+					if (boundingBox.width > minWidth)
+						minWidth = boundingBox.width;
+					if (boundingBox.height > minHeight)
+						minHeight = boundingBox.height;
+				}
+			}
+			unitGraph.nextColumn();
+		}
+		clusterDimensions = new Dimension(minWidth + CLUSTER_PADDING, minHeight + CLUSTER_PADDING);
+		computedClusterDimensions = true;
+
 		for (int column = 0; column < columnCount; column++)
 		{
 			for (List<Position> row : graph)
@@ -246,6 +286,8 @@ public class CIntentionClusterGraph
 			}
 			unitGraph.nextColumn();
 		}
+		
+//		computedClusterDimensions = false;
 		isCalculated = true;
 	}
 
@@ -558,21 +600,29 @@ public class CIntentionClusterGraph
 		}
 	}
 	
-	private static Dimension maxClusterDimension = new Dimension(0,0);
-	
-	public static Dimension getMaxClusterDimension() { return maxClusterDimension; }
-	
-	private void updateMaxClusterDimension()
+
+	public static Dimension getClusterDimensions()
 	{
-		Dimension di 
-		for (int column = 0; column < columnCount; column++)
+		if (computedClusterDimensions)
 		{
-			for (List<Position> row : graph)
-			{
-				Position position = row.get(column);
-				unitGraph.layout(position);
-			}
-			unitGraph.nextColumn();
+			return clusterDimensions;
 		}
+		return null;
+	}
+	
+	public int getClusterCount()
+	{
+//		private final List<List<Position>> graph = new ArrayList<List<Position>>();
+		int counter = 0;
+		for (List<Position> r : graph)
+		{
+			for(Position c : r)
+			{
+				if (c.cluster != null)
+					counter++;
+			}
+		}
+		
+		return counter;
 	}
 }

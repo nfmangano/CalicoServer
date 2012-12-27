@@ -9,6 +9,8 @@ public class CIntentionType
 	private final long uuid;
 	private String name;
 	private int colorIndex;
+	
+	public static long noTagIntentionType = 0l;
 
 	public CIntentionType(long uuid, String name, int colorIndex)
 	{

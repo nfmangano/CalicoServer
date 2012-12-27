@@ -247,6 +247,10 @@ public class CalicoPluginManager
 			return null;
 		}
 	}
+	public static boolean hasPlugin(Class<?> pluginClass)
+	{
+		return plugins.containsKey(pluginClass);
+	}
 	
 	
 	

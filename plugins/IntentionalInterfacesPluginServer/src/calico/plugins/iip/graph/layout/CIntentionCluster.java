@@ -23,10 +23,9 @@ class CIntentionCluster
 	}
 	
 	//git commit test
-
 	private static final SliceSorter SLICE_SORTER = new SliceSorter();
 	static final int RING_SEPARATION = 20 + CIntentionLayout.INTENTION_CELL_DIAMETER;
-	static final Dimension CLUSTER_UNIT_SIZE = new Dimension(CIntentionLayout.INTENTION_CELL_SIZE.width + 20, CIntentionLayout.INTENTION_CELL_SIZE.height + 20);
+	static final Dimension CLUSTER_UNIT_SIZE = new Dimension(CIntentionLayout.INTENTION_CELL_SIZE.width /*+ 20*/, CIntentionLayout.INTENTION_CELL_SIZE.height /*+ 20*/);
 
 	private final List<CIntentionRing> rings = new ArrayList<CIntentionRing>();
 	private final List<Double> ringRadii = new ArrayList<Double>();
@@ -130,7 +129,7 @@ class CIntentionCluster
 		}
 
 		slicesByRootCanvasId.clear();
-		Collections.sort(slices, SLICE_SORTER);
+//		Collections.sort(slices, SLICE_SORTER);
 		for (CIntentionSlice slice : slices)
 		{
 			slicesByRootCanvasId.put(slice.getRootCanvasId(), slice);

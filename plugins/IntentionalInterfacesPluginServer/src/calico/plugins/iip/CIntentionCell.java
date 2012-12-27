@@ -84,6 +84,8 @@ public class CIntentionCell
 
 	public void setIntentionType(long intentionTypeId)
 	{
+		if (intentionTypeId == -1)
+			intentionTypeId = CIntentionType.noTagIntentionType;
 		this.intentionTypeId = intentionTypeId;
 	}
 

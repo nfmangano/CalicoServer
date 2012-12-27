@@ -1,9 +1,14 @@
 package calico.plugins.iip;
 
+import java.io.IOException;
 import java.util.List;
 
+import calico.CalicoServer;
+import calico.CanvasThread;
+import calico.ProcessQueue;
 import calico.clients.Client;
 import calico.clients.ClientManager;
+import calico.components.CCanvas;
 import calico.controllers.CCanvasController;
 import calico.events.CalicoEventHandler;
 import calico.events.CalicoEventListener;
@@ -29,6 +34,8 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 
 	public void onPluginStart()
 	{
+		initializeCanvases();		
+		
 		CalicoEventHandler.getInstance().addListener(NetworkCommand.CANVAS_CREATE, this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListener(NetworkCommand.CANVAS_DELETE, this, CalicoEventHandler.PASSIVE_LISTENER);
 		CalicoEventHandler.getInstance().addListener(NetworkCommand.RESTORE_START, this, CalicoEventHandler.PASSIVE_LISTENER);
@@ -45,7 +52,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Idea", 2);
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Design Inside", 3);
 		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Continuation", 4);
-		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "No Tag", 5);
+		CIntentionType.noTagIntentionType = 
+				CIntentionCellController.getInstance().createIntentionType(
+						UUIDAllocator.getUUID(), "No Tag", 5).getId();
 
 		CalicoPluginManager.registerCalicoStateExtension(this);
 
@@ -54,6 +63,19 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 			createIntentionCell(canvasId);
 			CIntentionLayout.getInstance().insertCluster(canvasId);
 		}
+		
+		layoutGraph();
+	}
+
+	private void initializeCanvases() {
+		CCanvas initialCanvas1 = new CCanvas(UUIDAllocator.getUUID());
+		CCanvas initialCanvas2 = new CCanvas(UUIDAllocator.getUUID());
+		CCanvas initialCanvas3 = new CCanvas(UUIDAllocator.getUUID());
+		CCanvas initialCanvas4 = new CCanvas(UUIDAllocator.getUUID());
+		CCanvasController.canvases.put(initialCanvas1.getUUID(), initialCanvas1);
+		CCanvasController.canvases.put(initialCanvas2.getUUID(), initialCanvas2);
+		CCanvasController.canvases.put(initialCanvas3.getUUID(), initialCanvas3);
+		CCanvasController.canvases.put(initialCanvas4.getUUID(), initialCanvas4);
 	}
 
 	@Override
@@ -135,7 +157,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 					{
 						CIntentionLayout.getInstance().insertCluster(canvasId);
 					}
+					
 					layoutGraph();
+	
 					break;
 				case NetworkCommand.CANVAS_DELETE:
 					CANVAS_DELETE(p, c, canvasId);
@@ -277,7 +301,7 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 
 	private static void CIC_TAG(CalicoPacket p, Client c)
 	{
-		p.rewind();
+
 		IntentionalInterfacesNetworkCommands.Command.CIC_TAG.verify(p);
 
 		long uuid = p.getLong();
@@ -495,6 +519,33 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		}
 
 		forward(CIntentionLayout.getInstance().getTopology().createPacket());
+		
+		double sqrt = Math.sqrt((double)CIntentionLayout.getInstance().getClusterCount());
+//		if (sqrt > Math.floor(sqrt))
+//		{
+//			CalicoPacket canvasCreatePacket = CalicoPacket.getPacket(NetworkCommand.CANVAS_CREATE, calico.uuid.UUIDAllocator.getUUID(), 0l);
+//			canvasCreatePacket.rewind();
+//			canvasCreatePacket.getInt();
+//			
+//			long canvasThreadIndex = 1l;
+//			synchronized(CalicoServer.canvasThreads)
+//			{
+//				if (!CalicoServer.canvasThreads.containsKey(canvasThreadIndex))
+//				{
+//					try {
+//						CalicoServer.canvasThreads.put(canvasThreadIndex, new CanvasThread(canvasThreadIndex));
+//					} catch (IOException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//				}
+//				CalicoServer.canvasThreads.get(canvasThreadIndex).addPacketToQueue(NetworkCommand.CANVAS_CREATE, null, canvasCreatePacket);
+//			}
+//			
+//			
+////			ProcessQueue.receive(NetworkCommand.CANVAS_CREATE, c, canvasCreatePacket);
+////			layoutGraph();
+//		}
 	}
 
 	private static void forward(CalicoPacket p)
