@@ -31,11 +31,11 @@ import calico.uuid.UUIDAllocator;
 public class CCanvas
 	implements CalicoEventListener
 {
-	private static final AtomicInteger INDEX_COUNTER = new AtomicInteger(1);
+	private static final AtomicInteger INDEX_COUNTER = new AtomicInteger(0);
 	
 	public static void clearState()
 	{
-		INDEX_COUNTER.set(1);
+		INDEX_COUNTER.set(0);
 	}
 
 	private long uuid = 0L;

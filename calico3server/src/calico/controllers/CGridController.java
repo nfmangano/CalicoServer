@@ -12,11 +12,22 @@ import calico.uuid.UUIDAllocator;
 
 public class CGridController {
 	
-	private CGridController instance =  new CGridController();
+	private static CGridController instance;
 	private static boolean isActive = false;
 	
-	public CGridController getInstance()
+	public final static CalicoEventListener listener = new CalicoEventListener() {		
+		@Override
+		public void handleCalicoEvent(int event, CalicoPacket p, Client client) {
+			if (event == NetworkCommand.CANVAS_LIST)
+				GRID_SIZE(p, client);
+			
+		}
+	};
+	
+	public static CGridController getInstance()
 	{
+		if (instance == null)
+			instance = new CGridController();
 		return instance;
 	}
 	
@@ -65,14 +76,7 @@ public class CGridController {
 		return (Character.valueOf( (char) (x+65)) ).toString()+""+y;
 	}
 	
-	private static CalicoEventListener listener = new CalicoEventListener() {		
-		@Override
-		public void handleCalicoEvent(int event, CalicoPacket p, Client client) {
-			if (event == NetworkCommand.CANVAS_LIST)
-				GRID_SIZE(p, client);
-			
-		}
-	};
+
 	
 	public static void GRID_SIZE(CalicoPacket notused,Client client)
 	{

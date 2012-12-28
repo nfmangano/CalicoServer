@@ -175,14 +175,10 @@ public class CalicoServer
 
 		CalicoPluginManager.setup();
 		
-		try {
-			if (!CalicoPluginManager.hasPlugin(
-					Class.forName("calico.plugins.iip.IntentionalInterfacesClientPlugin")))
-				calico.controllers.CGridController.initialize();
-		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		if (!CalicoPluginManager.hasPlugin(
+				"calico.plugins.iip.IntentionalInterfacesClientPlugin"))
+			calico.controllers.CGridController.getInstance().initialize();
+
 		
 		try
 		{
