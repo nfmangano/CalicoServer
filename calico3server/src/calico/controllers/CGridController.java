@@ -59,14 +59,13 @@ public class CGridController {
 	
 	public static int getCanvasRow(long cuid)
 	{
-		//Formula: Floor(Index / NumColumns)
-		return (int) Math.floor(CCanvasController.canvases.get(cuid).getIndex() / COptions.GridCols);
+		//Formula: Index - Row * NumColumns
+		return CCanvasController.canvases.get(cuid).getIndex() - getCanvasColumn(cuid) * COptions.GridCols;
 	}
 	
 	public static int getCanvasColumn(long cuid)
 	{
-		//Formula: Index - Row * NumColumns
-		return CCanvasController.canvases.get(cuid).getIndex() - getCanvasRow(cuid) * COptions.GridCols;
+		return (int) Math.floor(CCanvasController.canvases.get(cuid).getIndex() / COptions.GridCols);
 	}
 	
 	public static String getCanvasCoord(long cuid)
