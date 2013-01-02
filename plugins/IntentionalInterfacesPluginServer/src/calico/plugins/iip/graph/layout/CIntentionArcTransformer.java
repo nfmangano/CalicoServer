@@ -15,7 +15,7 @@ class CIntentionArcTransformer
 		this.radius = radius;
 		this.ringSpan = ringSpan;
 
-		offset = ((7 * ringSpan) / 8.0) - (firstArcSpan / 2.0);
+		offset = -1 * firstArcSpan / 2 - ringSpan / 4; // ((7 * ringSpan) / 8.0) - (firstArcSpan / 2.0);
 
 		// System.out.println("Offset " + offset + " for radius " + radius + " and ring span " + ringSpan +
 		// " and first arc " + firstArcSpan);
