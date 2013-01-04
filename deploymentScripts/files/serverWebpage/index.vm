@@ -1,0 +1,19 @@
+#parse( "includes/header.vm" )
+
+<h1>Connecting to the Server</h1>
+<BR>
+You can connect to the server using the calico java web start, available below: <br><br>
+<ul>
+	<li><a href="/uploads/webstart/client/calicoclient-webstart.jnlp">Calico java web start</a>.</li>
+	<li>Launcher requires Java, which can be downloaded <a href="http://java.com/en/download/index.jsp">here</a>.</li>
+	<li>On some browsers, you may need to right-click the link and select "Save as", and launch the webstart manually.</li>
+</ul>
+
+Additional help:
+<ul>
+	<li>A cheat sheet of the icons is available <a href="/uploads/webstart/client/Calico-Icons-Guide.pdf">here</a>.</li>
+	<li>For a guide on calibrating the board, <a href="/uploads/webstart/client/Calibrating_the_projector.pdf">click here</a>.</li>
+	<li>For a guide on reseting the board sensor, <a href="/uploads/webstart/client/Adjusting_the_Board_Sensors.pdf">click here</a>.</li>
+	<li>For a guide on setting up your Windows 7 device to work correctly with Calico, <a href="/uploads/webstart/client/Setting_up_windows_touch.pdf">click here</a>.</li>
+
+#parse( "includes/footer.vm" )
