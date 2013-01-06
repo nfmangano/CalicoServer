@@ -70,12 +70,12 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 	private void initializeCanvases() {
 		CCanvas initialCanvas1 = new CCanvas(UUIDAllocator.getUUID());
 		CCanvas initialCanvas2 = new CCanvas(UUIDAllocator.getUUID());
-		CCanvas initialCanvas3 = new CCanvas(UUIDAllocator.getUUID());
-		CCanvas initialCanvas4 = new CCanvas(UUIDAllocator.getUUID());
+//		CCanvas initialCanvas3 = new CCanvas(UUIDAllocator.getUUID());
+//		CCanvas initialCanvas4 = new CCanvas(UUIDAllocator.getUUID());
 		CCanvasController.canvases.put(initialCanvas1.getUUID(), initialCanvas1);
 		CCanvasController.canvases.put(initialCanvas2.getUUID(), initialCanvas2);
-		CCanvasController.canvases.put(initialCanvas3.getUUID(), initialCanvas3);
-		CCanvasController.canvases.put(initialCanvas4.getUUID(), initialCanvas4);
+//		CCanvasController.canvases.put(initialCanvas3.getUUID(), initialCanvas3);
+//		CCanvasController.canvases.put(initialCanvas4.getUUID(), initialCanvas4);
 	}
 
 	@Override
