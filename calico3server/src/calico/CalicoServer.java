@@ -176,7 +176,7 @@ public class CalicoServer
 		CalicoPluginManager.setup();
 		
 		if (!CalicoPluginManager.hasPlugin(
-				"calico.plugins.iip.IntentionalInterfacesServerPlugin"))
+				"calico.plugins.iip.IntentionalInterfacesClientPlugin"))
 			calico.controllers.CGridController.getInstance().initialize();
 
 		

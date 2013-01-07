@@ -22,7 +22,8 @@ public class CIntentionCell
 	{
 		this.uuid = uuid;
 		this.canvas_uuid = canvasId;
-		this.location = new Point(-(CIntentionLayout.INTENTION_CELL_SIZE.width / 2), -(CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
+//		this.location = new Point(-(CIntentionLayout.INTENTION_CELL_SIZE.width / 2), -(CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
+		this.location = new Point(Integer.MIN_VALUE, Integer.MIN_VALUE);
 		this.title = DEFAULT_TITLE;
 	}
 
