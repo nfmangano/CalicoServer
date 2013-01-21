@@ -285,7 +285,8 @@ public class ProcessQueue
 		CCanvas canvas = new CCanvas(canvasId);
 		CCanvasController.canvases.put(canvasId, canvas);
 
-		System.out.println("Warning: canvas with uuid " + canvas.getUUID() + " received the wrong index " + canvas.getIndex() + ". It should be " + index + ".");
+		if (index != canvas.getIndex())
+			System.out.println("Warning: canvas with uuid " + canvas.getUUID() + " received the wrong index " + canvas.getIndex() + ". It should be " + index + ".");
 	}
 	
 	public static void CANVAS_CLEAR(CalicoPacket p, Client c)

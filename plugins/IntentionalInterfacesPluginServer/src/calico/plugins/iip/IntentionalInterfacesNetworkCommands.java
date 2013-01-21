@@ -1,6 +1,8 @@
 package calico.plugins.iip;
 
 import calico.networking.netstuff.CalicoPacket;
+import calico.networking.netstuff.NetCommandFormat;
+import calico.networking.netstuff.NetworkCommand;
 
 public class IntentionalInterfacesNetworkCommands
 {
@@ -23,6 +25,45 @@ public class IntentionalInterfacesNetworkCommands
 	public static final int CIC_UPDATE_FINISHED = Command.CIC_UPDATE_FINISHED.id;
 	public static final int II_PERSPECTIVE_ACTIVATED = Command.II_PERSPECTIVE_ACTIVATED.id;
 
+	static {
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_CREATE.id, 
+				new NetCommandFormat("CIC_CREATE", "LLIIS"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_MOVE.id, 
+				new NetCommandFormat("CIC_MOVE", "LII"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_SET_TITLE.id, 
+				new NetCommandFormat("CIC_SET_TITLE", "LS"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_TAG.id, 
+				new NetCommandFormat("CIC_TAG", "LL"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_UNTAG.id, 
+				new NetCommandFormat("CIC_UNTAG", "LL"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_TOPOLOGY.id, 
+				new NetCommandFormat("CIC_TOPOLOGY", ""));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_CLUSTER_GRAPH.id, 
+				new NetCommandFormat("CIC_CLUSTER_GRAPH", "S"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_DELETE.id, 
+				new NetCommandFormat("CIC_DELETE", ""));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIT_RENAME.id, 
+				new NetCommandFormat("CIT_RENAME", "LS"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIT_SET_COLOR.id, 
+				new NetCommandFormat("CIT_SET_COLOR", "LI"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIT_DELETE.id, 
+				new NetCommandFormat("CIT_DELETE", "L"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIT_CREATE.id, 
+				new NetCommandFormat("CIT_CREATE", "LSI"));		
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CLINK_CREATE.id, 
+				new NetCommandFormat("CLINK_CREATE", "L"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CLINK_MOVE_ANCHOR.id, 
+				new NetCommandFormat("CLINK_MOVE_ANCHOR", "LLIII"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CLINK_LABEL.id, 
+				new NetCommandFormat("CLINK_LABEL", "LS"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CLINK_DELETE.id, 
+				new NetCommandFormat("CLINK_DELETE", "L"));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_UPDATE_FINISHED.id, 
+				new NetCommandFormat("CIC_UPDATE_FINISHED", ""));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.II_PERSPECTIVE_ACTIVATED.id, 
+				new NetCommandFormat("II_PERSPECTIVE_ACTIVATED", ""));
+	}
+	
 	public enum Command
 	{
 		/**

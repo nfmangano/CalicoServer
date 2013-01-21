@@ -24,6 +24,7 @@ public class CIntentionSlice
 	private double maxArcWeight;
 	private double assignedWeight;
 	private int layoutSpan;
+	boolean debug = false;
 
 	CIntentionSlice(long rootCanvasId)
 	{
@@ -70,14 +71,16 @@ public class CIntentionSlice
 	{
 		assignedWeight = weight;
 
-		System.out.println(String.format("Slice for canvas %d has %d canvases and max weight %s with normalized weight %s%%",
+		if (debug)
+			System.out.println(String.format("Slice for canvas %d has %d canvases and max weight %s with normalized weight %s%%",
 				CIntentionLayout.getCanvasIndex(rootCanvasId), canvasIds.size(), WEIGHT_FORMAT.format(getMaxArcWeight()), toPercent(assignedWeight)));
 
 		for (Arc arc : arcs)
 		{
 			arc.calculateArcSpanProjection();
-
-			System.out.println(String.format("Slice for canvas %d has projected span %d for ring %d", CIntentionLayout.getCanvasIndex(rootCanvasId),
+			
+			if (debug)
+				System.out.println(String.format("Slice for canvas %d has projected span %d for ring %d", CIntentionLayout.getCanvasIndex(rootCanvasId),
 					arc.arcSpanProjection, arc.ringIndex));
 		}
 	}
@@ -135,7 +138,8 @@ public class CIntentionSlice
 				{
 					group.idealPosition = arcTransformer.calculateIdealPosition(arcPositions.get(group.parentCanvasId), parentRingRadius);
 
-					System.out.println("Ideal position for group of arc " + ringIndex + " in slice for canvas " + CIntentionLayout.getCanvasIndex(rootCanvasId)
+					if (debug)
+						System.out.println("Ideal position for group of arc " + ringIndex + " in slice for canvas " + CIntentionLayout.getCanvasIndex(rootCanvasId)
 							+ ": " + group.idealPosition + " in (" + arcStart + " - " + (arcStart + sliceWidth) + ")");
 
 					double idealStart = group.idealPosition - (group.getSpan() / 2.0);
@@ -307,7 +311,8 @@ public class CIntentionSlice
 				totalSpan += displacement.displacementSpan;
 			}
 
-			System.out.println("Collision for group with parent " + CIntentionLayout.getCanvasIndex(ideallyPlacedGroup.parentCanvasId) + ": "
+			if (debug)
+				System.out.println("Collision for group with parent " + CIntentionLayout.getCanvasIndex(ideallyPlacedGroup.parentCanvasId) + ": "
 					+ displacements.size() + " displacements totaling " + ((int) totalSpan) + " arc pixels.");
 		}
 	}

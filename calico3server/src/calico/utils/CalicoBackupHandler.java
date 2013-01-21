@@ -30,7 +30,7 @@ public class CalicoBackupHandler
 	 *  
 	 *  BACKUP_FILE_END()
 	 */
-	
+	private static boolean backupRestorationInProgress = false;
 	
 	public static void writeAutoBackupFile(String file) throws FileNotFoundException, IOException 
 	{
@@ -173,7 +173,7 @@ public class CalicoBackupHandler
 		byte[] packetSizeBuffer = new byte[ByteUtils.SIZE_OF_INT];
 		byte[] packetBuffer = null;
 		int packetSize = 0;
-		
+		backupRestorationInProgress = true;
 		Properties props = new Properties();
 		
 		// Check the first packet
@@ -235,7 +235,7 @@ public class CalicoBackupHandler
 		CalicoServer.logger.debug("SETTING NEXT UUID TO BE "+nextuuid);
 		
 		UUIDAllocator.restoreUUIDAllocator(Long.parseLong(nextuuid));
-		
+		backupRestorationInProgress = false;
 		
 	}//restoreBackup
 	
@@ -312,6 +312,11 @@ public class CalicoBackupHandler
 		backupFile.close();
 
 		return props;
+	}
+	
+	public static boolean isBackupRestorationInProgress()
+	{
+		return backupRestorationInProgress;
 	}
 	
 	

@@ -579,6 +579,7 @@ public class CIntentionClusterGraph
 		positionsByRootCanvasId.clear();
 
 		StringTokenizer rowParser = new StringTokenizer(data, "{}");
+		int maxRowSize = -1;
 		while (rowParser.hasMoreTokens())
 		{
 			String rowData = rowParser.nextToken();
@@ -596,8 +597,11 @@ public class CIntentionClusterGraph
 				{
 					positionsByRootCanvasId.put(position.cluster.getRootCanvasId(), position);
 				}
+				if (row.size() > maxRowSize)
+					maxRowSize = row.size();
 			}
 		}
+		columnCount = maxRowSize;
 	}
 	
 

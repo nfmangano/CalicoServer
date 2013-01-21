@@ -21,6 +21,7 @@ import calico.plugins.iip.controllers.CCanvasLinkController;
 import calico.plugins.iip.controllers.CIntentionCellController;
 import calico.plugins.iip.graph.layout.CIntentionClusterLayout;
 import calico.plugins.iip.graph.layout.CIntentionLayout;
+import calico.utils.CalicoBackupHandler;
 import calico.uuid.UUIDAllocator;
 
 public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin implements CalicoEventListener, CalicoStateElement
@@ -89,6 +90,10 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 
 		if (IntentionalInterfacesNetworkCommands.Command.isInDomain(event))
 		{
+			
+//			if (IntentionalInterfacesNetworkCommands.Command.forId(event) != null) 
+//				logger.debug("RX "+IntentionalInterfacesNetworkCommands.Command.forId(event).toString());
+
 			switch (IntentionalInterfacesNetworkCommands.Command.forId(event))
 			{
 				case CIC_CREATE:
@@ -158,7 +163,7 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 						CIntentionLayout.getInstance().insertCluster(canvasId);
 					}
 					
-					layoutGraph();
+//					layoutGraph();
 	
 					break;
 				case NetworkCommand.CANVAS_DELETE:
