@@ -49,7 +49,7 @@ public class CanvasGetActionHistoryRequestHandler extends AdminBasicRequestHandl
 		
 		JSONObject resp = new JSONObject();
 
-		//resp.put("actionhistory", CCanvasController.canvases.get(uuid).getActionHistoryAsJSON() );
+//		resp.put("actionhistory", CCanvasController.canvases.get(uuid).getActionHistoryAsJSON() );
 		
 		
 		StringEntity body = new StringEntity(resp.toString());

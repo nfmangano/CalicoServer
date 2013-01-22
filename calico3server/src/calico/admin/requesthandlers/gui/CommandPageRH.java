@@ -23,6 +23,7 @@ import calico.*;
 import calico.admin.CalicoAPIErrorException;
 import calico.admin.exceptions.RedirectException;
 import calico.admin.requesthandlers.AdminBasicRequestHandler;
+import calico.clients.ClientManager;
 import calico.controllers.CCanvasController;
 import calico.controllers.CGroupController;
 import calico.networking.netstuff.CalicoPacket;
@@ -130,8 +131,10 @@ public class CommandPageRH extends AdminBasicRequestHandler
 		String justCommand = theCmdArray.remove(0).toLowerCase();
 		
 		if(justCommand.equals("canvas_list")){command_canvas_list(output, theCmdArray);}
+		else if(justCommand.equals("canvas_contents")){command_canvas_contents(output, theCmdArray);}
 		else if(justCommand.equals("canvas_clear")){command_canvas_clear(output, theCmdArray);}
-
+		else if(justCommand.equals("group_delete")){command_group_delete(output, theCmdArray);}
+		else if(justCommand.equals("stroke_delete")){command_stroke_delete(output, theCmdArray);}
 		else if(justCommand.equals("group_copy")){command_group_copy(output, theCmdArray);}
 		
 		else if(justCommand.equals("set")){command_set(output, theCmdArray);}
@@ -159,18 +162,57 @@ public class CommandPageRH extends AdminBasicRequestHandler
 		{
 			builder.append(uuids[i]+"\t"+CCanvasController.canvases.get(uuids[i]).getIndex()+"\n");
 		}
+
 	}
+	
+	private void command_canvas_contents(StringBuilder builder, Vector<String> params) throws Exception
+	{
+		long uuid = Long.decode(params.get(0));
+		
+		builder.setLength(60);
+		builder.append(CCanvasController.canvases.get(uuid).toProperties());
+	}
+	
+
 	
 	private void command_canvas_clear(StringBuilder builder, Vector<String> params) throws Exception
 	{
 		long uuid = Long.decode(params.get(0));
 		//CCanvasController.no_notify_clear(uuid);
 		CalicoPacket packet = CalicoPacket.getPacket(NetworkCommand.CANVAS_CLEAR, uuid);
+		packet.rewind();
 		packet.getInt();
 		ProcessQueue.receive(NetworkCommand.CANVAS_CLEAR, null, packet);
+		ClientManager.send(packet);
 		
 		builder.append("Canvas "+uuid+" ("+CCanvasController.canvases.get(uuid).getIndex()+") cleared.\n");  	
 		
+	}
+	
+	private void command_group_delete(StringBuilder builder, Vector<String> params) throws Exception
+	{
+		long uuid = Long.decode(params.get(0));
+		//CCanvasController.no_notify_clear(uuid);
+		CalicoPacket packet = CalicoPacket.getPacket(NetworkCommand.GROUP_DELETE, uuid);
+		packet.rewind();
+		packet.getInt();
+		ProcessQueue.receive(NetworkCommand.GROUP_DELETE, null, packet);
+		ClientManager.send(packet);
+		
+		builder.append("Group "+uuid+" cleared.\n");  
+	}
+	
+	private void command_stroke_delete(StringBuilder builder, Vector<String> params) throws Exception
+	{
+		long uuid = Long.decode(params.get(0));
+		//CCanvasController.no_notify_clear(uuid);
+		CalicoPacket packet = CalicoPacket.getPacket(NetworkCommand.STROKE_DELETE, uuid);
+		packet.rewind();
+		packet.getInt();
+		ProcessQueue.receive(NetworkCommand.STROKE_DELETE, null, packet);
+		ClientManager.send(packet);
+		
+		builder.append("Stroke "+uuid+" cleared.\n");  
 	}
 	
 	private void command_set(StringBuilder builder, Vector<String> params) throws Exception
