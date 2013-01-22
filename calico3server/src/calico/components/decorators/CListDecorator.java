@@ -2,16 +2,14 @@ package calico.components.decorators;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
 
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.apache.commons.lang.ArrayUtils;
 
 import calico.COptions;
-import calico.CalicoServer;
 import calico.controllers.CGroupController;
 import calico.controllers.CGroupDecoratorController;
 import calico.controllers.CStrokeController;
@@ -449,6 +447,81 @@ public class CListDecorator extends CGroupDecorator {
 	public long[] getChildGroups()
 	{
 		return orderByYAxis(super.getChildGroups());
+	}
+	
+	@Override
+	protected void render_internal(Graphics2D g) {
+
+		//TODO: Add check icons to server.
+//		long[] childGroups = this.getChildGroups();
+//		Image checkIcon = CalicoIconManager.getIconImage("lists.checked");
+//		Image uncheckedIcon =  CalicoIconManager.getIconImage("lists.unchecked");
+//		
+//		Image checkImage;
+//		if (childGroups != null)
+//		{
+//			Rectangle[] iconBounds = getCheckIconBounds();
+//			for (int i = 0; i < childGroups.length; i++)
+//			{
+//				if (CGroupDecoratorController.groupCheckValues.containsKey(childGroups[i]))
+//				{
+//					g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+//						       1.0f));
+//					checkImage = (CGroupDecoratorController.groupCheckValues.get(childGroups[i]).booleanValue())
+//						? checkIcon
+//						: uncheckedIcon;
+//					g.drawImage(checkImage, iconBounds[i].x, iconBounds[i].y, iconBounds[i].width, iconBounds[i].height, null);
+//					
+//				}
+//			}
+//		}
+		
+	}
+	
+	public Rectangle[] getCheckIconBounds()
+	{
+		int moveToY, elementSpacing = 5, widthBuffer = 5;
+		int iconXSpace = this.iconWidth + this.iconWidthBuffer*2;
+		
+		int yOffset = elementSpacing + 0;
+		int x, y;
+		
+		long[] listElements = getChildGroups();
+		
+		if (listElements == null || listElements.length == 0)
+			return new Rectangle[] { };
+		
+		long firstchild = listElements[0];
+		if (!CGroupController.exists(firstchild))
+			return new Rectangle[] { };
+		
+		x = CGroupController.groups.get(firstchild).getPathReference().getBounds().x - widthBuffer - iconXSpace; //  bounds.x; // + widthBuffer / 2;
+		y = CGroupController.groups.get(firstchild).getPathReference().getBounds().y - yOffset; //bounds.y; // + elementSpacing / 2;
+		
+		Rectangle bounds;
+		
+		
+		Rectangle[] checkMarkBounds = new Rectangle[listElements.length];
+		
+		if (listElements.length < 1 || CGroupController.groups.get(listElements[0]) == null || CGroupController.groups.get(listElements[0]).getPathReference() == null)
+			return null;
+		
+		for (int i = 0; i < listElements.length; i++)
+		{
+			if (!CGroupController.exists(listElements[i]))
+				continue;
+			
+			//destination
+			moveToY = y;
+			
+			//figure out offset
+			bounds = CGroupController.groups.get(listElements[i]).getPathReference().getBounds();
+
+			checkMarkBounds[i] = new Rectangle(x + iconWidthBuffer, moveToY + yOffset + bounds.height/2 - iconHeight/2, this.iconWidth, this.iconHeight);
+			yOffset += bounds.height + elementSpacing;
+		}
+		
+		return checkMarkBounds;
 	}
 	
 }

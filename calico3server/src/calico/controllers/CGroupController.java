@@ -920,7 +920,7 @@ public class CGroupController
 		groups.get(uuid).addChildGroup(cguuid, x, y);
 	}
 	
-	private static long getDecoratorParent(long uuid)
+	public static long getDecoratorParent(long uuid)
 	{
 		if (!exists(uuid)) { return 0l; }
 		

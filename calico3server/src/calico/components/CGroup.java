@@ -6,6 +6,7 @@ import calico.networking.netstuff.*;
 import calico.admin.*;
 import calico.clients.*;
 import calico.components.decorators.CGroupDecorator;
+import calico.components.decorators.CListDecorator;
 import calico.controllers.CArrowController;
 import calico.controllers.CCanvasController;
 import calico.controllers.CConnectorController;
@@ -85,6 +86,8 @@ public class CGroup {
 	protected static Logger logger = Logger.getLogger(CGroup.class.getName());
 	
 	protected int networkLoadCommand = NetworkCommand.GROUP_LOAD;
+	
+	private static BasicStroke groupStroke = new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
 	public CGroup(long uuid, long cuid, long puid, boolean isPerm) {
 		this.uuid = uuid;
@@ -993,16 +996,29 @@ public class CGroup {
 	}
 
 	protected void render_internal(Graphics2D g) {
-		g.setStroke(new BasicStroke(1.5f));
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setStroke(CGroup.groupStroke);
 		g.setPaint(new Color(0,0,0, 50));
-		g.drawPolygon(points.xpoints, points.ypoints, points.npoints);
+//		g.drawPolygon(points.xpoints, points.ypoints, points.npoints);
+		pathReferenceShadow.closePath();
+		g.draw(pathReferenceShadow);
+		Color drawColor;
+		if (CGroupController.groups.get(getParentUUID()) instanceof CListDecorator)
+			drawColor = new Color(0, 0, 0, 50);
+		else
+		{
+			drawColor = new Color(0x62, 0xA5, 0xCC, 50);
+			g.setPaint(drawColor);// new Color( Color.BLUE.getRed(),
+			g.fill(pathReferenceShadow);
+		}
 
-		Color drawColor = new Color(0x62, 0xA5, 0xCC, 50);
 
-		g.setPaint(drawColor);// new Color( Color.BLUE.getRed(),
-								// Color.BLUE.getGreen(), Color.BLUE.getBlue(),
-								// 100));
-		g.fillPolygon(points.xpoints, points.ypoints, points.npoints);
+		// Color.BLUE.getGreen(), Color.BLUE.getBlue(),
+		// 100));
+
+		
+
+//		g.fillPolygon(points.xpoints, points.ypoints, points.npoints);
 		
 		if (textSet) {
 			PAffineTransform piccoloTextTransform = getPTransform();
@@ -1010,10 +1026,11 @@ public class CGroup {
 			g.setTransform(piccoloTextTransform);
 			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
 			g.setColor(Color.BLACK);
-			int yTextOffset = getTextBounds(text).height;
+			int yTextOffset = getTextBounds(text, g).height;
 			g.setFont(COptions.group.font);
 			g.drawString(this.text,
-					(float) (points.getBounds().getX() + COptions.group.text_padding + COptions.group.padding), (float) (points.getBounds().getY() + COptions.group.padding + (points.getBounds().getHeight()+5)/2 - yTextOffset/4));
+					(float) (points.getBounds().getX() + COptions.group.text_padding + COptions.group.padding), 
+					(float) (pathReferenceShadow.getBounds().getY() + COptions.group.padding + (pathReferenceShadow.getBounds().getHeight())/2 + yTextOffset/4));
 			g.setTransform(old);
 			
 		}
@@ -1036,10 +1053,10 @@ public class CGroup {
 		this.groupArea = PolygonUtils.PolygonArea(areaTemp);
 	}
 
-	private Rectangle getTextBounds(String t) {
-		Graphics2D g2d = (Graphics2D) new BufferedImage(16, 16,
-				BufferedImage.TYPE_INT_RGB).getGraphics();
-		FontRenderContext frc = g2d.getFontRenderContext();
+	private Rectangle getTextBounds(String t, Graphics2D g) {
+//		Graphics2D g2d = (Graphics2D) new BufferedImage(16, 16,
+//				BufferedImage.TYPE_INT_RGB).getGraphics();
+		FontRenderContext frc = g.getFontRenderContext();
 		Rectangle fontBounds = COptions.group.font.getStringBounds(t, frc)
 				.getBounds();
 		return fontBounds;
@@ -1171,7 +1188,8 @@ public class CGroup {
 			childrenBounds = this.getPathReference().getBounds();
 		boundsOfContainedElements.add(childrenBounds);
 
-		Rectangle textDimensions = getTextBounds(this.text);
+		Rectangle textDimensions = getTextBounds(this.text, (Graphics2D) new BufferedImage(16, 16,
+					BufferedImage.TYPE_INT_RGB).getGraphics());
 		Rectangle textBounds;
 		textBounds = new Rectangle(childrenBounds.x, childrenBounds.y,
 				textDimensions.width + COptions.group.text_padding*2, textDimensions.height

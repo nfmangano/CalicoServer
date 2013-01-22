@@ -401,8 +401,8 @@ public class CStroke
 	
 	public void render(Graphics2D g)
 	{
-		
-		g.setStroke(new BasicStroke(thickness));
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setStroke(new BasicStroke(thickness,BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g.setPaint(getColor());
 		g.draw(pathReferenceShadow);
 //		g.drawPolyline(this.points.xpoints, this.points.ypoints, this.points.npoints);
