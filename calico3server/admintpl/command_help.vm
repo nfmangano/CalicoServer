@@ -11,13 +11,22 @@
 
 <p>#commandinfo("canvas_list", "This will list all canvases with their IDs")</p>
 
+<p>#commandinfo("canvas_contents <b>uuid</b>","Lists the contents of a canvas")</p>
+
 <p>#commandinfo("canvas_clear <b>uuid</b>","Clears the canvas")</p>
 	
 <h2>Groups</h2>
 <p>
 	#commandinfo("group_copy <b>uuid</b> <b>canvas_uuid</b> [shift_x shift_y]","Copies a group to a new canvas, shifting all coordinates if requested")
 </p>
+<p>
+	#commandinfo("group_delete <b>uuid</b>","Deletes a group")
+</p>
 
+<h2>Strokes</h2>
+<p>
+	#commandinfo("stroke_delete <b>uuid</b>","Deletes a stroke")
+</p>
 
 <h2>Configuration</h2>
 <p>
