@@ -27,6 +27,8 @@ public class CIntentionLayout
 	{
 		return new Point(x - (CIntentionLayout.INTENTION_CELL_SIZE.width / 2), y - (CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
 	}
+	
+	public static final Dimension INTENTION_CELL_DEFAULT_SIZE = new Dimension(200, 130);
 
 	public static final Dimension INTENTION_CELL_SIZE = new Dimension(200, 130);
 	static final int INTENTION_CELL_DIAMETER = calculateCellDiameter(INTENTION_CELL_SIZE);

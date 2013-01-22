@@ -505,6 +505,12 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 	private static void layoutGraph()
 	{
 		List<CIntentionClusterLayout> clusterLayouts = CIntentionLayout.getInstance().layoutGraph();
+		
+		CalicoPacket p_size = new CalicoPacket();
+		p_size.putInt(IntentionalInterfacesNetworkCommands.CIC_SET_SIZE);
+		p_size.putInt(CIntentionLayout.INTENTION_CELL_SIZE.width);
+		p_size.putInt(CIntentionLayout.INTENTION_CELL_SIZE.height);
+		forward(p_size);
 
 		for (CIntentionClusterLayout clusterLayout : clusterLayouts)
 		{

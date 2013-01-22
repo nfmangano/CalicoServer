@@ -24,6 +24,8 @@ public class IntentionalInterfacesNetworkCommands
 	public static final int CLINK_DELETE = Command.CLINK_DELETE.id;
 	public static final int CIC_UPDATE_FINISHED = Command.CIC_UPDATE_FINISHED.id;
 	public static final int II_PERSPECTIVE_ACTIVATED = Command.II_PERSPECTIVE_ACTIVATED.id;
+	public static final int CIC_SET_SIZE = Command.CIC_SET_SIZE.id;
+	
 
 	static {
 		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_CREATE.id, 
@@ -62,6 +64,8 @@ public class IntentionalInterfacesNetworkCommands
 				new NetCommandFormat("CIC_UPDATE_FINISHED", ""));
 		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.II_PERSPECTIVE_ACTIVATED.id, 
 				new NetCommandFormat("II_PERSPECTIVE_ACTIVATED", ""));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_SET_SIZE.id, 
+				new NetCommandFormat("CIC_SET_SIZE", "II"));
 	}
 	
 	public enum Command
@@ -138,7 +142,11 @@ public class IntentionalInterfacesNetworkCommands
 		/**
 		 * Alerts the server that the intention
 		 */
-		II_PERSPECTIVE_ACTIVATED;
+		II_PERSPECTIVE_ACTIVATED,
+		/**
+		 * Informs the client of the size of CICs
+		 */
+		CIC_SET_SIZE;
 
 		public final int id;
 
