@@ -23,6 +23,7 @@ public class AdminRequestListenerThread extends Thread
 	
 	private final HttpParams params; 
 	private final HttpService httpService;
+	private static HttpRequestHandlerRegistry reqistry;
 
 	public AdminRequestListenerThread() throws IOException
 	{
@@ -44,7 +45,7 @@ public class AdminRequestListenerThread extends Thread
 		httpproc.addInterceptor(new ResponseConnControl());
 		
 		// Set up request handlers
-		HttpRequestHandlerRegistry reqistry = new HttpRequestHandlerRegistry();
+		reqistry = new HttpRequestHandlerRegistry();
 
 		// Clients
 		reqistry.register("/client/list*", new ClientListRequestHandler());
@@ -116,6 +117,17 @@ public class AdminRequestListenerThread extends Thread
 		);
 		this.httpService.setParams(this.params);
 		this.httpService.setHandlerResolver(reqistry);
+	}
+	
+	/**
+	 * Allows a plugin to register a new handler. See one of the *.vm page for an example of
+	 * a template page. Also, if you want to add a tab, make sure to use {@link=GUITemplate.setSection(String)} 
+	 * @param page The string of the page. Example: "/gui/clients/*". The * implies any following character.
+	 * @param handler
+	 */
+	public static void registerPageHandler(String page, AdminBasicRequestHandler handler)
+	{
+		reqistry.register(page, handler);
 	}
 
 	public void run()

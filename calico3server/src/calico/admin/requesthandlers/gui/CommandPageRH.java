@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Vector;
@@ -160,7 +161,11 @@ public class CommandPageRH extends AdminBasicRequestHandler
 		builder.append("UUID\tCoordinate\n");
 		for(int i=0;i<uuids.length;i++)
 		{
-			builder.append(uuids[i]+"\t"+CCanvasController.canvases.get(uuids[i]).getIndex()+"\n");
+			builder.append("<a href=\"http://"
+					+InetAddress.getLocalHost().getHostAddress()+":"+COptions.admin.serversocket.getLocalPort()
+					+"/canvas/getimage?uuid="+uuids[i]+"\">");
+			builder.append(uuids[i]+"\t"+CCanvasController.canvases.get(uuids[i]).getIndex());
+			builder.append("</a>\n");
 		}
 
 	}
