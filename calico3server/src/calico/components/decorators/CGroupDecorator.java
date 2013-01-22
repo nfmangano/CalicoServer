@@ -288,7 +288,16 @@ public abstract class CGroupDecorator extends CGroup {
 	}
 
 	public CalicoPacket[] getUpdatePackets(boolean captureChildren) {
-		return getDecoratorUpdatePackets(this.uuid, this.cuid, this.puid, this.getDecoratedUUID());
+		CalicoPacket[] ret = {};
+		try
+		{
+			ret = getDecoratorUpdatePackets(this.uuid, this.cuid, this.puid, this.getDecoratedUUID());
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return ret;
 	}
 	
 	public CalicoPacket[] getUpdatePackets(long uuid, long cuid, long puid, int dx, int dy, boolean captureChildren) {

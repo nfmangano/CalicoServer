@@ -22,7 +22,7 @@ public class CListDecorator extends CGroupDecorator {
 	int iconXSpace = this.iconWidth + this.iconWidthBuffer*2;
 	int widthBuffer = 5;
 	
-	private final boolean debugListOrder = true;
+	private final boolean debugListOrder = false;
 	
 	static
 	{
@@ -95,7 +95,8 @@ public class CListDecorator extends CGroupDecorator {
 	public boolean containsShape(Shape shape)
 	{
 //		printBounds();
-		System.out.println("Shape: " + shape.getBounds2D().getCenterX() + ", " + shape.getBounds2D().getCenterY());
+		if (debugListOrder)
+			System.out.println("Shape: " + shape.getBounds2D().getCenterX() + ", " + shape.getBounds2D().getCenterY());
 		return this.containsPoint((int)shape.getBounds2D().getCenterX(), (int)shape.getBounds2D().getCenterY());
 	}
 	

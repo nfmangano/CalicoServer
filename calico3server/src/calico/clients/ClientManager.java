@@ -343,7 +343,15 @@ public class ClientManager
 		
 			CCanvas can = CCanvasController.canvases.get(canvasids[j]);
 			
-			CalicoPacket[] packets = can.getUpdatePackets();
+			CalicoPacket[] packets = {};
+			try
+			{
+				packets = can.getUpdatePackets();
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 			for(int i=0;i<packets.length;i++)
 			{
 				send(client, packets[i]);
