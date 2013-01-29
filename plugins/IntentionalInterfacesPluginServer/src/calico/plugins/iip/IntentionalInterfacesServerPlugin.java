@@ -19,6 +19,7 @@ import calico.plugins.CalicoPluginManager;
 import calico.plugins.CalicoStateElement;
 import calico.plugins.iip.controllers.CCanvasLinkController;
 import calico.plugins.iip.controllers.CIntentionCellController;
+import calico.plugins.iip.graph.layout.CIntentionClusterGraph;
 import calico.plugins.iip.graph.layout.CIntentionClusterLayout;
 import calico.plugins.iip.graph.layout.CIntentionLayout;
 import calico.utils.CalicoBackupHandler;
@@ -524,6 +525,8 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 					p.putLong(cell.getId());
 					p.putInt(cell.getLocation().x);
 					p.putInt(cell.getLocation().y);
+					p.putInt(CIntentionLayout.INTENTION_CELL_SIZE.width);
+					p.putInt(CIntentionLayout.INTENTION_CELL_SIZE.height);
 					forward(p);
 				}
 			}
