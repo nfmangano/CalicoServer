@@ -37,6 +37,7 @@ class CIntentionCluster
 	private final Dimension layoutSize = new Dimension();
 
 	private boolean populated = false;
+	private double normalizedSizeRatio = 1.0d;
 
 	public CIntentionCluster(long rootCanvasId)
 	{
@@ -156,10 +157,10 @@ class CIntentionCluster
 					}
 				}
 
-				double ringRadius = ringSpan / (2 * Math.PI);
+				double ringRadius = (ringSpan / (2 * Math.PI)) * normalizedSizeRatio;
 				if (ringRadius < (lastRingRadius + RING_SEPARATION))
 				{
-					ringRadius = (lastRingRadius + RING_SEPARATION);
+					ringRadius = (lastRingRadius + RING_SEPARATION) * normalizedSizeRatio;
 					ringSpan = (int) (2 * Math.PI * ringRadius);
 				}
 
@@ -337,5 +338,11 @@ class CIntentionCluster
 
 			return firstCanvas.getIndex() - secondCanvas.getIndex();
 		}
+	}
+	
+	public void setNormalizedSizeRatio(double newRatio)
+	{
+		normalizedSizeRatio = newRatio;
+		ringRadii.clear();
 	}
 }

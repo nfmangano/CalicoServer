@@ -28,10 +28,10 @@ public class CIntentionLayout
 		return new Point(x - (CIntentionLayout.INTENTION_CELL_SIZE.width / 2), y - (CIntentionLayout.INTENTION_CELL_SIZE.height / 2));
 	}
 	
+	public static final Dimension CLUSTER_DEFAULT_SIZE = new Dimension(1000,1000);
 	public static final Dimension INTENTION_CELL_DEFAULT_SIZE = new Dimension(200, 130);
-
-	public static final Dimension INTENTION_CELL_SIZE = new Dimension(200, 130);
-	static final int INTENTION_CELL_DIAMETER = calculateCellDiameter(INTENTION_CELL_SIZE);
+	public static Dimension INTENTION_CELL_SIZE = new Dimension(200, 130);
+	static int INTENTION_CELL_DIAMETER = calculateCellDiameter(INTENTION_CELL_SIZE);
 
 	private final CIntentionClusterGraph graph = new CIntentionClusterGraph();
 	private final CIntentionTopology topology = new CIntentionTopology();
@@ -120,5 +120,11 @@ public class CIntentionLayout
 	public int getClusterCount()
 	{
 		return graph.getClusterCount();
+	}
+	
+	public static void setCellSize(Dimension newSize)
+	{
+		INTENTION_CELL_SIZE = newSize;
+		INTENTION_CELL_DIAMETER = calculateCellDiameter(INTENTION_CELL_SIZE);
 	}
 }

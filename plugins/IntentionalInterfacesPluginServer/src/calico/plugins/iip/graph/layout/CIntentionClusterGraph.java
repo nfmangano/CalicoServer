@@ -5,12 +5,14 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import calico.networking.netstuff.CalicoPacket;
 import calico.plugins.iip.IntentionalInterfacesNetworkCommands;
+import calico.plugins.iip.controllers.CCanvasLinkController;
 
 public class CIntentionClusterGraph {
 	static boolean computedClusterDimensions = false;
@@ -128,6 +130,66 @@ public class CIntentionClusterGraph {
 			buffer.append("]");
 		}
 
+		public void normalizeSize(Dimension maxClusterDimension) {
+			// get ratio
+			double xRatio = clusterDimensions.getWidth() / maxClusterDimension.getWidth();
+			double yRatio = clusterDimensions.getHeight() / maxClusterDimension.getHeight();
+			double ratio = Math.min(xRatio, yRatio);
+			
+//			//get max dimensions of the contents of this dimension
+//			
+//			//compute necessary values
+//			Point2D.Double initialOriginDelta = new Point2D.Double(clusterLayout.getBoundingBox().getWidth()/2,
+//					clusterLayout.getBoundingBox().getHeight()/2);
+//			Point2D.Double finalOriginDelta = new Point2D.Double(clusterLayout.getBoundingBox().getWidth()/2, 
+//					clusterLayout.getBoundingBox().getHeight()/2);
+//			finalOriginDelta.setLocation(finalOriginDelta.x * ratio, finalOriginDelta.y * ratio);
+//			
+//			// get affine transformation
+//			//	create affine transformation; 
+//			//	move cluster so that upperleft corner is at position 0,0; 
+//			//	scale the contents of the cluster; 
+//			//	move center back to position 0,0
+//			AffineTransform transform = AffineTransform.getTranslateInstance(initialOriginDelta.x, initialOriginDelta.y);
+//			AffineTransform transform2 = AffineTransform.getScaleInstance(ratio, ratio);
+//			AffineTransform transform3 = AffineTransform.getTranslateInstance(-1 * (int)finalOriginDelta.x, 
+//					-1 * (int)finalOriginDelta.y);
+//			
+//			//apply transform to all CICs and CanvasLinks
+//			for (CIntentionClusterLayout.CanvasPosition layoutPosition : clusterLayout
+//					.getCanvasPositions()) {
+//				Point p = new Point(layoutPosition.location);
+//				transform.transform(p, p);
+//				transform2.transform(p, p);
+//				transform3.transform(p, p);
+//				layoutPosition.translateBy(layoutPosition.location.x - p.x, layoutPosition.location.y - p.y);
+//			}
+			
+			cluster.setNormalizedSizeRatio(ratio);
+			Dimension newCellSize = new Dimension((int)(CIntentionLayout.INTENTION_CELL_DEFAULT_SIZE.getWidth() * ratio),
+					(int)(CIntentionLayout.INTENTION_CELL_DEFAULT_SIZE.getHeight() * ratio));
+			CIntentionLayout.setCellSize(newCellSize);
+			
+			//traverse canvas links
+			// ????? WHERE ARE THE POSITIONS SET DURING LAYOUT ??????
+			
+//			for (long anchorId : CCanvasLinkController.getInstance().getAnchorIdsForCanvasId(cluster.getRootCanvasId()))
+//			{
+//				long linkedCanvasId = CCanvasLinkController.getInstance().getOpposite(anchorId).getCanvasId();
+//				if (linkedCanvasId < 0L)
+//				{
+//					continue;
+//				}
+//				
+//				//transform canvas position
+//
+//			}
+			
+			
+			
+			
+		}
+
 
 	}
 
@@ -232,51 +294,71 @@ public class CIntentionClusterGraph {
 		}
 	}
 
+	/**
+	 * This method does the following in order:
+	 * 	1) Calculate the dimensions in freespace.
+	 * 	2) Normalizes the size of CIntentionCells and the radii of clusters.
+	 * 	3) Computes the layout of the cluster again with the revised values.
+	 */
 	private void calculate() {
 		if (isCalculated)
 			return;
-
+		
 		// calculate default dimension
+		//	First we must reset the size of the cells to their default value.
+		CIntentionLayout.setCellSize(CIntentionLayout.INTENTION_CELL_DEFAULT_SIZE);
 		int CLUSTER_PADDING = 60;
-		int minWidth = Integer.MIN_VALUE;
-		int minHeight = Integer.MIN_VALUE;
+		int maxWidth = Integer.MIN_VALUE;
+		int maxHeight = Integer.MIN_VALUE;
 		for (int column = 0; column < columnCount; column++) {
 			for (List<Position> row : graph) {
 				Position position = row.get(column);
 				if (position.isEmpty()) {
 
 				} else {
+					//reset the radii of clusters to their default values
+					position.cluster.setNormalizedSizeRatio(1.0d);
 					position.layoutInEmptySpace();
 					Dimension boundingBox = position.clusterLayout
 							.getBoundingBox();
-					if (boundingBox.width > minWidth)
-						minWidth = boundingBox.width;
-					if (boundingBox.height > minHeight)
-						minHeight = boundingBox.height;
+					if (boundingBox.width > maxWidth)
+						maxWidth = boundingBox.width;
+					if (boundingBox.height > maxHeight)
+						maxHeight = boundingBox.height;
 				}
 			}
 			unitGraph.nextColumn();
 		}
-		clusterDimensions = new Dimension(minWidth + CLUSTER_PADDING, minHeight
+		clusterDimensions = CIntentionLayout.CLUSTER_DEFAULT_SIZE;
+		Dimension maxClusterDimension = new Dimension(maxWidth + CLUSTER_PADDING, maxHeight
 				+ CLUSTER_PADDING);
 		computedClusterDimensions = true;
 		
+		//compute normalized ratios
+		double xRatio = clusterDimensions.getWidth() / maxClusterDimension.getWidth();
+		double yRatio = clusterDimensions.getHeight() / maxClusterDimension.getHeight();
+		double ratio = Math.min(xRatio, yRatio);		
+		Dimension normalizedCellSize = new Dimension((int)(CIntentionLayout.INTENTION_CELL_DEFAULT_SIZE.getWidth() * ratio),
+				(int)(CIntentionLayout.INTENTION_CELL_DEFAULT_SIZE.getHeight() * ratio));
+		CIntentionLayout.setCellSize(normalizedCellSize);
+		
 		//recompute cluster layout a second time with normalized cells
-		//Note, we could have simply re-scaled all of the points rather than recompute the cluster layout,
-		//   but it's done this way both because of laziness and reusing code is less prone to bugs.
-		normalizePositionDimension(clusterDimensions, new Dimension(500, 500));
 		for (int column = 0; column < columnCount; column++) {
 			for (List<Position> row : graph) {
 				Position position = row.get(column);
 				if (position.isEmpty()) {
 
 				} else {
+					position.cluster.setNormalizedSizeRatio(ratio);
+
+//					position.normalizeSize(maxClusterDimension);
 					position.layoutInEmptySpace();
 				}
 			}
 			unitGraph.nextColumn();
 		}
 
+		//layout the clusters within the unit graph
 		for (int column = 0; column < columnCount; column++) {
 			for (List<Position> row : graph) {
 				Position position = row.get(column);
@@ -295,22 +377,22 @@ public class CIntentionClusterGraph {
 	 * @param maxDimension The size of the largest cluster.
 	 * @param normalizedDimension The size that we want all of the clusters to be.
 	 */
-	private void normalizePositionDimension(Dimension maxDimension,
-			Dimension normalizedDimension) {
-		// get ratio
-		float xRatio = maxDimension.width / normalizedDimension.width;
-		float yRatio = maxDimension.height / normalizedDimension.height;
-		float ratio = Math.min(xRatio, yRatio);
-
-		// get affine transformation
-		AffineTransform transform = new AffineTransform();
-		transform.scale(ratio, ratio);
-		
-		// change size and position of all CICs and CanvasLinks
-		CIntentionLayout.INTENTION_CELL_SIZE.setSize(
-				CIntentionLayout.INTENTION_CELL_DEFAULT_SIZE.width * ratio, 
-				CIntentionLayout.INTENTION_CELL_DEFAULT_SIZE.height * ratio);
-	}
+//	private void normalizePositionDimension(Dimension maxDimension,
+//			Dimension normalizedDimension) {
+//		// get ratio
+//		float xRatio = maxDimension.width / normalizedDimension.width;
+//		float yRatio = maxDimension.height / normalizedDimension.height;
+//		float ratio = Math.min(xRatio, yRatio);
+//
+//		// get affine transformation
+//		AffineTransform transform = new AffineTransform();
+//		transform.scale(ratio, ratio);
+//		
+//		// change size and position of all CICs and CanvasLinks
+//		CIntentionLayout.INTENTION_CELL_SIZE.setSize(
+//				CIntentionLayout.INTENTION_CELL_DEFAULT_SIZE.width * ratio, 
+//				CIntentionLayout.INTENTION_CELL_DEFAULT_SIZE.height * ratio);
+//	}
 
 	private List<Position> getRow(int rowIndex) {
 		for (int i = graph.size(); i <= rowIndex; i++) {
