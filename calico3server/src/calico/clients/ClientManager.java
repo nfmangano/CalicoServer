@@ -323,8 +323,9 @@ public class ClientManager
 		// Send away!
 		ClientManager.send(client, CalicoPacket.command(NetworkCommand.CONSISTENCY_CHECK));
 		
+//		CalicoPacket packet = new CalicoPacket();
+		
 		/*
-		 * TODO:
 		 * - We want to send the list of canvases
 		 * - The groups
 		 * - The BGelements
@@ -333,14 +334,20 @@ public class ClientManager
 		 * - 
 		 */
 		
+		//calico state elements
+		for (CalicoStateElement element : CalicoPluginManager.calicoStateExtensions)
+		{
+			send(client, element.getCalicoStateElementUpdatePackets());
+		}
+		
 		ClientManager.send(CalicoPacket.getPacket(NetworkCommand.CANVAS_SET_DIMENSIONS, COptions.canvas.width, COptions.canvas.height));
+		
 		
 		long[] canvasids = CCanvasController.canvases.keySet().toLongArray();
 		
-		
 		for(int j=0;j<canvasids.length;j++)
 		{
-		
+			send(client, CalicoPacket.getPacket(NetworkCommand.CANVAS_LOAD_PROGRESS, j, canvasids.length));
 			CCanvas can = CCanvasController.canvases.get(canvasids[j]);
 			
 			CalicoPacket[] packets = {};
@@ -358,11 +365,7 @@ public class ClientManager
 			}
 		}
 		
-		//calico state elements
-		for (CalicoStateElement element : CalicoPluginManager.calicoStateExtensions)
-		{
-			send(client, element.getCalicoStateElementUpdatePackets());
-		}
+
 		
 		// Stuff!
 		ClientManager.send(client, CalicoPacket.command(NetworkCommand.CONSISTENCY_FINISH));
