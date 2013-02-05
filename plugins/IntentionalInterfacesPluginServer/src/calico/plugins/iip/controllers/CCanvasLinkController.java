@@ -2,17 +2,22 @@ package calico.plugins.iip.controllers;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
 
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import calico.ProcessQueue;
+import calico.networking.netstuff.CalicoPacket;
 import calico.plugins.iip.CCanvasLink;
 import calico.plugins.iip.CCanvasLinkAnchor;
 import calico.plugins.iip.IntentionalInterfaceState;
+import calico.plugins.iip.IntentionalInterfacesNetworkCommands;
 import calico.plugins.iip.IntentionalInterfacesServerPlugin;
 import calico.plugins.iip.graph.layout.CIntentionLayout;
+import calico.uuid.UUIDAllocator;
 
 public class CCanvasLinkController
 {
@@ -180,5 +185,58 @@ public class CCanvasLinkController
 			linkIds.add(linkAnchors.get(anchorId).getLinkId());
 		}
 		return linkIds;
+	}
+	
+	/**
+	 * Create a new link, sending the request directly to the server. Instantiation and placement of rendering
+	 * components will occur on each client when the server broadcasts the new link.
+	 */
+	public void createLink(long fromCanvasId, long toCanvasId)
+	{
+		CalicoPacket packet = new CalicoPacket();
+		packet.putInt(IntentionalInterfacesNetworkCommands.CLINK_CREATE);
+		packet.putLong(UUIDAllocator.getUUID());
+		packAnchor(packet, fromCanvasId, CIntentionLayout.getInstance().getArrowAnchorPosition(fromCanvasId, toCanvasId));
+		packAnchor(packet, toCanvasId, CIntentionLayout.getInstance().getArrowAnchorPosition(toCanvasId, fromCanvasId));
+		packet.putString(""); // empty label
+
+		packet.rewind();
+		ProcessQueue.receive(IntentionalInterfacesNetworkCommands.CLINK_CREATE, null, packet);
+//		Networking.send(packet);
+	}
+	
+	private void packAnchor(CalicoPacket packet, long canvas_uuid, Point2D position)
+	{
+		packAnchor(packet, canvas_uuid, CCanvasLinkAnchor.ArrowEndpointType.INTENTION_CELL, (int) position.getX(), (int) position.getY(), 0L);
+	}
+
+	private void packAnchor(CalicoPacket packet, long canvas_uuid, Point2D position, long group_uuid)
+	{
+		packAnchor(packet, canvas_uuid, CCanvasLinkAnchor.ArrowEndpointType.INTENTION_CELL, (int) position.getX(), (int) position.getY(), group_uuid);
+	}
+
+	private void packAnchor(CalicoPacket packet, long canvas_uuid, CCanvasLinkAnchor.ArrowEndpointType type, int x, int y)
+	{
+		packAnchor(packet, canvas_uuid, type, x, y, 0L);
+	}
+
+	private void packAnchor(CalicoPacket packet, long canvas_uuid, CCanvasLinkAnchor.ArrowEndpointType type, int x, int y, long group_uuid)
+	{
+		packet.putLong(UUIDAllocator.getUUID());
+		packet.putLong(canvas_uuid);
+
+		packet.putInt(type.ordinal());
+		if (type == CCanvasLinkAnchor.ArrowEndpointType.FLOATING)
+		{
+			packet.putInt(x);
+			packet.putInt(y);
+		}
+		else
+		{
+			packet.putInt(0);
+			packet.putInt(0);
+		}
+
+		packet.putLong(group_uuid);
 	}
 }

@@ -1,12 +1,15 @@
 package calico.plugins.iip;
 
 import java.awt.Point;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
 import calico.components.CCanvas;
 import calico.networking.netstuff.CalicoPacket;
 import calico.plugins.iip.graph.layout.CIntentionLayout;
+import edu.umd.cs.piccolo.util.PBounds;
 
 public class CIntentionCell
 {
@@ -108,5 +111,22 @@ public class CIntentionCell
 		{
 			state.addCellPacket(CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_TAG, uuid, intentionTypeId));
 		}
+	}
+	
+	/**
+	 * Get the center point of this CIC in Intention View coordinates.
+	 */
+	public Point2D getCenter()
+	{
+		Rectangle2D.Double rect = new Rectangle2D.Double(location.x, location.y, 
+				CIntentionLayout.INTENTION_CELL_SIZE.width,
+				CIntentionLayout.INTENTION_CELL_SIZE.height);
+		return new Point2D.Double(rect.getCenterX(), rect.getCenterY());
+	}
+
+	public Rectangle2D copyBounds() {
+		return 	new Rectangle2D.Double(location.x, location.y, 
+				CIntentionLayout.INTENTION_CELL_SIZE.width,
+				CIntentionLayout.INTENTION_CELL_SIZE.height);
 	}
 }

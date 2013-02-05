@@ -157,14 +157,17 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 					createIntentionCell(canvasId);
 					if (originatingCanvasId > 0L)
 					{
-						CIntentionLayout.getInstance().insertCluster(originatingCanvasId, canvasId);
+						long rootCanvas = CIntentionLayout.getInstance().getRootCanvasId(originatingCanvasId);
+						CCanvasLinkController.getInstance().createLink(rootCanvas, canvasId);
+//						CIntentionCellController.getInstance().get
+//						CIntentionLayout.getInstance().insertCluster(originatingCanvasId, canvasId);
 					}
 					else
 					{
 						CIntentionLayout.getInstance().insertCluster(canvasId);
 					}
 					
-//					layoutGraph();
+					layoutGraph();
 	
 					break;
 				case NetworkCommand.CANVAS_DELETE:

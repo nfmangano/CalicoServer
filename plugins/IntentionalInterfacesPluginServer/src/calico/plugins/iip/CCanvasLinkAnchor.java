@@ -17,6 +17,17 @@ public class CCanvasLinkAnchor
 	private Point point;
 
 	private long group_uuid;
+	
+	/**
+	 * Simple enum specifying whether an endpoint is attached to any <code>CIntentionCell</code>.
+	 * 
+	 * @author Byron Hawkins
+	 */
+	public enum ArrowEndpointType
+	{
+		FLOATING,
+		INTENTION_CELL;
+	}
 
 	public CCanvasLinkAnchor(long uuid, long link_uuid, long canvas_uuid)
 	{

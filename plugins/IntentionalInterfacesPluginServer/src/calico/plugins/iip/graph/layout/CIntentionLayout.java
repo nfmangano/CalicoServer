@@ -3,12 +3,16 @@ package calico.plugins.iip.graph.layout;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.List;
 
 import calico.controllers.CCanvasController;
 import calico.plugins.iip.CCanvasLink;
 import calico.plugins.iip.IntentionalInterfaceState;
 import calico.plugins.iip.controllers.CCanvasLinkController;
+import calico.plugins.iip.controllers.CIntentionCellController;
+import edu.umd.cs.piccolo.util.PBounds;
 
 public class CIntentionLayout
 {
@@ -125,6 +129,96 @@ public class CIntentionLayout
 	public Rectangle getTopologyBounds()
 	{
 		return topology.getTopologyBounds();
+	}
+	
+	public Point2D getArrowAnchorPosition(long canvas_uuid, long opposite_canvas_uuid)
+	{
+		calico.plugins.iip.CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(opposite_canvas_uuid);
+		return getArrowAnchorPosition(canvas_uuid, cell.getCenter());
+	}
+
+	public Point2D getArrowAnchorPosition(long canvas_uuid, Point2D opposite)
+	{
+		return getArrowAnchorPosition(canvas_uuid, opposite.getX(), opposite.getY());
+	}
+
+	public Point2D getArrowAnchorPosition(long canvas_uuid, double xOpposite, double yOpposite)
+	{
+		calico.plugins.iip.CIntentionCell cell = CIntentionCellController.getInstance().getCellByCanvasId(canvas_uuid);
+		return alignAnchorAtCellEdge(cell.copyBounds(), xOpposite, yOpposite);
+	}
+	
+	/**
+	 * Trig machinery to align arrow anchors with CIC edges.
+	 */
+	private Point2D alignAnchorAtCellEdge(Rectangle2D cellBounds, double xOpposite, double yOpposite)
+	{
+		double[] intersection = new double[2];
+		for (CellEdge edge : CellEdge.values())
+		{
+			if (edge.findIntersection(cellBounds, xOpposite, yOpposite, intersection))
+			{
+				return new Point2D.Double(intersection[0], intersection[1]);
+			}
+		}
+
+//		System.out.println("Failed to align an arrow to a CIntentionCell edge--can't find the arrow's intersection with the cell!");
+
+		return new Point2D.Double(cellBounds.getCenterX(), cellBounds.getCenterY());
+	}
+	
+	/**
+	 * Utility for calculating the intersection of a line with the bounds of a CIC, used for placing arrow endpoints
+	 * adjacent to cell edges.
+	 * 
+	 * @author Byron Hawkins
+	 */
+	private enum CellEdge
+	{
+		TOP
+		{
+			@Override
+			boolean findIntersection(Rectangle2D cellBounds, double xOpposite, double yOpposite, double[] intersection)
+			{
+				int result = calico.utils.Geometry.findLineSegmentIntersection(cellBounds.getX(), cellBounds.getY(), cellBounds.getX() + cellBounds.getWidth(),
+						cellBounds.getY(), cellBounds.getCenterX(), cellBounds.getCenterY(), xOpposite, yOpposite, intersection);
+				return result == 1;
+			}
+		},
+		RIGHT
+		{
+			@Override
+			boolean findIntersection(Rectangle2D cellBounds, double xOpposite, double yOpposite, double[] intersection)
+			{
+				int result = calico.utils.Geometry.findLineSegmentIntersection(cellBounds.getX(), cellBounds.getY() + cellBounds.getHeight(),
+						cellBounds.getX() + cellBounds.getWidth(), cellBounds.getY() + cellBounds.getHeight(), cellBounds.getCenterX(),
+						cellBounds.getCenterY(), xOpposite, yOpposite, intersection);
+				return result == 1;
+			}
+		},
+		BOTTOM
+		{
+			@Override
+			boolean findIntersection(Rectangle2D cellBounds, double xOpposite, double yOpposite, double[] intersection)
+			{
+				int result = calico.utils.Geometry.findLineSegmentIntersection(cellBounds.getX(), cellBounds.getY(), cellBounds.getX(),
+						cellBounds.getY() + cellBounds.getHeight(), cellBounds.getCenterX(), cellBounds.getCenterY(), xOpposite, yOpposite, intersection);
+				return result == 1;
+			}
+		},
+		LEFT
+		{
+			@Override
+			boolean findIntersection(Rectangle2D cellBounds, double xOpposite, double yOpposite, double[] intersection)
+			{
+				int result = calico.utils.Geometry.findLineSegmentIntersection(cellBounds.getX() + cellBounds.getWidth(), cellBounds.getY(),
+						cellBounds.getX() + cellBounds.getWidth(), cellBounds.getY() + cellBounds.getHeight(), cellBounds.getCenterX(),
+						cellBounds.getCenterY(), xOpposite, yOpposite, intersection);
+				return result == 1;
+			}
+		};
+
+		abstract boolean findIntersection(Rectangle2D cellBounds, double xOpposite, double yOpposite, double[] intersection);
 	}
 	
 }
