@@ -2,6 +2,7 @@ package calico.plugins.iip;
 
 import java.awt.Rectangle;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import calico.CalicoServer;
@@ -509,7 +510,7 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 	private static void layoutGraph()
 	{
 		List<CIntentionClusterLayout> clusterLayouts = CIntentionLayout.getInstance().layoutGraph();
-
+		ArrayList<CalicoPacket> packetsToSend = new ArrayList<CalicoPacket>();
 		for (CIntentionClusterLayout clusterLayout : clusterLayouts)
 		{
 			for (CIntentionClusterLayout.CanvasPosition canvas : clusterLayout.getCanvasPositions())
@@ -522,14 +523,28 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 					p.putLong(cell.getId());
 					p.putInt(cell.getLocation().x);
 					p.putInt(cell.getLocation().y);
-					forward(p);
+//					forward(p);
+					packetsToSend.add(p);
 				}
 			}
 		}
 
-		forward(CIntentionLayout.getInstance().getTopology().createPacket());
+//		forward(CIntentionLayout.getInstance().getTopology().createPacket());
+		packetsToSend.add(CIntentionLayout.getInstance().getTopology().createPacket());
 		
-		double sqrt = Math.sqrt((double)CIntentionLayout.getInstance().getClusterCount());
+		CalicoPacket p = new CalicoPacket();
+		p.putInt(NetworkCommand.CHUNK_DATA);
+		p.putInt(packetsToSend.size());
+		
+		for(int j=0;j<packetsToSend.size();j++)
+		{
+			byte[] bytes = packetsToSend.get(j).export();
+			p.putInt(bytes.length);
+			p.putByte(bytes);
+		}
+		forward(p);
+		
+//		double sqrt = Math.sqrt((double)CIntentionLayout.getInstance().getClusterCount());
 //		if (sqrt > Math.floor(sqrt))
 //		{
 //			CalicoPacket canvasCreatePacket = CalicoPacket.getPacket(NetworkCommand.CANVAS_CREATE, calico.uuid.UUIDAllocator.getUUID(), 0l);
