@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 
 import calico.networking.netstuff.CalicoPacket;
+import calico.plugins.iip.graph.layout.CIntentionLayout;
 
 public class IntentionalInterfaceState
 {
@@ -40,8 +41,14 @@ public class IntentionalInterfaceState
 		packets.add(packet);
 	}
 	
+	public void setTopologyBoundsPacket(CalicoPacket packet)
+	{
+		packets.add(packet);
+	}
+	
 	public CalicoPacket[] getAllPackets()
 	{
+
 		packets.addAll(cellPackets);
 		packets.addAll(linkPackets);
 		packets.add(CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_UPDATE_FINISHED, IntentionalInterfacesNetworkCommands.CIC_UPDATE_FINISHED));

@@ -1,5 +1,6 @@
 package calico.plugins.iip;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.List;
 
@@ -574,6 +575,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 	public CalicoPacket[] getCalicoStateElementUpdatePackets()
 	{
 		state.reset();
+		
+		Rectangle rect = CIntentionLayout.getInstance().getTopologyBounds();
+		state.setTopologyBoundsPacket(CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.WALL_BOUNDS, rect.x, rect.y, rect.width, rect.height));		
 		CIntentionCellController.getInstance().populateState(state);
 		CCanvasLinkController.getInstance().populateState(state);
 		CIntentionLayout.getInstance().populateState(state);

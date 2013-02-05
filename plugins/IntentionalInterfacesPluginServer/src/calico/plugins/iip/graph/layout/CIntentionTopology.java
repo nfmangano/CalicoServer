@@ -119,4 +119,25 @@ public class CIntentionTopology
 		}
 		return buffer.toString();
 	}
+	
+	public Rectangle getTopologyBounds()
+	{
+		int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE,
+				maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+		
+		for (Cluster c : clusters)
+		{
+			if (minX > c.outerBox.x)
+				minX = c.outerBox.x;
+			if (minY > c.outerBox.y)
+				minY = c.outerBox.y;
+			if (maxX < c.outerBox.x + c.outerBox.width)
+				maxX = c.outerBox.x + c.outerBox.width;
+			if (maxY < c.outerBox.y + c.outerBox.height)
+				maxY = c.outerBox.y + c.outerBox.height;
+		}
+		
+		return new Rectangle(minX, minY,
+				maxX - minX, maxY - minY);
+	}
 }

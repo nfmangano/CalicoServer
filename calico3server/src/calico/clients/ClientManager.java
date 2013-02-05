@@ -448,10 +448,18 @@ public class ClientManager
 	{
 		long[] canvasids = CCanvasController.canvases.keySet().toLongArray();
 		
+		CalicoPacket p = new CalicoPacket();
+		p.putInt(NetworkCommand.CHUNK_DATA);
+		p.putInt(canvasids.length);
+		
 		for(int j=0;j<canvasids.length;j++)
 		{
-			ClientManager.send(c,CCanvasController.canvases.get(canvasids[j]).getInfoPacket());
+			byte[] bytes = CCanvasController.canvases.get(canvasids[j]).getInfoPacket().export();
+			p.putInt(bytes.length);
+			p.putByte(bytes);
+//			ClientManager.send(c,CCanvasController.canvases.get(canvasids[j]).getInfoPacket());
 		}
+		ClientManager.send(c, p);
 		//
 	}
 	

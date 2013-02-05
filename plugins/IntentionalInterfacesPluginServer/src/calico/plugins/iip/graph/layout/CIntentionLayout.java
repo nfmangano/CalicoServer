@@ -2,6 +2,7 @@ package calico.plugins.iip.graph.layout;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.List;
 
 import calico.controllers.CCanvasController;
@@ -43,6 +44,7 @@ public class CIntentionLayout
 	{
 		state.setTopologyPacket(topology.createPacket());
 		state.setClusterGraphPacket(graph.createPacket());
+		
 	}
 	
 	public void inflateStoredClusterGraph(String graphData)
@@ -119,4 +121,10 @@ public class CIntentionLayout
 	{
 		return graph.getClusterCount();
 	}
+	
+	public Rectangle getTopologyBounds()
+	{
+		return topology.getTopologyBounds();
+	}
+	
 }
