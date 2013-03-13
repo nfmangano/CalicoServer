@@ -143,6 +143,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 				case CLINK_DELETE:
 					CLINK_DELETE(p, c, true);
 					break;
+				case CIC_SET_PIN:
+					CIC_SET_PIN(p, c);
+					break;
 			}
 		}
 		else
@@ -505,6 +508,19 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		{
 			forward(p, c);
 		}
+	}
+	
+	private static void CIC_SET_PIN(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIC_SET_PIN.verify(p);
+		
+		long cic_id = p.getLong();
+		boolean pinValue = p.getInt() != 0;
+		
+		CIntentionCellController.getInstance().getCellById(cic_id).setIsPinned(pinValue);
+		
+		forward(p, c);
 	}
 
 	private static void layoutGraph()

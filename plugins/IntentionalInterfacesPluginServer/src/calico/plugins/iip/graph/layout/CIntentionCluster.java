@@ -14,6 +14,7 @@ import calico.controllers.CCanvasController;
 import calico.plugins.iip.CCanvasLink;
 import calico.plugins.iip.CCanvasLinkAnchor;
 import calico.plugins.iip.controllers.CCanvasLinkController;
+import calico.plugins.iip.controllers.CIntentionCellController;
 
 class CIntentionCluster
 {
@@ -116,6 +117,8 @@ class CIntentionCluster
 		for (long anchorId : CCanvasLinkController.getInstance().getAnchorIdsForCanvasId(rootCanvasId))
 		{
 			long linkedCanvasId = CCanvasLinkController.getInstance().getOpposite(anchorId).getCanvasId();
+			if (CIntentionCellController.getInstance().getCellByCanvasId(linkedCanvasId).isPinned())
+				continue;
 			if (linkedCanvasId < 0L)
 			{
 				continue;
@@ -236,6 +239,8 @@ class CIntentionCluster
 				continue;
 			}
 			long linkedCanvasId = CCanvasLinkController.getInstance().getOpposite(anchorId).getCanvasId();
+			if (CIntentionCellController.getInstance().getCellByCanvasId(linkedCanvasId).isPinned())
+				continue;
 			if (linkedCanvasId < 0L)
 			{
 				continue; // this is not a canvas, nothing is here

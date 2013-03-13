@@ -1,6 +1,7 @@
 package calico.plugins.iip;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.List;
 
 import calico.components.CCanvas;
 import calico.networking.netstuff.CalicoPacket;
+import calico.plugins.iip.controllers.CIntentionCellController;
 import calico.plugins.iip.graph.layout.CIntentionLayout;
 import edu.umd.cs.piccolo.util.PBounds;
 
@@ -19,7 +21,17 @@ public class CIntentionCell
 	private long canvas_uuid;
 	private final Point location;
 	private String title;
+	private boolean isPinned = false;
 	private Long intentionTypeId = null;
+	
+	/**
+	 * Used by layout manager for pinning
+	 */
+	private double ratioX = 0;
+	/**
+	 * Used by layout manager for pinning
+	 */
+	private double ratioY = 0;
 
 	public CIntentionCell(long uuid, long canvasId)
 	{
@@ -57,8 +69,23 @@ public class CIntentionCell
 
 		location.x = x;
 		location.y = y;
+		
+		
+		Rectangle r = CIntentionLayout.getInstance().getClusterBounds(
+				calico.plugins.iip.graph.layout.CIntentionLayout.getInstance().getRootCanvasId(this.canvas_uuid));
+		
+		this.ratioX = (location.getX() - r.getX()) / r.getWidth();
+		this.ratioY = (location.getY() - r.getY()) / r.getHeight();
 
 		return true;
+	}
+	
+	public void setLocationBasedOnRatio(Rectangle r)
+	{
+		int newX = (int)(r.getWidth() * ratioX + r.getX());
+		int newY = (int)(r.getHeight() * ratioY + r.getY());
+		
+		setLocation(newX, newY);
 	}
 
 	public String getTitle()
@@ -100,7 +127,7 @@ public class CIntentionCell
 
 	public CalicoPacket getCreatePacket()
 	{
-		return CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_CREATE, uuid, canvas_uuid, location.x, location.y, title);
+		return CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIC_CREATE, uuid, canvas_uuid, location.x, location.y, title, isPinned);
 	}
 
 	public void populateState(IntentionalInterfaceState state)
@@ -128,5 +155,13 @@ public class CIntentionCell
 		return 	new Rectangle2D.Double(location.x, location.y, 
 				CIntentionLayout.INTENTION_CELL_SIZE.width,
 				CIntentionLayout.INTENTION_CELL_SIZE.height);
+	}
+
+	public void setIsPinned(boolean pinValue) {
+		isPinned = pinValue;
+	}
+
+	public boolean isPinned() {
+		return isPinned;
 	}
 }

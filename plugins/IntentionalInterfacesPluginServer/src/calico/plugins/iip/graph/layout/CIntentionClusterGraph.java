@@ -4,12 +4,14 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import calico.networking.netstuff.CalicoPacket;
 import calico.plugins.iip.IntentionalInterfacesNetworkCommands;
+import calico.plugins.iip.controllers.CIntentionCellController;
 
 public class CIntentionClusterGraph
 {	static	boolean computedClusterDimensions = false; static Dimension clusterDimensions;
@@ -98,9 +100,14 @@ public class CIntentionClusterGraph
 //			Point center = new Point((int) ((xUnit * CIntentionCluster.CLUSTER_UNIT_SIZE.width) + rootPosition.x),
 //					(int) ((yUnit * CIntentionCluster.CLUSTER_UNIT_SIZE.height) + rootPosition.y));
 
+//			Rectangle targetBounds = new Rectangle(center.x - clusterDimensions.width/2, center.y - clusterDimensions.height/2, clusterDimensions.width, clusterDimensions.height);
 			for (CIntentionClusterLayout.CanvasPosition layoutPosition : clusterLayout.getCanvasPositions())
 			{
 				layoutPosition.translateBy(center.x, center.y);
+//				if (CIntentionCellController.getInstance().getCellByCanvasId(layoutPosition.canvasId).isPinned())
+//				{
+//					CIntentionCellController.getInstance().getCellByCanvasId(layoutPosition.canvasId).setLocationBasedOnRatio(targetBounds);
+//				}
 			}
 
 			cluster.setLocation(center);

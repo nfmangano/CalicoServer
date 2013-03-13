@@ -78,6 +78,16 @@ public class CIntentionTopology
 		{
 			return radii;
 		}
+		
+		public long getRootCanvasId()
+		{
+			return rootCanvasId;
+		}
+		
+		public Rectangle getOuterBoxBounds()
+		{
+			return outerBox.getBounds();
+		}
 	}
 
 	private final List<Cluster> clusters = new ArrayList<Cluster>();

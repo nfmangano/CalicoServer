@@ -12,6 +12,7 @@ import calico.plugins.iip.CCanvasLink;
 import calico.plugins.iip.IntentionalInterfaceState;
 import calico.plugins.iip.controllers.CCanvasLinkController;
 import calico.plugins.iip.controllers.CIntentionCellController;
+import calico.plugins.iip.graph.layout.CIntentionTopology.Cluster;
 import edu.umd.cs.piccolo.util.PBounds;
 
 public class CIntentionLayout
@@ -129,6 +130,15 @@ public class CIntentionLayout
 	public Rectangle getTopologyBounds()
 	{
 		return topology.getTopologyBounds();
+	}
+	
+	public Rectangle getClusterBounds(long rootCanvasId)
+	{
+		for (Cluster c : topology.getClusters())
+			if (c.getRootCanvasId() == rootCanvasId)
+				return c.getOuterBoxBounds();
+		
+		return null;
 	}
 	
 	public Point2D getArrowAnchorPosition(long canvas_uuid, long opposite_canvas_uuid)
