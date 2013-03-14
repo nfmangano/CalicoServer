@@ -74,8 +74,11 @@ public class CIntentionCell
 		Rectangle r = CIntentionLayout.getInstance().getClusterBounds(
 				calico.plugins.iip.graph.layout.CIntentionLayout.getInstance().getRootCanvasId(this.canvas_uuid));
 		
-		this.ratioX = (location.getX() - r.getX()) / r.getWidth();
-		this.ratioY = (location.getY() - r.getY()) / r.getHeight();
+		if (r != null)
+		{
+			this.ratioX = (location.getX() - r.getX()) / r.getWidth();
+			this.ratioY = (location.getY() - r.getY()) / r.getHeight();
+		}
 
 		return true;
 	}
@@ -86,6 +89,13 @@ public class CIntentionCell
 		int newY = (int)(r.getHeight() * ratioY + r.getY());
 		
 		setLocation(newX, newY);
+	}
+	
+	public Point getLocationBasedOnRatio(Rectangle r)
+	{
+		int newX = (int)(r.getWidth() * ratioX + r.getX());
+		int newY = (int)(r.getHeight() * ratioY + r.getY());
+		return new Point(newX,newY);
 	}
 
 	public String getTitle()

@@ -13,6 +13,7 @@ import calico.components.CCanvas;
 import calico.controllers.CCanvasController;
 import calico.plugins.iip.CCanvasLink;
 import calico.plugins.iip.CCanvasLinkAnchor;
+import calico.plugins.iip.CIntentionCell;
 import calico.plugins.iip.controllers.CCanvasLinkController;
 import calico.plugins.iip.controllers.CIntentionCellController;
 
@@ -221,6 +222,49 @@ class CIntentionCluster
 		}
 
 		return layout;
+	}
+	
+	public List<CIntentionCell> getAllCanvasesInCluster()
+	{
+		List<CIntentionCell> set = new ArrayList<CIntentionCell>();
+		for (long anchorId : CCanvasLinkController.getInstance().getAnchorIdsForCanvasId(rootCanvasId))
+		{
+			long linkedCanvasId = CCanvasLinkController.getInstance().getOpposite(anchorId).getCanvasId();
+
+			if (linkedCanvasId < 0L)
+			{
+				continue;
+			}
+
+			set.add(CIntentionCellController.getInstance().getCellByCanvasId(linkedCanvasId));
+
+			getAllCanvasesInCluster(linkedCanvasId, set);
+		}
+		
+		return set;
+	}
+	
+	private void getAllCanvasesInCluster(long canvasId, List<CIntentionCell> set)
+	{
+		set.add(CIntentionCellController.getInstance().getCellByCanvasId(canvasId));
+		
+		for (long anchorId : CCanvasLinkController.getInstance().getAnchorIdsForCanvasId(canvasId))
+		{
+			CCanvasLinkAnchor anchor = CCanvasLinkController.getInstance().getAnchor(anchorId);
+			CCanvasLink link = CCanvasLinkController.getInstance().getLink(anchor.getLinkId());
+			if (link.getAnchorB().getId() == anchorId)
+			{
+				continue;
+			}
+			long linkedCanvasId = CCanvasLinkController.getInstance().getOpposite(anchorId).getCanvasId();
+
+			if (linkedCanvasId < 0L)
+			{
+				continue; // this is not a canvas, nothing is here
+			}
+			getAllCanvasesInCluster(linkedCanvasId, set);
+		}
+		
 	}
 
 	private void traverseAndPopulate(long parentCanvasId, long canvasId, int ringIndex, CIntentionSlice slice)
