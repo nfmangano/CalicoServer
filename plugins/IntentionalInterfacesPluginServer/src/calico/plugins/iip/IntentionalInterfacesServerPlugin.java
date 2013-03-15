@@ -519,6 +519,7 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		boolean pinValue = p.getInt() != 0;
 		
 		CIntentionCellController.getInstance().getCellById(cic_id).setIsPinned(pinValue);
+		layoutGraph();
 		
 		forward(p, c);
 	}
