@@ -2,9 +2,14 @@ package calico.plugins.iip.controllers;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.commons.lang.ArrayUtils;
+
+import calico.plugins.iip.CCanvasLink;
+import calico.plugins.iip.CCanvasLinkAnchor;
 import calico.plugins.iip.CIntentionCell;
 import calico.plugins.iip.CIntentionType;
 import calico.plugins.iip.IntentionalInterfaceState;
@@ -128,5 +133,29 @@ public class CIntentionCellController
 				cell.clearIntentionType();
 			}
 		}
+	}
+	
+	public long[] getCIntentionCellChildren(long memberCanvasId)
+	{
+		ArrayList<Long> childrenCanvases = new ArrayList<Long>();
+		for (long anchorId : CCanvasLinkController.getInstance().getAnchorIdsForCanvasId(memberCanvasId))
+		{
+			CCanvasLinkAnchor anchor = CCanvasLinkController.getInstance().getAnchor(anchorId);
+			CCanvasLink link = CCanvasLinkController.getInstance().getLink(anchor.getLinkId());
+			if (link.getAnchorB().getId() == anchorId)
+			{
+				continue;
+			}
+			long linkedCanvasId = CCanvasLinkController.getInstance().getOpposite(anchorId).getCanvasId();
+
+			if (linkedCanvasId < 0L)
+			{
+				continue; // this is not a canvas, nothing is here
+			}
+			
+			childrenCanvases.add(new Long(linkedCanvasId));
+		}
+		
+		return ArrayUtils.toPrimitive(childrenCanvases.toArray(new Long[0]));
 	}
 }

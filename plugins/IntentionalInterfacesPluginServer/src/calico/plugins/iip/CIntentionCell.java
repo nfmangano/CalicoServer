@@ -9,6 +9,7 @@ import java.util.List;
 
 import calico.components.CCanvas;
 import calico.networking.netstuff.CalicoPacket;
+import calico.plugins.iip.controllers.CCanvasLinkController;
 import calico.plugins.iip.controllers.CIntentionCellController;
 import calico.plugins.iip.graph.layout.CIntentionLayout;
 import edu.umd.cs.piccolo.util.PBounds;
@@ -169,6 +170,10 @@ public class CIntentionCell
 
 	public void setIsPinned(boolean pinValue) {
 		isPinned = pinValue;
+		
+		long[] children = CIntentionCellController.getInstance().getCIntentionCellChildren(getCanvasId());
+		if (children.length > 0)
+			 CIntentionCellController.getInstance().getCellByCanvasId(children[0]).setIsPinned(pinValue);
 	}
 
 	public boolean isPinned() {
