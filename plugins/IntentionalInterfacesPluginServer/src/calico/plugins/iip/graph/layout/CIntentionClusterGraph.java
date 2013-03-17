@@ -264,8 +264,8 @@ public class CIntentionClusterGraph
 
 		//calculate default dimension
 		int CLUSTER_PADDING = 60;
-		int minWidth = Integer.MIN_VALUE;
-		int minHeight = Integer.MIN_VALUE;
+		int minWidth = 1500; //Integer.MIN_VALUE;
+		int minHeight = 1500;//Integer.MIN_VALUE;
 		for (int column = 0; column < columnCount; column++)
 		{
 			for (List<Position> row : graph)
