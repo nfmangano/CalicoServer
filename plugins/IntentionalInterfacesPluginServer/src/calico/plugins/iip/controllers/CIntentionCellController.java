@@ -74,14 +74,14 @@ public class CIntentionCellController
 		cells.remove(uuid);
 	}
 
-	public CIntentionType createIntentionType(long uuid, String name, int colorIndex)
+	public CIntentionType createIntentionType(long uuid, String name, int colorIndex, String description)
 	{
 		if (colorIndex < 0)
 		{
 			colorIndex = chooseColorIndex();
 		}
 
-		CIntentionType type = new CIntentionType(uuid, name, colorIndex);
+		CIntentionType type = new CIntentionType(uuid, name, colorIndex, description);
 		activeIntentionTypes.put(uuid, type);
 		return type;
 	}

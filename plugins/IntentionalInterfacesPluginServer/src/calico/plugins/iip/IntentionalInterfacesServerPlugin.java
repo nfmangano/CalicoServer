@@ -1,5 +1,6 @@
 package calico.plugins.iip;
 
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,14 +51,15 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		}
 
 		// create the default intention types
-		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Perspective", 0);
-		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Alternative", 1);
-		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Idea", 2);
-		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Design Inside", 3);
-		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "Continuation", 4);
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "alternative", 0, "a new alternative");
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "abstraction", 1, "some part in detail");
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "continuation", 2, "more of the same");
+		CIntentionCellController.getInstance().createIntentionType(UUIDAllocator.getUUID(), "perspective", 3, "a different view");
+		
+		
 		CIntentionType.noTagIntentionType = 
 				CIntentionCellController.getInstance().createIntentionType(
-						UUIDAllocator.getUUID(), "No Tag", 5).getId();
+						UUIDAllocator.getUUID(), "no tag", 4, "something unrelated").getId();
 
 		CalicoPluginManager.registerCalicoStateExtension(this);
 
@@ -376,8 +378,11 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		long uuid = p.getLong();
 		String name = p.getString();
 		int colorIndex = p.getInt();
+		String description = "";
+		if (p.remaining() > 0)
+			description = p.getString();
 
-		CIntentionType type = CIntentionCellController.getInstance().createIntentionType(uuid, name, colorIndex);
+		CIntentionType type = CIntentionCellController.getInstance().createIntentionType(uuid, name, colorIndex, description);
 
 		CalicoPacket colored = CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIT_CREATE, uuid, name, type.getColorIndex());
 		ClientManager.send(colored);

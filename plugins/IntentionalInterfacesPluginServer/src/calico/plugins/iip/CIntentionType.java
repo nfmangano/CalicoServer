@@ -9,14 +9,16 @@ public class CIntentionType
 	private final long uuid;
 	private String name;
 	private int colorIndex;
+	private String description;
 	
 	public static long noTagIntentionType = 0l;
 
-	public CIntentionType(long uuid, String name, int colorIndex)
+	public CIntentionType(long uuid, String name, int colorIndex, String description)
 	{
 		this.uuid = uuid;
 		this.name = name;
 		this.colorIndex = colorIndex;
+		this.description = description;
 	}
 
 	public long getId()
@@ -28,10 +30,20 @@ public class CIntentionType
 	{
 		return name;
 	}
+	
+	public String getDescription()
+	{
+		return description;
+	}
 
 	public void setName(String name)
 	{
 		this.name = name;
+	}
+	
+	public void setDescription(String description)
+	{
+		this.description = description;
 	}
 
 	public int getColorIndex()
@@ -46,6 +58,6 @@ public class CIntentionType
 
 	public CalicoPacket getState()
 	{
-		return CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIT_CREATE, uuid, name, colorIndex);
+		return CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIT_CREATE, uuid, name, colorIndex, description);
 	}
 }
