@@ -26,6 +26,7 @@ public class IntentionalInterfacesNetworkCommands
 	public static final int II_PERSPECTIVE_ACTIVATED = Command.II_PERSPECTIVE_ACTIVATED.id;
 	public static final int WALL_BOUNDS = Command.WALL_BOUNDS.id;
 	public static final int CIC_SET_PIN = Command.CIC_SET_PIN.id;
+	public static final int EXECUTE_II_EVENT_DISPATCHER_EVENTS = Command.EXECUTE_II_EVENT_DISPATCHER_EVENTS.id;
 
 	static {
 		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.CIC_CREATE.id, 
@@ -64,6 +65,8 @@ public class IntentionalInterfacesNetworkCommands
 				new NetCommandFormat("CIC_UPDATE_FINISHED", ""));
 		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.II_PERSPECTIVE_ACTIVATED.id, 
 				new NetCommandFormat("II_PERSPECTIVE_ACTIVATED", ""));
+		NetworkCommand.formats.put(IntentionalInterfacesNetworkCommands.Command.EXECUTE_II_EVENT_DISPATCHER_EVENTS.id, 
+				new NetCommandFormat("EXECUTE_II_EVENT_DISPATCHER_EVENTS", ""));
 	}
 	
 	public enum Command
@@ -142,7 +145,8 @@ public class IntentionalInterfacesNetworkCommands
 		 */
 		II_PERSPECTIVE_ACTIVATED,
 		WALL_BOUNDS,
-		CIC_SET_PIN;
+		CIC_SET_PIN,
+		EXECUTE_II_EVENT_DISPATCHER_EVENTS;
 
 		public final int id;
 

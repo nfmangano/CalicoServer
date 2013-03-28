@@ -150,6 +150,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 				case CIC_SET_PIN:
 					CIC_SET_PIN(p, c);
 					break;
+				case EXECUTE_II_EVENT_DISPATCHER_EVENTS:
+					EXECUTE_II_EVENT_DISPATCHER_EVENTS(p,c);
+					break;
 			}
 		}
 		else
@@ -530,6 +533,16 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		
 		forward(p, c);
 	}
+	
+	private static void EXECUTE_II_EVENT_DISPATCHER_EVENTS(CalicoPacket p, Client c)
+	{
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.EXECUTE_II_EVENT_DISPATCHER_EVENTS.verify(p);
+		
+		forward(p, c);
+	}
+	
+	
 
 	private static void layoutGraph()
 	{
