@@ -116,6 +116,11 @@ public class CIntentionCellController
 	{
 		activeIntentionTypes.get(typeId).setName(name);
 	}
+	
+	public void setIntentionTypeDescription(long typeId, String descr)
+	{
+		activeIntentionTypes.get(typeId).setDescription(descr);
+	}
 
 	public void setIntentionTypeColor(long typeId, int color)
 	{

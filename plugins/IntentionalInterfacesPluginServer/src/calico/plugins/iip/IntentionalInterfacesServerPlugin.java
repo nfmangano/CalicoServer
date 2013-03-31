@@ -153,6 +153,9 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 				case EXECUTE_II_EVENT_DISPATCHER_EVENTS:
 					EXECUTE_II_EVENT_DISPATCHER_EVENTS(p,c);
 					break;
+				case CIT_SET_DESCRIPTION:
+					CIT_SET_DESCRIPTION(p,c);
+					break;
 			}
 		}
 		else
@@ -389,7 +392,7 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 
 		CIntentionType type = CIntentionCellController.getInstance().createIntentionType(uuid, name, colorIndex, description);
 
-		CalicoPacket colored = CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIT_CREATE, uuid, name, type.getColorIndex());
+		CalicoPacket colored = CalicoPacket.getPacket(IntentionalInterfacesNetworkCommands.CIT_CREATE, uuid, name, type.getColorIndex(), description);
 		ClientManager.send(colored);
 	}
 
@@ -401,6 +404,19 @@ public class IntentionalInterfacesServerPlugin extends AbstractCalicoPlugin impl
 		long uuid = p.getLong();
 		String name = p.getString();
 		CIntentionCellController.getInstance().renameIntentionType(uuid, name);
+
+		forward(p, c);
+	}
+	
+	private static void CIT_SET_DESCRIPTION(CalicoPacket p, Client c)
+	{
+		
+		p.rewind();
+		IntentionalInterfacesNetworkCommands.Command.CIT_SET_DESCRIPTION.verify(p);
+
+		long uuid = p.getLong();
+		String name = p.getString();
+		CIntentionCellController.getInstance().setIntentionTypeDescription(uuid, name);
 
 		forward(p, c);
 	}
