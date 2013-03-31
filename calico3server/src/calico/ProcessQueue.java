@@ -168,6 +168,8 @@ public class ProcessQueue
 				case NetworkCommand.PRESENCE_CANVAS_RESET:PRESENCE_CANVAS_RESET(pdata,client);break;
 				case NetworkCommand.PRESENCE_CANVAS_USERS:PRESENCE_CANVAS_USERS(pdata,client);break;
 				
+				case NetworkCommand.DEFAULT_EMAIL:DEFAULT_EMAIL(pdata, client);break;
+				
 				default:
 					break;
 			}//switch
@@ -1664,6 +1666,17 @@ public class ProcessQueue
 				ClientManager.send(client, outPacket);
 			}
 		}
+	}
+	
+	public static void DEFAULT_EMAIL(CalicoPacket p, Client client)
+	{
+		p.rewind();
+		p.getInt();
+		
+		COptions.server.default_email = p.getString();
+		
+		if (client != null)
+			ClientManager.send_except(client, p);
 	}
 
 

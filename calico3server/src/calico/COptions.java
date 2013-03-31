@@ -78,6 +78,7 @@ public class COptions
 	public static class server
 	{
 		public static int tickrate = 66;
+		public static String default_email = "";
 		public static class backup
 		{
 			public static boolean enable_autobackup = true;

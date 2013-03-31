@@ -340,7 +340,10 @@ public class ClientManager
 			send(client, element.getCalicoStateElementUpdatePackets());
 		}
 		
-		ClientManager.send(CalicoPacket.getPacket(NetworkCommand.CANVAS_SET_DIMENSIONS, COptions.canvas.width, COptions.canvas.height));
+		CalicoPacket default_email = CalicoPacket.getPacket(NetworkCommand.DEFAULT_EMAIL, COptions.server.default_email);
+		ClientManager.send(client, default_email);
+		
+		ClientManager.send(client, CalicoPacket.getPacket(NetworkCommand.CANVAS_SET_DIMENSIONS, COptions.canvas.width, COptions.canvas.height));
 		
 		
 		long[] canvasids = CCanvasController.canvases.keySet().toLongArray();
