@@ -45,7 +45,6 @@
         <jar href="libs/shodor.jar"/>
 		<jar href="libs/smtp.jar"/>
 		<jar href="plugins/palettepluginclient.jar"/>
-		<jar href="plugins/userlistpluginclient.jar"/>
 		<jar href="plugins/iip-pluginClient.jar"/>
 		
 

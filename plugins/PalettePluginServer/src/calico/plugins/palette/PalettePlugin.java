@@ -65,8 +65,16 @@ public class PalettePlugin extends AbstractCalicoPlugin
 //		}
 //		
 //		CalicoPluginManager.registerCalicoStateExtension(this);
+
 		
+
 		
+
+	}
+	
+	
+	public void onPluginStart()
+	{		
 		//register for palette events
 		for (Integer event : this.getNetworkCommands())
 		{
@@ -78,14 +86,8 @@ public class PalettePlugin extends AbstractCalicoPlugin
 				CalicoEventHandler.getInstance().addListener(event.intValue(), CCanvasController.canvases.get(canvaskey.longValue()), CalicoEventHandler.PASSIVE_LISTENER);
 			}
 		}
-		
 		CalicoPluginManager.registerCalicoStateExtension(this);
-	}
-	
-	
-	public void onPluginStart()
-	{
-
+		
 		addPalette(UUIDAllocator.getUUID());
 	}
 	
