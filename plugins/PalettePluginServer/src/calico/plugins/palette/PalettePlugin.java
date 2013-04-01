@@ -360,14 +360,23 @@ public class PalettePlugin extends AbstractCalicoPlugin
 
 	@Override
 	public CalicoPacket[] getCalicoStateElementUpdatePackets() {
-		CalicoPacket[] p = new CalicoPacket[palettes.size()];
+		ArrayList<CalicoPacket> paletteItems = new ArrayList<CalicoPacket>();
 		long[] pKeys = getPaletteUUIDs();
 		for (int i = 0; i < pKeys.length; i++)
 		{
-			p[i] = palettes.get(pKeys[i]).getUpdatePacket();
+			paletteItems.addAll(palettes.get(pKeys[i]).getPaletteItems());
 		}
+		return paletteItems.toArray(new CalicoPacket[paletteItems.size()]);
 		
-		return p;
+		
+//		CalicoPacket[] p = new CalicoPacket[palettes.size()];
+//		long[] pKeys = getPaletteUUIDs();
+//		for (int i = 0; i < pKeys.length; i++)
+//		{
+//			p[i] = palettes.get(pKeys[i]).getUpdatePacket();
+//		}
+//		
+//		return p;
 	}
 	
 	private static void PALETTE_LOAD(CalicoPacket p, Client client)
