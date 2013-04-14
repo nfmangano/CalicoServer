@@ -6,13 +6,9 @@ import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
-import java.awt.geom.Point2D.Double;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.shodor.util11.PolygonUtils;
-
-import calico.clients.ClientManager;
 import calico.components.CGroup;
 import calico.controllers.CArrowController;
 import calico.controllers.CCanvasController;
@@ -21,7 +17,6 @@ import calico.controllers.CStrokeController;
 import calico.networking.netstuff.ByteUtils;
 import calico.networking.netstuff.CalicoPacket;
 import calico.networking.netstuff.NetworkCommand;
-import calico.utils.Geometry;
 
 public abstract class CGroupDecorator extends CGroup {
 

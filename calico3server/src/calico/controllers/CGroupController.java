@@ -28,7 +28,6 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
 import org.apache.log4j.*;
-import org.shodor.util11.PolygonUtils;
 
 import it.unimi.dsi.fastutil.longs.*;
 

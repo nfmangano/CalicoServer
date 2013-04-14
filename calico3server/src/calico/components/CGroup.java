@@ -35,8 +35,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.json.me.*;
 
-import org.shodor.util11.*;
-
 import edu.umd.cs.piccolo.util.PAffineTransform;
 
 public class CGroup {
@@ -406,7 +404,7 @@ public class CGroup {
 		}
 		this.finished = true;
 
-		this.groupArea = PolygonUtils.PolygonArea(this.points);
+		this.groupArea = Geometry.computePolygonArea(this.points);
 		
 //		smoothedPath = ;
 		pathReferenceShadow = Geometry.getBezieredPoly(points);
@@ -1050,7 +1048,7 @@ public class CGroup {
 		}
 
 		// Area
-		this.groupArea = PolygonUtils.PolygonArea(areaTemp);
+		this.groupArea = Geometry.computePolygonArea(areaTemp);
 	}
 
 	private Rectangle getTextBounds(String t, Graphics2D g) {
@@ -1217,7 +1215,7 @@ public class CGroup {
 			points.reset();
 		points = Geometry.getRoundedPolygon(newBounds, padding);
 		
-		this.groupArea = PolygonUtils.PolygonArea(this.points);
+		this.groupArea = Geometry.computePolygonArea(this.points);
 //		smoothedPath = 
 		pathReferenceShadow = Geometry.getBezieredPoly(points);
 		
@@ -1241,7 +1239,7 @@ public class CGroup {
 		PAffineTransform piccoloTextTransform = getPTransform();
 		GeneralPath p = (GeneralPath) Geometry.getBezieredPoly(points).createTransformedShape(piccoloTextTransform);
 		pathReferenceShadow = p;
-		this.groupArea = PolygonUtils.PolygonArea(Geometry.getPolyFromPath(p.getPathIterator(null)));
+		this.groupArea = Geometry.computePolygonArea(Geometry.getPolyFromPath(p.getPathIterator(null)));
 	}
 
 	public PAffineTransform getPTransform() {
@@ -1498,7 +1496,7 @@ public class CGroup {
 	public boolean canParent(Shape s, double area)
 	{
 		if (area < -1)
-			area = PolygonUtils.PolygonArea(Geometry.getPolyFromPath(s.getPathIterator(null)));
+			area = Geometry.computePolygonArea(Geometry.getPolyFromPath(s.getPathIterator(null)));
 		if (this.containsShape(s) && this.groupArea > area)
 			return true;
 		

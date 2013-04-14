@@ -1,5 +1,6 @@
 package calico.utils;
 
+import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
@@ -68,6 +69,12 @@ public class Geometry {
 //			(new Exception()).printStackTrace();
 		}
 		return ret;
+	}
+	
+	public static Point getMidPoint(Polygon p)
+	{
+		Point2D point2d = getMidPoint2D(p);
+		return new Point((int)point2d.getX(), (int)point2d.getY());
 	}
 	
 	public static Polygon getPolyFromPath(PathIterator it) {
@@ -521,5 +528,61 @@ public class Geometry {
 	{
 		double v[] = {p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]};
 		return v;
+	}
+	
+	/**
+	 * Compute the area of the specfied polygon.
+	 * 
+	 * @param x  X coordinates of polygon.
+	 * @param y  Y coordinates of polygon.   
+	 * @return   Area of specified polygon.
+	 */
+	public static double computePolygonArea (double[] x, double[] y)
+	{
+		int n = x.length;
+
+		double area = 0.0;
+		for (int i = 0; i < n - 1; i++)
+			area += (x[i] * y[i+1]) - (x[i+1] * y[i]);
+		area += (x[n-1] * y[0]) - (x[0] * y[n-1]);    
+
+		area *= 0.5;
+
+		return area;
+	}
+	
+	public static double computePolygonArea (Polygon poly)
+	{
+		double[] x = new double[poly.npoints];
+		double[] y = new double[poly.npoints];
+		for (int i = 0;i < poly.npoints; i++)
+		{
+			x[i] = poly.xpoints[i];
+			y[i] = poly.ypoints[i];
+		}
+		
+		return computePolygonArea(x, y);
+	}
+
+
+
+	/**
+	 * Compute the area of the specfied polygon.
+	 * 
+	 * @param xy  Geometry of polygon [x,y,...]
+	 * @return    Area of specified polygon.
+	 */
+	public static double computePolygonArea (double[] xy)
+	{
+		int n = xy.length;
+
+		double area = 0.0;
+		for (int i = 0; i < n - 2; i += 2)
+			area += (xy[i] * xy[i+3]) - (xy[i+2] * xy[i+1]);
+		area += (xy[xy.length-2] * xy[1]) - (xy[0] * xy[xy.length-1]);    
+
+		area *= 0.5;
+
+		return area;
 	}
 }

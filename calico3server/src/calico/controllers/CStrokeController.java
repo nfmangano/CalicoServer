@@ -6,13 +6,13 @@ import calico.components.*;
 import calico.networking.*;
 import calico.networking.netstuff.*;
 import calico.utils.CalicoUtils;
+import calico.utils.Geometry;
 import calico.uuid.*;
 
 import java.awt.*;
 import java.util.*;
 
 import org.apache.log4j.Logger;
-import org.shodor.util11.PolygonUtils;
 
 import it.unimi.dsi.fastutil.longs.*;
 
@@ -66,7 +66,7 @@ public class CStrokeController
 		CStroke stroke = CStrokeController.strokes.get(suuid);
 		
 		long parent = CGroupController.get_smallest_containing_group_for_point(stroke.getCanvasUUID(), 
-				PolygonUtils.polygonCenterOfMass(stroke.getPolygon()));
+				Geometry.getMidPoint(stroke.getPolygon()));
 		CGroupController.no_notify_start(new_guuid, stroke.getCanvasUUID(), parent, false);
 		
 		Polygon strokePoly = stroke.getPolygon();
